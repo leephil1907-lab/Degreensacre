@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import CookieConsent from "@/components/CookieConsent";
+import LocationPermission from "@/components/LocationPermission";
 import { Providers } from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -153,6 +155,8 @@ export default function RootLayout({
           </main>
           <Footer />
           <WhatsAppFloat />
+          <CookieConsent />
+          <LocationPermission />
         </Providers>
       </body>
     </html>

@@ -5,24 +5,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const SLIDES = [
   {
-    url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=85',
-    alt: 'Luxury modern duplex exterior',
+    url: '/properties/property-1.jpg',
+    alt: 'Premium property in Nigeria',
   },
   {
-    url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&q=85',
-    alt: 'Premium residential property',
+    url: '/properties/property-2.jpg',
+    alt: 'Luxury residential home',
   },
   {
-    url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&q=85',
-    alt: 'Modern architectural home',
+    url: '/properties/property-3.jpg',
+    alt: 'Modern architectural duplex',
   },
   {
-    url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=85',
+    url: '/properties/property-4.jpg',
     alt: 'Elegant family residence',
   },
   {
-    url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1920&q=85',
-    alt: 'Contemporary luxury estate',
+    url: '/properties/property-5.jpg',
+    alt: 'Residential land and estate',
   },
 ];
 
