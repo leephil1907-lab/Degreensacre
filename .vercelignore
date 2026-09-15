@@ -1,0 +1,54 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Next.js
+.next/
+out/
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode
+.idea
+
+# Setup scripts (one-time use)
+add-*.sh
+add-*.js
+sql-*.sql
+supabase-*.sql
+
+# Documentation (optional)
+IMPLEMENTATION_COMPLETE.md
+TESTING_RESULTS.md
+PRODUCTION_UPGRADE_SUMMARY.md
+FINAL_VERIFICATION.md
+
+# Temporary files
+tmp
+temp
