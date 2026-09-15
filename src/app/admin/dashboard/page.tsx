@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   const [recentEnquiries, setRecentEnquiries] = useState<RecentEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/dashboard');
       if (response.ok) {
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
       return;
     }
     fetchDashboardData();
-  }, [user, profile, router]);
+  }, [user, profile, router, fetchDashboardData]);
 
   if (loading) {
     return (

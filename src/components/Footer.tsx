@@ -40,7 +40,7 @@ export default function Footer() {
               <li><Link href="/location/lagos" className="text-gray-400 hover:text-white transition-colors">Lagos</Link></li>
               <li><Link href="/location/abuja" className="text-gray-400 hover:text-white transition-colors">Abuja</Link></li>
               <li><Link href="/location/enugu" className="text-gray-400 hover:text-white transition-colors">Enugu</Link></li>
-              <li><Link href="/location/uyo" className="text-gray-400 hover:text-white transition-colors">Uyo</Link></li>
+              <li><Link href="/location/akwa-ibom" className="text-gray-400 hover:text-white transition-colors">Uyo</Link></li>
               <li><Link href="/location/port-harcourt" className="text-gray-400 hover:text-white transition-colors">Port Harcourt</Link></li>
               <li><Link href="/locations" className="text-gray-400 hover:text-white transition-colors">All Locations</Link></li>
             </ul>
