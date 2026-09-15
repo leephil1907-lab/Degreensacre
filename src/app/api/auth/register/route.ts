@@ -59,6 +59,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Auto-grant admin access for the configured admin email
+    const adminEmail = (process.env.ADMIN_EMAIL || 'degreenacrespropertieslimited@gmail.com').toLowerCase();
+    if (data.user && body.email.toLowerCase().trim() === adminEmail) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ is_admin: true })
+          .eq('id', data.user.id);
+      } catch (adminError) {
+        console.error('Failed to set admin flag:', adminError);
+      }
+    }
+
     return NextResponse.json({
       user: data.user,
       success: true,

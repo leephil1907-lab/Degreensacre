@@ -128,34 +128,39 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200 animate-fade-in">
+          <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-[#fffff8] dark:bg-charcoal animate-fade-in">
             <div className="flex flex-col space-y-1">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="px-4 py-3 text-charcoal hover:text-forest font-medium rounded-lg hover:bg-sage/10 transition-colors"
+                  className="px-4 py-3 text-charcoal dark:text-gray-200 hover:text-forest dark:hover:text-forest font-medium rounded-lg hover:bg-sage/10 dark:hover:bg-gray-800 transition-colors"
                   onClick={closeMobile}
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="pt-4 border-t border-gray-200 space-y-2">
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
                 {!loading && user ? (
                   <>
                     <Link href="/dashboard" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
                       Dashboard
                     </Link>
+                    {profile?.is_admin && (
+                      <Link href="/admin/dashboard" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={() => { signOut(); closeMobile(); }}
-                      className="block px-4 py-3 text-left text-gray-600 font-semibold w-full"
+                      className="block px-4 py-3 text-left text-gray-600 dark:text-gray-400 font-semibold w-full"
                     >
                       Sign Out
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/signin" className="block px-4 py-3 text-charcoal font-semibold" onClick={closeMobile}>
+                    <Link href="/signin" className="block px-4 py-3 text-charcoal dark:text-gray-200 font-semibold" onClick={closeMobile}>
                       Sign In
                     </Link>
                     <Link href="/signup" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
