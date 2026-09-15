@@ -1,0 +1,252 @@
+export interface Property {
+  id: string;
+  slug: string;
+  title: string;
+  type: 'sale' | 'rent' | 'short-let' | 'land' | 'commercial';
+  propertyType: string;
+  price: number;
+  pricePeriod?: 'month' | 'year';
+  pricePerSqm?: number;
+  bedrooms: number;
+  bathrooms: number;
+  toilets: number;
+  parking: number;
+  sqm: number;
+  landSize?: number;
+  address: string;
+  area: string;
+  lga: string;
+  state: string;
+  description: string;
+  features: string[];
+  images: string[];
+  videoUrl?: string;
+  virtualTourUrl?: string;
+  agent: string;
+  agentPhone?: string;
+  agentEmail?: string;
+  featured: boolean;
+  verified: boolean;
+  verificationStatus?: 'verified' | 'pending' | 'unverified';
+  new: boolean;
+  furnished?: boolean;
+  serviced?: boolean;
+  gatedEstate?: boolean;
+  documentation?: string;
+  dateAdded: string;
+  status: 'available' | 'sold' | 'rented' | 'pending' | 'archived';
+  views: number;
+  sample?: boolean;
+}
+
+export const properties: Property[] = [
+  {
+    id: 'dg-001',
+    slug: 'exquisite-5-bedroom-detached-duplex-lekki',
+    title: 'Exquisite 5 Bedroom Detached Duplex with BQ',
+    type: 'sale',
+    propertyType: 'Detached Duplex',
+    price: 180000000,
+    pricePerSqm: 400000,
+    bedrooms: 5,
+    bathrooms: 6,
+    toilets: 7,
+    parking: 4,
+    sqm: 450,
+    address: 'Plot 15, Greenacres Estate',
+    area: 'Chevron Drive',
+    lga: 'Lekki',
+    state: 'Lagos',
+    description: 'Magnificent newly built 5 bedroom fully detached duplex with swimming pool, elevator, and smart home automation. Features include all ensuite rooms, spacious living areas, modern kitchen with island, and beautifully landscaped compound.',
+    features: ['Swimming Pool', 'Elevator', 'Smart Home', 'All Rooms Ensuite', 'Boys Quarter', 'Gym', 'CCTV', '24/7 Security', 'Fiber Internet'],
+    images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    agentEmail: 'info@degreenacresproperties.com',
+    featured: true,
+    verified: true,
+    verificationStatus: 'verified',
+    new: true,
+    furnished: false,
+    serviced: true,
+    gatedEstate: true,
+    documentation: 'C of O',
+    dateAdded: '2026-09-10',
+    status: 'available',
+    views: 245,
+    sample: true
+  },
+  {
+    id: 'dg-002',
+    slug: 'luxury-4-bedroom-semi-detached-lekki-phase-1',
+    title: 'Luxury 4 Bedroom Semi-Detached Duplex',
+    type: 'sale',
+    propertyType: 'Semi-Detached Duplex',
+    price: 120000000,
+    pricePerSqm: 375000,
+    bedrooms: 4,
+    bathrooms: 5,
+    toilets: 5,
+    parking: 3,
+    sqm: 320,
+    address: '12 Admiralty Way',
+    area: 'Lekki Phase 1',
+    lga: 'Lekki',
+    state: 'Lagos',
+    description: 'Stunning 4 bedroom semi-detached duplex in prime Lekki Phase 1 location. Features modern finishes, spacious rooms, fitted kitchen, and excellent security.',
+    features: ['All Rooms Ensuite', 'Fitted Kitchen', 'POP Ceiling', 'Water Treatment', '24/7 Security', 'Ample Parking'],
+    images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    featured: true,
+    verified: true,
+    verificationStatus: 'verified',
+    new: false,
+    furnished: false,
+    serviced: true,
+    gatedEstate: true,
+    documentation: 'Governor\'s Consent',
+    dateAdded: '2026-09-05',
+    status: 'available',
+    views: 189,
+    sample: true
+  },
+  {
+    id: 'dg-009',
+    slug: 'exquisite-6-bedroom-duplex-maitama-abuja',
+    title: 'Exquisite 6 Bedroom Duplex in Maitama',
+    type: 'sale',
+    propertyType: 'Detached Duplex',
+    price: 380000000,
+    pricePerSqm: 584615,
+    bedrooms: 6,
+    bathrooms: 7,
+    toilets: 8,
+    parking: 5,
+    sqm: 650,
+    address: 'Plot 25, Maitama District',
+    area: 'Maitama',
+    lga: 'Maitama',
+    state: 'Abuja',
+    description: 'Magnificent 6 bedroom fully detached duplex in prime Maitama location. Features modern architecture, spacious rooms, home office, and beautifully landscaped compound with swimming pool.',
+    features: ['Swimming Pool', 'Home Office', 'All Rooms Ensuite', 'Boys Quarter', 'Gym', 'CCTV', '24/7 Security', 'Ample Parking'],
+    images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    featured: true,
+    verified: true,
+    verificationStatus: 'verified',
+    new: true,
+    furnished: false,
+    serviced: true,
+    gatedEstate: true,
+    documentation: 'C of O',
+    dateAdded: '2026-09-13',
+    status: 'available',
+    views: 312,
+    sample: true
+  },
+  {
+    id: 'dg-012',
+    slug: '5-bedroom-duplex-independence-layout-enugu',
+    title: '5 Bedroom Duplex in Independence Layout',
+    type: 'sale',
+    propertyType: 'Detached Duplex',
+    price: 165000000,
+    pricePerSqm: 330000,
+    bedrooms: 5,
+    bathrooms: 6,
+    toilets: 6,
+    parking: 4,
+    sqm: 500,
+    address: '18 Ogui Road',
+    area: 'Independence Layout',
+    lga: 'Enugu Urban',
+    state: 'Enugu',
+    description: 'Spacious 5 bedroom detached duplex in prime Independence Layout location. Features modern finishes, all ensuite rooms, and large compound.',
+    features: ['All Rooms Ensuite', 'Modern Kitchen', 'POP Ceiling', 'Boys Quarter', '24/7 Security', 'Ample Parking'],
+    images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    featured: true,
+    verified: true,
+    verificationStatus: 'verified',
+    new: true,
+    furnished: false,
+    serviced: false,
+    gatedEstate: false,
+    documentation: 'C of O',
+    dateAdded: '2026-09-12',
+    status: 'available',
+    views: 178,
+    sample: true
+  },
+  {
+    id: 'dg-005',
+    slug: '600sqm-residential-land-shelter-afrique-uyo',
+    title: '600sqm Residential Land',
+    type: 'land',
+    propertyType: 'Land',
+    price: 45000000,
+    pricePerSqm: 75000,
+    bedrooms: 0,
+    bathrooms: 0,
+    toilets: 0,
+    parking: 0,
+    sqm: 600,
+    landSize: 600,
+    address: 'Plot 45, Shelter Afrique Estate',
+    area: 'Shelter Afrique',
+    lga: 'Uyo',
+    state: 'Akwa Ibom',
+    description: 'Well-located 600sqm plot of dry land in prestigious Shelter Afrique Estate. Excellent for residential development with good road access and utilities.',
+    features: ['Dry Land', 'Good Road Access', 'Estate Security', 'Government Approved'],
+    images: ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    featured: true,
+    verified: true,
+    verificationStatus: 'verified',
+    new: true,
+    documentation: 'C of O',
+    dateAdded: '2026-09-08',
+    status: 'available',
+    views: 156,
+    sample: true
+  },
+  {
+    id: 'dg-010',
+    slug: '4-bedroom-duplex-asokoro-abuja',
+    title: '4 Bedroom Duplex in Asokoro',
+    type: 'sale',
+    propertyType: 'Semi-Detached Duplex',
+    price: 220000000,
+    pricePerSqm: 578947,
+    bedrooms: 4,
+    bathrooms: 5,
+    toilets: 5,
+    parking: 3,
+    sqm: 380,
+    address: '12 Asokoro Crescent',
+    area: 'Asokoro',
+    lga: 'Asokoro',
+    state: 'Abuja',
+    description: 'Elegant 4 bedroom semi-detached duplex in prestigious Asokoro district. Features contemporary design, fitted kitchen, and excellent security.',
+    features: ['All Rooms Ensuite', 'Fitted Kitchen', 'POP Ceiling', 'Water Treatment', '24/7 Security', 'Ample Parking'],
+    images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200'],
+    agent: 'De-Greenacres Properties',
+    agentPhone: '+2348065019971',
+    featured: true,
+    verified: false,
+    verificationStatus: 'pending',
+    new: true,
+    furnished: false,
+    serviced: true,
+    gatedEstate: true,
+    documentation: 'Governor\'s Consent',
+    dateAdded: '2026-09-11',
+    status: 'available',
+    views: 234,
+    sample: true
+  }
+];
