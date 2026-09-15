@@ -177,6 +177,7 @@ function PropertiesContent() {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        setMapLoaded(false);
       }
     };
   }, [viewMode]);
@@ -298,7 +299,7 @@ function PropertiesContent() {
   const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
 
   return (
-    <div className="min-h-screen bg-ivory flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
+    <div className="min-h-screen bg-ivory flex flex-col" style={{ height: 'calc(100vh - 130px)' }}>
       {/* Top Filter Bar - Zillow Style */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="px-4 py-3">
@@ -512,7 +513,7 @@ function PropertiesContent() {
       <div className="flex-1 flex overflow-hidden">
         {/* Property List */}
         <div className={`overflow-y-auto ${
-          viewMode === 'split' ? 'w-full lg:w-[480px] xl:w-[520px]' : 'w-full'
+          viewMode === 'split' ? 'hidden lg:block lg:w-[480px] xl:w-[520px]' : 'w-full'
         }`}>
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -681,9 +682,17 @@ function PropertiesContent() {
           )}
         </div>
 
-        {/* Map Panel - Zillow Split View */}
+        {/* Map Panel - Split on desktop, full-screen on mobile */}
         {viewMode === 'split' && (
-          <div className="hidden lg:block flex-1 relative">
+          <div className="flex-1 relative">
+            {/* Mobile close button */}
+            <button
+              onClick={() => setViewMode('grid')}
+              className="lg:hidden absolute top-3 left-3 z-[1000] bg-white shadow-lg rounded-full px-4 py-2 text-sm font-bold text-charcoal flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Back to List
+            </button>
             <div ref={mapRef} className="absolute inset-0 z-10" />
             {!mapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
@@ -696,6 +705,17 @@ function PropertiesContent() {
           </div>
         )}
       </div>
+
+      {/* Floating "Show Map" button on mobile when in grid/list mode */}
+      {viewMode !== 'split' && (
+        <button
+          onClick={() => setViewMode('split')}
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-forest text-white shadow-xl rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2"
+        >
+          <MapIcon className="w-4 h-4" />
+          Show Map
+        </button>
+      )}
 
       {/* Map marker styles */}
       <style jsx global>{`
