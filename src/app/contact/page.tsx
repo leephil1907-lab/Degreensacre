@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import ScrollReveal from '@/components/ScrollReveal';
+import { MapPin, CheckCircle } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -52,79 +54,76 @@ export default function ContactPage() {
             {/* Contact Info Cards */}
             <div className="lg:col-span-1 space-y-6">
               {/* Lagos Office */}
-              <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-magenta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <ScrollReveal direction="left" delay={0}>
+                <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-magenta" />
+                    </div>
+                    <h3 className="text-xl font-bold text-charcoal">Lagos Office</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-charcoal">Lagos Office</h3>
+                  <p className="text-gray-600 mb-2">
+                    5 Borogade Crescent,<br />
+                    Off Okengbero Street,<br />
+                    New Oko-Oba, Lagos State
+                  </p>
                 </div>
-                <p className="text-gray-600 mb-2">
-                  5 Borogade Crescent,<br />
-                  Off Okengbero Street,<br />
-                  New Oko-Oba, Lagos State
-                </p>
-              </div>
+              </ScrollReveal>
 
               {/* Abuja Office */}
-              <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 bg-plum/10 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-plum" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <ScrollReveal direction="left" delay={0.1}>
+                <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-plum/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-plum" />
+                    </div>
+                    <h3 className="text-xl font-bold text-charcoal">Abuja Office</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-charcoal">Abuja Office</h3>
+                  <p className="text-gray-600 mb-2">
+                    Maitama District,<br />
+                    Abuja FCT
+                  </p>
                 </div>
-                <p className="text-gray-600 mb-2">
-                  Maitama District,<br />
-                  Abuja FCT
-                </p>
-              </div>
+              </ScrollReveal>
 
               {/* Akwa Ibom Office */}
-              <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 bg-charcoal/10 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <ScrollReveal direction="left" delay={0.2}>
+                <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-charcoal/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-charcoal" />
+                    </div>
+                    <h3 className="text-xl font-bold text-charcoal">Akwa Ibom Office</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-charcoal">Akwa Ibom Office</h3>
+                  <p className="text-gray-600 mb-2">
+                    Ifa Ikot Ubo,<br />
+                    Uyo Local Government Area,<br />
+                    Akwa Ibom State
+                  </p>
                 </div>
-                <p className="text-gray-600 mb-2">
-                  Ifa Ikot Ubo,<br />
-                  Uyo Local Government Area,<br />
-                  Akwa Ibom State
-                </p>
-              </div>
+              </ScrollReveal>
 
               {/* Southeast Office */}
-              <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-magenta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <ScrollReveal direction="left" delay={0.3}>
+                <div className="bg-white rounded-xl shadow-soft p-6 hover-lift">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-magenta" />
+                    </div>
+                    <h3 className="text-xl font-bold text-charcoal">Southeast Office</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-charcoal">Southeast Office</h3>
+                  <p className="text-gray-600 mb-2">
+                    Independence Layout,<br />
+                    Enugu, Enugu State
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Serving: Enugu, Anambra, Imo, Abia, Ebonyi
+                  </p>
                 </div>
-                <p className="text-gray-600 mb-2">
-                  Independence Layout,<br />
-                  Enugu, Enugu State
-                </p>
-                <p className="text-sm text-gray-500">
-                  Serving: Enugu, Anambra, Imo, Abia, Ebonyi
-                </p>
-              </div>
+              </ScrollReveal>
 
               {/* Quick Contact — Icons Only, No Exposed Details */}
+              <ScrollReveal direction="left" delay={0.4}>
               <div className="bg-white rounded-xl shadow-soft p-6">
                 <h3 className="text-xl font-bold text-charcoal mb-4">Get in Touch</h3>
                 <p className="text-gray-600 text-sm mb-6">Choose your preferred way to reach us:</p>
@@ -159,8 +158,10 @@ export default function ContactPage() {
                   Our team typically responds within 24 hours
                 </p>
               </div>
+              </ScrollReveal>
 
               {/* WhatsApp CTA */}
+              <ScrollReveal direction="left" delay={0.5}>
               <a
                 href="https://wa.me/2348065019971"
                 target="_blank"
@@ -177,18 +178,18 @@ export default function ContactPage() {
                   </div>
                 </div>
               </a>
+              </ScrollReveal>
             </div>
 
             {/* Contact Form */}
             <div className="lg:col-span-2">
+              <ScrollReveal direction="right">
               <div className="bg-white rounded-xl shadow-soft p-8">
                 <h2 className="text-2xl font-bold text-charcoal mb-6">Send Us a Message</h2>
                 
                 {submitted && (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
-                    <svg className="w-6 h-6 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
                     <p className="text-green-800 font-medium">Thank you! Your message has been sent successfully.</p>
                   </div>
                 )}
@@ -299,6 +300,7 @@ export default function ContactPage() {
                   </button>
                 </form>
               </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>

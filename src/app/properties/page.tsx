@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { properties } from '@/data/properties';
+import ScrollReveal from '@/components/ScrollReveal';
+import { SlidersHorizontal, X, Grid3X3, List, MapPin, SearchX } from 'lucide-react';
 
-export default function PropertiesPage() {
+function PropertiesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -33,8 +35,9 @@ export default function PropertiesPage() {
     
     const params = new URLSearchParams();
     Object.entries(updated).forEach(([key, value]) => {
-      if (value && value !== '' && value !== false) {
-        params.set(key, String(value));
+      const v = value as unknown;
+      if (v && v !== '' && v !== false) {
+        params.set(key, String(v));
       }
     });
     router.push(`/properties?${params.toString()}`, { scroll: false });
@@ -134,9 +137,7 @@ export default function PropertiesPage() {
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               className="btn-secondary w-full flex items-center justify-center space-x-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
+              <SlidersHorizontal className="w-5 h-5" />
               <span>Filters</span>
             </button>
           </div>
@@ -151,9 +152,7 @@ export default function PropertiesPage() {
                     onClick={() => setShowMobileFilters(false)}
                     className="lg:hidden text-gray-500 hover:text-charcoal"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -297,9 +296,7 @@ export default function PropertiesPage() {
                       viewMode === 'grid' ? 'bg-magenta text-white' : 'bg-ivory text-gray-600 hover:bg-gray-100'
                     }`}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
+                    <Grid3X3 className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
@@ -307,9 +304,7 @@ export default function PropertiesPage() {
                       viewMode === 'list' ? 'bg-magenta text-white' : 'bg-ivory text-gray-600 hover:bg-gray-100'
                     }`}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
+                    <List className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -317,12 +312,12 @@ export default function PropertiesPage() {
               {/* Properties Grid/List */}
               {filteredProperties.length > 0 ? (
                 <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-6'}>
-                  {filteredProperties.map((property) => (
-                    <Link
-                      key={property.id}
-                      href={`/properties/${property.slug}`}
-                      className={`card hover-lift group ${viewMode === 'list' ? 'flex flex-col md:flex-row' : ''}`}
-                    >
+                  {filteredProperties.map((property, i) => (
+                    <ScrollReveal key={property.id} delay={i * 0.05}>
+                      <Link
+                        href={`/properties/${property.slug}`}
+                        className={`card hover-lift group block ${viewMode === 'list' ? 'flex flex-col md:flex-row' : ''}`}
+                      >
                       <div className={`relative overflow-hidden ${viewMode === 'list' ? 'md:w-80 md:flex-shrink-0' : 'h-64'}`}>
                         <img
                           src={property.images[0]}
@@ -346,10 +341,7 @@ export default function PropertiesPage() {
                           {property.title}
                         </h3>
                         <p className="text-gray-600 text-sm mb-4 flex items-center">
-                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
+                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-forest" />
                           {property.area}, {property.state}
                         </p>
                         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -363,13 +355,12 @@ export default function PropertiesPage() {
                         </div>
                       </div>
                     </Link>
+                    </ScrollReveal>
                   ))}
                 </div>
               ) : (
                 <div className="bg-white rounded-xl shadow-soft p-12 text-center">
-                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <SearchX className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold text-charcoal mb-2">No Properties Found</h3>
                   <p className="text-gray-600 mb-6">
                     Try adjusting your filters to see more results
@@ -400,5 +391,13 @@ export default function PropertiesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function PropertiesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-ivory flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-magenta"></div></div>}>
+      <PropertiesContent />
+    </Suspense>
   );
 }

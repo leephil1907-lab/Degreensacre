@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import ScrollReveal from '@/components/ScrollReveal';
 
 export default function ListPropertyPage() {
   const [step, setStep] = useState(1);

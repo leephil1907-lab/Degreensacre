@@ -1,3 +1,8 @@
+'use client';
+
+import ScrollReveal from '@/components/ScrollReveal';
+import { Calendar, User, ArrowRight } from 'lucide-react';
+
 import Link from 'next/link';
 
 interface Article {
