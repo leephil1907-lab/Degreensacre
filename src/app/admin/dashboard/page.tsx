@@ -1,150 +1,284 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-  Users,
-  Home,
-  MessageSquare,
-  TrendingUp,
-  DollarSign,
-  Eye,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
+  Home, Users, Building2, MessageSquare, Eye, TrendingUp,
+  Calendar, DollarSign, AlertCircle, CheckCircle, Clock,
+  ArrowUpRight, ArrowDownRight, Loader2
 } from 'lucide-react';
 
-const stats = [
-  { label: 'Total Users', value: '2,847', change: '+12.5%', up: true, icon: Users, color: 'bg-blue-500' },
-  { label: 'Active Listings', value: '156', change: '+8.2%', up: true, icon: Home, color: 'bg-forest' },
-  { label: 'Enquiries', value: '89', change: '+23.1%', up: true, icon: MessageSquare, color: 'bg-magenta' },
-  { label: 'Revenue', value: '₦4.2M', change: '-3.4%', up: false, icon: DollarSign, color: 'bg-amber-500' },
-];
+interface Stats {
+  totalUsers: number;
+  totalProperties: number;
+  publishedProperties: number;
+  pendingProperties: number;
+  totalEnquiries: number;
+  newEnquiries: number;
+  totalViewings: number;
+}
 
-const recentActivities = [
-  { user: 'John Doe', action: 'submitted a property listing', time: '2 minutes ago', icon: Home },
-  { user: 'Jane Smith', action: 'sent an enquiry', time: '15 minutes ago', icon: MessageSquare },
-  { user: 'Mike Johnson', action: 'registered a new account', time: '1 hour ago', icon: Users },
-  { user: 'Sarah Wilson', action: 'scheduled a viewing', time: '2 hours ago', icon: Calendar },
-  { user: 'David Brown', action: 'updated property details', time: '3 hours ago', icon: Activity },
-];
+interface RecentProperty {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  price: number;
+  state: string;
+  date_added: string;
+}
 
-const topProperties = [
-  { title: '5 Bedroom Duplex, Lekki', views: 1247, enquiries: 23 },
-  { title: '3 Bedroom Apartment, Victoria Island', views: 892, enquiries: 18 },
-  { title: 'Land for Sale, Ajah', views: 756, enquiries: 15 },
-  { title: '4 Bedroom Terrace, Ikoyi', views: 634, enquiries: 12 },
-];
+interface RecentEnquiry {
+  id: string;
+  buyer_name: string;
+  buyer_email: string;
+  message: string;
+  status: string;
+  created_at: string;
+  properties?: { title: string };
+}
 
 export default function AdminDashboard() {
+  const { user, profile } = useAuth();
+  const router = useRouter();
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recentProperties, setRecentProperties] = useState<RecentProperty[]>([]);
+  const [recentEnquiries, setRecentEnquiries] = useState<RecentEnquiry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/admin/dashboard');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+        setRecentProperties(data.recentProperties || []);
+        setRecentEnquiries(data.recentEnquiries || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (profile && !profile.is_admin) {
+      router.push('/');
+      return;
+    }
+    fetchDashboardData();
+  }, [user, profile, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000000000) return `₦${(price / 1000000000).toFixed(1)}B`;
+    if (price >= 1000000) return `₦${(price / 1000000).toFixed(1)}M`;
+    return `₦${price.toLocaleString()}`;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-serif text-charcoal-900 mb-2">Admin Dashboard</h1>
+        <p className="text-charcoal-600">Welcome back! Here&apos;s what&apos;s happening with your platform.</p>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <div className={`flex items-center gap-1 text-sm font-semibold ${stat.up ? 'text-green-600' : 'text-red-600'}`}>
-                  {stat.up ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                  {stat.change}
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-charcoal mb-1">{stat.value}</div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
-            </motion.div>
-          );
-        })}
+        {/* Total Users */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+            <ArrowUpRight className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.totalUsers || 0}</p>
+          <p className="text-sm text-charcoal-500">Total Users</p>
+        </div>
+
+        {/* Total Properties */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-green-600" />
+            </div>
+            <ArrowUpRight className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.totalProperties || 0}</p>
+          <p className="text-sm text-charcoal-500">Total Properties</p>
+        </div>
+
+        {/* Published Properties */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-purple-600" />
+            </div>
+            <ArrowUpRight className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.publishedProperties || 0}</p>
+          <p className="text-sm text-charcoal-500">Published</p>
+        </div>
+
+        {/* Pending Properties */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-6 h-6 text-yellow-600" />
+            </div>
+            <ArrowDownRight className="w-5 h-5 text-red-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.pendingProperties || 0}</p>
+          <p className="text-sm text-charcoal-500">Pending Review</p>
+        </div>
+
+        {/* Total Enquiries */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-indigo-600" />
+            </div>
+            <ArrowUpRight className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.totalEnquiries || 0}</p>
+          <p className="text-sm text-charcoal-500">Total Enquiries</p>
+        </div>
+
+        {/* New Enquiries */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            {stats?.newEnquiries && stats.newEnquiries > 0 ? (
+              <ArrowUpRight className="w-5 h-5 text-red-500" />
+            ) : (
+              <ArrowDownRight className="w-5 h-5 text-green-500" />
+            )}
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.newEnquiries || 0}</p>
+          <p className="text-sm text-charcoal-500">New Enquiries</p>
+        </div>
+
+        {/* Total Viewings */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Eye className="w-6 h-6 text-orange-600" />
+            </div>
+            <ArrowUpRight className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-charcoal-900">{stats?.totalViewings || 0}</p>
+          <p className="text-sm text-charcoal-500">Total Viewings</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-sm p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold mb-1">Quick Actions</p>
+          <Link href="/admin/properties" className="text-sm text-white/90 hover:text-white underline">
+            Manage Properties →
+          </Link>
+        </div>
       </div>
 
+      {/* Recent Properties & Enquiries */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-        >
-          <h3 className="text-lg font-bold text-charcoal mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {recentActivities.map((activity, i) => {
-              const Icon = activity.icon;
-              return (
-                <div key={i} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-charcoal">
-                      <span className="font-semibold">{activity.user}</span> {activity.action}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">{activity.time}</div>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Recent Properties */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-serif text-charcoal-900">Recent Properties</h2>
+            <Link href="/admin/properties" className="text-sm text-green-600 hover:text-green-700">
+              View All →
+            </Link>
           </div>
-        </motion.div>
-
-        {/* Top Properties */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-        >
-          <h3 className="text-lg font-bold text-charcoal mb-4">Top Performing Properties</h3>
-          <div className="space-y-4">
-            {topProperties.map((property, i) => (
-              <div key={i} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                <div className="font-semibold text-charcoal text-sm mb-2">{property.title}</div>
-                <div className="flex items-center gap-4 text-xs text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    {property.views.toLocaleString()} views
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="w-4 h-4" />
-                    {property.enquiries} enquiries
-                  </div>
+          <div className="space-y-3">
+            {recentProperties.slice(0, 5).map((property) => (
+              <Link
+                key={property.id}
+                href={`/properties/${property.slug}`}
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-charcoal-50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-charcoal-900 truncate">{property.title}</p>
+                  <p className="text-sm text-charcoal-500">{property.state} • {formatPrice(property.price)}</p>
                 </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  property.status === 'available' ? 'bg-green-100 text-green-700' :
+                  property.status === 'sold' ? 'bg-red-100 text-red-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {property.status}
+                </span>
+              </Link>
+            ))}
+            {recentProperties.length === 0 && (
+              <p className="text-center text-charcoal-400 py-8">No properties yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Enquiries */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-serif text-charcoal-900">Recent Enquiries</h2>
+            <Link href="/admin/enquiries" className="text-sm text-green-600 hover:text-green-700">
+              View All →
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentEnquiries.slice(0, 5).map((enquiry) => (
+              <div
+                key={enquiry.id}
+                className="p-3 rounded-lg hover:bg-charcoal-50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-charcoal-900">{enquiry.buyer_name}</p>
+                    <p className="text-sm text-charcoal-500">{enquiry.buyer_email}</p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    enquiry.status === 'new' ? 'bg-blue-100 text-blue-700' :
+                    enquiry.status === 'replied' ? 'bg-green-100 text-green-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {enquiry.status}
+                  </span>
+                </div>
+                <p className="text-sm text-charcoal-600 line-clamp-2">{enquiry.message}</p>
+                {enquiry.properties && (
+                  <p className="text-xs text-charcoal-400 mt-1">
+                    Re: {enquiry.properties.title}
+                  </p>
+                )}
               </div>
             ))}
+            {recentEnquiries.length === 0 && (
+              <p className="text-center text-charcoal-400 py-8">No enquiries yet</p>
+            )}
           </div>
-        </motion.div>
-      </div>
-
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-gradient-to-r from-forest to-forest-light rounded-xl p-6 text-white"
-      >
-        <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
-        <p className="text-sm text-white/80 mb-4">Manage your platform efficiently</p>
-        <div className="flex flex-wrap gap-3">
-          <button className="bg-white text-forest px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors">
-            Add New Property
-          </button>
-          <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors">
-            Send Newsletter
-          </button>
-          <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors">
-            View Reports
-          </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

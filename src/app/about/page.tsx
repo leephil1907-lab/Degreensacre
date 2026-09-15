@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import ScrollReveal from '@/components/ScrollReveal';
 import { Shield, MapPin, FileCheck, MessageSquare, FileText, Eye } from 'lucide-react';
 
@@ -177,12 +178,12 @@ export default function AboutPage() {
               Browse our curated selection of premium properties or contact us to discuss your real estate needs.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <a href="/properties" className="btn-primary bg-white text-magenta hover:bg-ivory w-full sm:w-auto">
+              <Link href="/properties" className="btn-primary bg-white text-magenta hover:bg-ivory w-full sm:w-auto">
                 Browse Properties
-              </a>
-              <a href="/contact" className="btn-outline border-white text-white hover:bg-white hover:text-charcoal w-full sm:w-auto">
+              </Link>
+              <Link href="/contact" className="btn-outline border-white text-white hover:bg-white hover:text-charcoal w-full sm:w-auto">
                 Contact Us
-              </a>
+              </Link>
             </div>
           </ScrollReveal>
         </div>

@@ -1,402 +1,501 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { properties } from '@/data/properties';
+import {
+  Search, MapPin, SlidersHorizontal, X, Grid3X3, List,
+  Loader2, SearchX, Bed, Bath, Square, Car, Heart, Eye,
+  CheckCircle, ChevronDown, Bookmark, BookmarkPlus
+} from 'lucide-react';
 import ScrollReveal from '@/components/ScrollReveal';
-import { SlidersHorizontal, X, Grid3X3, List, MapPin, SearchX } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface PropertyImage {
+  url: string;
+  display_order: number;
+  is_primary: boolean;
+}
+
+interface Property {
+  id: string;
+  slug: string;
+  title: string;
+  type: string;
+  property_type: string;
+  price: number;
+  price_period?: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqm: number;
+  parking: number;
+  area: string;
+  state: string;
+  address?: string;
+  description?: string;
+  features: string[];
+  verification_status: string;
+  status: string;
+  featured: boolean;
+  views: number;
+  property_images?: PropertyImage[];
+  furnished?: boolean;
+  serviced?: boolean;
+  gated_estate?: boolean;
+  documentation?: string;
+}
 
 function PropertiesContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-
+  // Read initial state from URL
   const [filters, setFilters] = useState({
-    type: searchParams.get('type') || 'sale',
-    propertyType: searchParams.get('propertyType') || '',
+    type: searchParams.get('type') || '',
     state: searchParams.get('state') || '',
     area: searchParams.get('area') || '',
-    bedrooms: searchParams.get('bedrooms') || '',
-    bathrooms: searchParams.get('bathrooms') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
-    furnished: searchParams.get('furnished') === 'true',
-    serviced: searchParams.get('serviced') === 'true',
-    gatedEstate: searchParams.get('gatedEstate') === 'true',
-    sortBy: searchParams.get('sortBy') || 'newest'
+    bedrooms: searchParams.get('bedrooms') || '',
   });
+  
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'date_added');
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
-  const updateFilters = (newFilters: Partial<typeof filters>) => {
-    const updated = { ...filters, ...newFilters };
-    setFilters(updated);
+  // Fetch properties when filters change
+  const fetchProperties = useCallback(async () => {
+    setLoading(true);
+    setError('');
     
-    const params = new URLSearchParams();
-    Object.entries(updated).forEach(([key, value]) => {
-      const v = value as unknown;
-      if (v && v !== '' && v !== false) {
-        params.set(key, String(v));
+    try {
+      const params = new URLSearchParams();
+      params.set('status', 'published');
+      if (filters.type) params.set('type', filters.type);
+      if (filters.state) params.set('state', filters.state);
+      if (filters.area) params.set('area', filters.area);
+      if (filters.minPrice) params.set('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+      if (filters.bedrooms) params.set('bedrooms', filters.bedrooms);
+      if (sortBy) params.set('orderBy', sortBy === 'newest' ? 'date_added' : sortBy);
+      if (sortBy === 'price_asc') {
+        params.set('orderBy', 'price');
+        params.set('order', 'asc');
+      } else if (sortBy === 'price_desc') {
+        params.set('orderBy', 'price');
+        params.set('order', 'desc');
       }
+      params.set('limit', '50');
+
+      const response = await fetch(`/api/properties?${params.toString()}`);
+      
+      if (!response.ok) throw new Error('Failed to fetch properties');
+      
+      const data = await response.json();
+      setProperties(data.properties || []);
+      setTotalCount(data.count || 0);
+    } catch (err: any) {
+      console.error('Fetch error:', err);
+      setError(err.message);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, sortBy]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
+
+  // Update URL when filters change
+  const updateUrl = (newFilters: typeof filters) => {
+    const params = new URLSearchParams();
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
     });
+    if (sortBy) params.set('sort', sortBy);
     router.push(`/properties?${params.toString()}`, { scroll: false });
   };
 
-  const filteredProperties = useMemo(() => {
-    let filtered = properties.filter(p => p.type === filters.type && p.status === 'available');
-
-    if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
-    }
-
-    if (filters.state) {
-      filtered = filtered.filter(p => p.state === filters.state);
-    }
-
-    if (filters.area) {
-      filtered = filtered.filter(p => p.area.toLowerCase().includes(filters.area.toLowerCase()));
-    }
-
-    if (filters.bedrooms) {
-      filtered = filtered.filter(p => p.bedrooms >= parseInt(filters.bedrooms));
-    }
-
-    if (filters.bathrooms) {
-      filtered = filtered.filter(p => p.bathrooms >= parseInt(filters.bathrooms));
-    }
-
-    if (filters.minPrice) {
-      filtered = filtered.filter(p => p.price >= parseInt(filters.minPrice));
-    }
-
-    if (filters.maxPrice) {
-      filtered = filtered.filter(p => p.price <= parseInt(filters.maxPrice));
-    }
-
-    if (filters.furnished) {
-      filtered = filtered.filter(p => p.furnished === true);
-    }
-
-    if (filters.serviced) {
-      filtered = filtered.filter(p => p.serviced === true);
-    }
-
-    if (filters.gatedEstate) {
-      filtered = filtered.filter(p => p.gatedEstate === true);
-    }
-
-    // Sort
-    switch (filters.sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'featured':
-        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-        break;
-      case 'newest':
-      default:
-        filtered.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
-    }
-
-    return filtered;
-  }, [filters]);
-
-  const formatPrice = (price: number, period?: string) => {
-    if (price >= 1000000000) {
-      return `₦${(price / 1000000000).toFixed(1)}B`;
-    } else if (price >= 1000000) {
-      return `₦${(price / 1000000).toFixed(0)}M`;
-    } else if (price >= 1000) {
-      return `₦${(price / 1000).toFixed(0)}K`;
-    }
-    return `₦${price.toLocaleString()}`;
+  const handleFilterChange = (key: string, value: string) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    updateUrl(newFilters);
   };
 
+  const clearFilters = () => {
+    const empty = { type: '', state: '', area: '', minPrice: '', maxPrice: '', bedrooms: '' };
+    setFilters(empty);
+    setSortBy('date_added');
+    router.push('/properties', { scroll: false });
+  };
+
+  const toggleSaved = async (propertyId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/saved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property_id: propertyId }),
+      });
+      const data = await response.json();
+      
+      if (data.saved) {
+        setSavedIds(prev => new Set(prev).add(propertyId));
+      } else {
+        setSavedIds(prev => {
+          const next = new Set(prev);
+          next.delete(propertyId);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle saved:', error);
+    }
+  };
+
+  const formatPrice = (price: number, period?: string) => {
+    if (price >= 1000000000) return `₦${(price / 1000000000).toFixed(1)}B${period ? `/${period}` : ''}`;
+    if (price >= 1000000) return `₦${(price / 1000000).toFixed(1)}M${period ? `/${period}` : ''}`;
+    return `₦${price.toLocaleString()}${period ? `/${period}` : ''}`;
+  };
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+
   return (
-    <div className="min-h-screen bg-ivory">
-      {/* Page Header */}
-      <section className="bg-gradient-to-br from-charcoal to-plum text-white py-12">
-        <div className="container-custom">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Find Your Property</h1>
-          <p className="text-xl text-white/80">
-            {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'} available
-          </p>
+    <div className="min-h-screen bg-ivory-50">
+      {/* Header */}
+      <div className="bg-white border-b border-charcoal-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ScrollReveal direction="up">
+            <h1 className="text-4xl font-serif text-charcoal-900 mb-2">Properties</h1>
+            <p className="text-charcoal-600">
+              {loading ? 'Loading...' : `${totalCount} properties available`}
+            </p>
+          </ScrollReveal>
         </div>
-      </section>
+      </div>
 
-      {/* Filters and Results */}
-      <section className="py-8">
-        <div className="container-custom">
-          {/* Mobile Filter Button */}
-          <div className="lg:hidden mb-4">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="btn-secondary w-full flex items-center justify-center space-x-2"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>Filters</span>
-            </button>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search & Filter Bar */}
+        <ScrollReveal direction="up" delay={0.1}>
+          <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal-400" />
+                <input
+                  type="text"
+                  placeholder="Search by area, address..."
+                  value={filters.area}
+                  onChange={(e) => handleFilterChange('area', e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Filters Sidebar */}
-            <div className={`lg:col-span-1 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
-              <div className="bg-white rounded-xl shadow-soft p-6 sticky top-24">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">Filters</h2>
-                  <button
-                    onClick={() => setShowMobileFilters(false)}
-                    className="lg:hidden text-gray-500 hover:text-charcoal"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+              {/* Type filter */}
+              <select
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                className="px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">All Types</option>
+                <option value="sale">For Sale</option>
+                <option value="rent">For Rent</option>
+                <option value="land">Land</option>
+                <option value="commercial">Commercial</option>
+                <option value="short-let">Short Let</option>
+              </select>
 
-                <div className="space-y-6">
-                  {/* Listing Type */}
+              {/* State filter */}
+              <select
+                value={filters.state}
+                onChange={(e) => handleFilterChange('state', e.target.value)}
+                className="px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">All States</option>
+                <option value="Lagos">Lagos</option>
+                <option value="Abuja">Abuja (FCT)</option>
+                <option value="Rivers">Rivers</option>
+                <option value="Akwa Ibom">Akwa Ibom</option>
+                <option value="Oyo">Oyo</option>
+                <option value="Enugu">Enugu</option>
+                <option value="Delta">Delta</option>
+                <option value="Kano">Kano</option>
+              </select>
+
+              {/* Advanced Filters Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-3 border rounded-lg transition-colors ${
+                  showFilters || hasActiveFilters
+                    ? 'bg-green-50 border-green-300 text-green-700'
+                    : 'border-charcoal-200 text-charcoal-600 hover:bg-charcoal-50'
+                }`}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                )}
+              </button>
+            </div>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-charcoal-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-charcoal mb-3">Listing Type</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { value: 'sale', label: 'Buy' },
-                        { value: 'rent', label: 'Rent' },
-                        { value: 'land', label: 'Land' },
-                        { value: 'commercial', label: 'Commercial' },
-                      ].map((type) => (
-                        <button
-                          key={type.value}
-                          onClick={() => updateFilters({ type: type.value })}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                            filters.type === type.value
-                              ? 'bg-magenta text-white shadow-md'
-                              : 'bg-ivory text-charcoal hover:bg-gray-100'
-                          }`}
-                        >
-                          {type.label}
-                        </button>
-                      ))}
-                    </div>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-1">Min Price</label>
+                    <input
+                      type="number"
+                      value={filters.minPrice}
+                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                      placeholder="₦0"
+                      className="w-full px-3 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
                   </div>
-
-                  {/* State */}
                   <div>
-                    <label className="block text-sm font-semibold text-charcoal mb-2">State</label>
-                    <select
-                      value={filters.state}
-                      onChange={(e) => updateFilters({ state: e.target.value })}
-                      className="input-field"
-                    >
-                      <option value="">All States</option>
-                      <option value="Lagos">Lagos</option>
-                      <option value="Abuja">Abuja</option>
-                      <option value="Enugu">Enugu</option>
-                      <option value="Akwa Ibom">Akwa Ibom</option>
-                    </select>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-1">Max Price</label>
+                    <input
+                      type="number"
+                      value={filters.maxPrice}
+                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                      placeholder="No limit"
+                      className="w-full px-3 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
                   </div>
-
-                  {/* Bedrooms */}
                   <div>
-                    <label className="block text-sm font-semibold text-charcoal mb-2">Bedrooms</label>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-1">Bedrooms</label>
                     <select
                       value={filters.bedrooms}
-                      onChange={(e) => updateFilters({ bedrooms: e.target.value })}
-                      className="input-field"
+                      onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                      className="w-full px-3 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">Any</option>
+                      <option value="1">1+</option>
                       <option value="2">2+</option>
                       <option value="3">3+</option>
                       <option value="4">4+</option>
                       <option value="5">5+</option>
                     </select>
                   </div>
-
-                  {/* Amenities */}
-                  <div>
-                    <label className="block text-sm font-semibold text-charcoal mb-3">Amenities</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filters.furnished}
-                          onChange={(e) => updateFilters({ furnished: e.target.checked })}
-                          className="w-4 h-4 text-magenta border-gray-300 rounded focus:ring-magenta"
-                        />
-                        <span className="text-sm text-gray-700">Furnished</span>
-                      </label>
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filters.serviced}
-                          onChange={(e) => updateFilters({ serviced: e.target.checked })}
-                          className="w-4 h-4 text-magenta border-gray-300 rounded focus:ring-magenta"
-                        />
-                        <span className="text-sm text-gray-700">Serviced</span>
-                      </label>
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filters.gatedEstate}
-                          onChange={(e) => updateFilters({ gatedEstate: e.target.checked })}
-                          className="w-4 h-4 text-magenta border-gray-300 rounded focus:ring-magenta"
-                        />
-                        <span className="text-sm text-gray-700">Gated Estate</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Reset Filters */}
-                  <button
-                    onClick={() => updateFilters({
-                      type: 'sale',
-                      propertyType: '',
-                      state: '',
-                      area: '',
-                      bedrooms: '',
-                      bathrooms: '',
-                      minPrice: '',
-                      maxPrice: '',
-                      furnished: false,
-                      serviced: false,
-                      gatedEstate: false,
-                      sortBy: 'newest'
-                    })}
-                    className="w-full btn-outline"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Results */}
-            <div className="lg:col-span-3">
-              {/* Sort and View Controls */}
-              <div className="bg-white rounded-xl shadow-soft p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center space-x-4">
-                  <select
-                    value={filters.sortBy}
-                    onChange={(e) => updateFilters({ sortBy: e.target.value })}
-                    className="input-field py-2 text-sm"
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="featured">Featured</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'grid' ? 'bg-magenta text-white' : 'bg-ivory text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Grid3X3 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'list' ? 'bg-magenta text-white' : 'bg-ivory text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <List className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Properties Grid/List */}
-              {filteredProperties.length > 0 ? (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-6'}>
-                  {filteredProperties.map((property, i) => (
-                    <ScrollReveal key={property.id} delay={i * 0.05}>
-                      <Link
-                        href={`/properties/${property.slug}`}
-                        className={`card hover-lift group block ${viewMode === 'list' ? 'flex flex-col md:flex-row' : ''}`}
+                  <div className="flex items-end">
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="w-full px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-2"
                       >
-                      <div className={`relative overflow-hidden ${viewMode === 'list' ? 'md:w-80 md:flex-shrink-0' : 'h-64'}`}>
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                          {property.featured && <span className="badge-featured">Featured</span>}
-                          {property.verified && <span className="badge-verified">Verified</span>}
-                          {property.sample && <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">Sample</span>}
-                        </div>
-                        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
-                          <p className="text-xl font-bold text-magenta">
-                            {formatPrice(property.price)}
-                            {property.pricePeriod && <span className="text-sm text-gray-600 font-normal">/{property.pricePeriod}</span>}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="p-6 flex-1">
-                        <h3 className="text-lg font-bold text-charcoal mb-2 line-clamp-2 group-hover:text-magenta transition-colors">
-                          {property.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-4 flex items-center">
-                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0 text-forest" />
-                          {property.area}, {property.state}
-                        </p>
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                          {property.bedrooms > 0 && (
-                            <span className="text-sm text-gray-600">{property.bedrooms} Beds</span>
-                          )}
-                          {property.bathrooms > 0 && (
-                            <span className="text-sm text-gray-600">{property.bathrooms} Baths</span>
-                          )}
-                          <span className="text-sm text-gray-600">{property.sqm} sqm</span>
-                        </div>
-                      </div>
-                    </Link>
-                    </ScrollReveal>
-                  ))}
+                        <X className="w-4 h-4" />
+                        Clear All
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow-soft p-12 text-center">
-                  <SearchX className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-charcoal mb-2">No Properties Found</h3>
-                  <p className="text-gray-600 mb-6">
-                    Try adjusting your filters to see more results
-                  </p>
-                  <button
-                    onClick={() => updateFilters({
-                      type: 'sale',
-                      propertyType: '',
-                      state: '',
-                      area: '',
-                      bedrooms: '',
-                      bathrooms: '',
-                      minPrice: '',
-                      maxPrice: '',
-                      furnished: false,
-                      serviced: false,
-                      gatedEstate: false,
-                      sortBy: 'newest'
-                    })}
-                    className="btn-primary"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 text-sm border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="date_added">Newest First</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="views">Most Viewed</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-green-100 text-green-700' : 'text-charcoal-400 hover:bg-charcoal-50'}`}
+            >
+              <Grid3X3 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-green-100 text-green-700' : 'text-charcoal-400 hover:bg-charcoal-50'}`}
+            >
+              <List className="w-5 h-5" />
+            </button>
           </div>
         </div>
-      </section>
+
+        {/* Results */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <SearchX className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-charcoal-900 mb-2">Something went wrong</h3>
+            <p className="text-charcoal-500">{error}</p>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="text-center py-16">
+            <SearchX className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-charcoal-900 mb-2">No properties found</h3>
+            <p className="text-charcoal-500 mb-6">Try adjusting your filters</p>
+            <button
+              onClick={clearFilters}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className={viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+            : 'space-y-4'
+          }>
+            {properties.map((property, index) => (
+              <ScrollReveal key={property.id} direction="up" delay={index * 0.05}>
+                <Link
+                  href={`/properties/${property.slug}`}
+                  className={`block bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all group ${
+                    viewMode === 'list' ? 'flex' : ''
+                  }`}
+                >
+                  {/* Image */}
+                  <div className={`relative ${viewMode === 'list' ? 'w-64 flex-shrink-0' : ''}`}>
+                    {property.property_images && property.property_images.length > 0 ? (
+                      <img
+                        src={property.property_images[0]?.url}
+                        alt={property.title}
+                        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-56 bg-charcoal-100 flex items-center justify-center">
+                        <MapPin className="w-8 h-8 text-charcoal-300" />
+                      </div>
+                    )}
+                    
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        property.type === 'sale' ? 'bg-green-500 text-white' :
+                        property.type === 'rent' ? 'bg-blue-500 text-white' :
+                        property.type === 'land' ? 'bg-amber-500 text-white' :
+                        'bg-charcoal-500 text-white'
+                      }`}>
+                        {property.type === 'sale' ? 'For Sale' :
+                         property.type === 'rent' ? 'For Rent' :
+                         property.type === 'land' ? 'Land' :
+                         property.type === 'short-let' ? 'Short Let' :
+                         property.type}
+                      </span>
+                      {property.verification_status === 'verified' && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-white/90 text-green-700 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Verified
+                        </span>
+                      )}
+                      {property.featured && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-magenta-500 text-white">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Save button */}
+                    <button
+                      onClick={(e) => toggleSaved(property.id, e)}
+                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                    >
+                      {savedIds.has(property.id) ? (
+                        <Bookmark className="w-4 h-4 text-green-600 fill-green-600" />
+                      ) : (
+                        <BookmarkPlus className="w-4 h-4 text-charcoal-600" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5 flex-1">
+                    <h3 className="font-serif text-lg text-charcoal-900 mb-1 group-hover:text-green-700 transition-colors line-clamp-1">
+                      {property.title}
+                    </h3>
+                    <div className="flex items-center gap-1 text-charcoal-500 text-sm mb-3">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="line-clamp-1">{property.area}, {property.state}</span>
+                    </div>
+
+                    <p className="text-green-600 text-xl font-bold mb-3">
+                      {formatPrice(property.price, property.price_period)}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-sm text-charcoal-600">
+                      {property.bedrooms > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Bed className="w-4 h-4" />
+                          {property.bedrooms}
+                        </span>
+                      )}
+                      {property.bathrooms > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Bath className="w-4 h-4" />
+                          {property.bathrooms}
+                        </span>
+                      )}
+                      {property.sqm > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Square className="w-4 h-4" />
+                          {property.sqm}sqm
+                        </span>
+                      )}
+                      {property.parking > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Car className="w-4 h-4" />
+                          {property.parking}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-charcoal-100">
+                      <span className="text-xs text-charcoal-400">{property.property_type}</span>
+                      <span className="flex items-center gap-1 text-xs text-charcoal-400">
+                        <Eye className="w-3 h-3" />
+                        {property.views}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </ScrollReveal>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function PropertiesPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ivory flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-magenta"></div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      </div>
+    }>
       <PropertiesContent />
     </Suspense>
   );

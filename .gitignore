@@ -51,3 +51,14 @@ logs
 # Temporary files
 tmp
 temp
+
+# Setup scripts (one-time use)
+add-*.sh
+add-*.js
+sql-*.sql
+supabase-*.sql
+
+# Documentation (optional)
+IMPLEMENTATION_COMPLETE.md
+TESTING_RESULTS.md
+PRODUCTION_UPGRADE_SUMMARY.md
