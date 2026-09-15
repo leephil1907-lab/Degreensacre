@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import { Providers } from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -155,6 +156,7 @@ export default function RootLayout({
             </PageTransition>
           </main>
           <Footer />
+          <WhatsAppFloat />
         </Providers>
       </body>
     </html>
