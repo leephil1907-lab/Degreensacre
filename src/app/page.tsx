@@ -1,17 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { properties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
+import HeroCarousel from '@/components/HeroCarousel';
 import InvestmentCalculator from '@/components/InvestmentCalculator';
 import AIPropertyMatchmaker from '@/components/AIPropertyMatchmaker';
 import MortgageCalculatorHub from '@/components/MortgageCalculatorHub';
 import PropertyCompare from '@/components/PropertyCompare';
 import Testimonials from '@/components/Testimonials';
 import LandTitleVerification from '@/components/LandTitleVerification';
-import { Search, MapPin, ArrowRight, Shield, TrendingUp, Zap, Star, Calculator, Brain, GitCompare, FileCheck, Map as MapIcon, Loader2 } from 'lucide-react';
+import { Search, MapPin, ArrowRight, BadgeCheck, Headset, Star, Calculator, Brain, GitCompare, FileCheck, Map as MapIcon, Loader2 } from 'lucide-react';
 
 // Dynamic imports for components that use window/browser APIs
 const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
@@ -33,31 +33,24 @@ export default function HomePage() {
     <>
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=90"
-            alt="Luxury Property"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-        </div>
+        <HeroCarousel />
 
         <div className="relative z-10 container-custom w-full py-20">
           <div className="max-w-5xl mx-auto text-center text-white">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2 mb-8 animate-fade-in">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-sm font-medium">Nigeria's Premium Property Platform</span>
+              <BadgeCheck className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-medium">CAC-Registered · Verified Listings Across Nigeria</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in leading-tight tracking-tight">
-              Discover Properties<br />
+              Find Property With<br />
               <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-                Worth Knowing
+                Confidence.
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto animate-fade-in font-light">
-              Curated homes, land, and investment opportunities across Nigeria's most promising markets
+            <p className="text-lg md:text-xl text-white/90 mb-12 max-w-3xl mx-auto animate-fade-in font-light leading-relaxed">
+              Verified listings, transparent land titles, and local expertise across Lagos, Abuja, Enugu, Akwa Ibom &amp; Southeast Nigeria — so every move you make is backed by trust.
             </p>
 
             <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 max-w-5xl mx-auto animate-fade-in border border-white/20">
@@ -371,7 +364,7 @@ export default function HomePage() {
             <ScrollReveal delay={0}>
               <div className="text-center p-10 rounded-3xl bg-gradient-to-br from-white to-ivory border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-2 group">
                 <div className="w-20 h-20 bg-gradient-to-br from-forest to-forest-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <Shield className="w-10 h-10 text-white" />
+                  <BadgeCheck className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-charcoal">CAC Registered</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -383,7 +376,7 @@ export default function HomePage() {
             <ScrollReveal delay={0.15}>
               <div className="text-center p-10 rounded-3xl bg-gradient-to-br from-white to-ivory border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-2 group">
                 <div className="w-20 h-20 bg-gradient-to-br from-sage to-sage-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <TrendingUp className="w-10 h-10 text-white" />
+                  <MapPin className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-charcoal">Local Expertise</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -395,7 +388,7 @@ export default function HomePage() {
             <ScrollReveal delay={0.3}>
               <div className="text-center p-10 rounded-3xl bg-gradient-to-br from-white to-ivory border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-2 group">
                 <div className="w-20 h-20 bg-gradient-to-br from-magenta to-magenta-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <Zap className="w-10 h-10 text-white" />
+                  <Headset className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-charcoal">Dedicated Support</h3>
                 <p className="text-gray-600 leading-relaxed">
