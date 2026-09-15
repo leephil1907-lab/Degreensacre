@@ -47,7 +47,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2d2lycGZjbHlzYXBxdG5ybHZ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTQ4NDg5MiwiZXhwIjoyMTA1MDYwODkyfQ.0ns-Aqd8rnc7abAUxUVHWTDfIh4LQrjE_of0Bo9QokM
 
 # Site Configuration
-NEXT_PUBLIC_SITE_URL=https://degreenacres.com
+NEXT_PUBLIC_SITE_URL=https://degreenacres.org
 
 # Email (Optional - Get from resend.com)
 RESEND_API_KEY=re_your_resend_api_key_here
@@ -69,11 +69,11 @@ NEXT_PUBLIC_WHATSAPP_NUMBER=2348065019971
 
 ## 🌐 Custom Domain Setup
 
-### Option A: Use degreenacres.com
+### Option A: Use degreenacres.org (Recommended)
 
 1. Go to **Project Settings** → **Domains**
-2. Add domain: `degreenacres.com`
-3. Add domain: `www.degreenacres.com`
+2. Add domain: `degreenacres.org`
+3. Add domain: `www.degreenacres.org`
 4. Update DNS records at your domain registrar:
 
 **DNS Records:**
@@ -87,9 +87,9 @@ Name: www
 Value: cname.vercel-dns.com
 ```
 
-### Option B: Use degreenacresproperties.com
+### Option B: Use degreenacresproperties.org
 
-Same steps as above, but use `degreenacresproperties.com` instead.
+Same steps as above, but use `degreenacresproperties.org` instead.
 
 ---
 
@@ -132,12 +132,11 @@ Expected: JSON response with properties
 ### Regions (vercel.json)
 
 ```json
-"regions": ["fra1", "lhr1", "cdg1"]
+"regions": ["fra1"]
 ```
 
 - **fra1** - Frankfurt (closest to Nigeria)
-- **lhr1** - London (backup)
-- **cdg1** - Paris (backup)
+- **Note:** Vercel Free tier supports only 1 region. Upgrade to Pro for multiple regions.
 
 ### Security Headers
 
@@ -198,16 +197,16 @@ git push origin main
 
 ## 💰 Cost Breakdown
 
-### Vercel Pro Plan ($20/month)
+### Vercel Free Tier ($0/month)
 
 - ✅ Unlimited deployments
-- ✅ 1TB bandwidth
-- ✅ Edge functions
-- ✅ Analytics
+- ✅ 100GB bandwidth/month
+- ✅ Edge functions (limited)
+- ✅ Basic analytics
 - ✅ Preview deployments
 - ✅ Custom domains
 - ✅ SSL certificates
-- ✅ Team collaboration
+- ✅ 1 region (Frankfurt)
 
 ### Supabase Free Tier ($0/month)
 
@@ -220,13 +219,21 @@ git push origin main
 ### Total Monthly Cost
 
 ```
-Vercel Pro:        $20/month
+Vercel Free:       $0/month
 Supabase Free:     $0/month
-Domain:            $10-15/year
+Domain (.org):     $10-15/year
 Email (Resend):    $0/month (free tier)
 ────────────────────────────────
-TOTAL:             $20/month (~₦32,000/month)
+TOTAL:             $0/month (FREE!)
 ```
+
+### Upgrade to Vercel Pro ($20/month) When Ready
+
+- ✅ 1TB bandwidth
+- ✅ Multiple regions
+- ✅ Advanced analytics
+- ✅ Team collaboration
+- ✅ Priority support
 
 ---
 
@@ -315,7 +322,7 @@ TOTAL:             $20/month (~₦32,000/month)
 Once deployment is complete, your De-Greenacres Properties platform is live at:
 
 **Production URL:** `https://degreensacre.vercel.app`  
-**Custom Domain:** `https://degreenacres.com` (after DNS setup)
+**Custom Domain:** `https://degreenacres.org` (after DNS setup)
 
 ### What's Next?
 

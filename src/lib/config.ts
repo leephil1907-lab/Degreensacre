@@ -30,6 +30,7 @@ export const config = {
     defaultLocale: 'en-NG',
     currency: 'NGN',
     currencySymbol: '₦',
+    domain: 'degreenacres.org',
   },
 
   // Pagination
