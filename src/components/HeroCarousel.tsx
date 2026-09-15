@@ -62,10 +62,8 @@ export default function HeroCarousel() {
         )}
       </AnimatePresence>
 
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
 
-      {/* Dot indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2.5">
         {SLIDES.map((_, index) => (
           <button

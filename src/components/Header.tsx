@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Logo from './Logo';
+import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import { Phone, ChevronDown, Menu, X } from 'lucide-react';
+import { Phone, Menu, X } from 'lucide-react';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,7 +24,7 @@ export default function Header() {
   const closeMobile = () => setMobileMenuOpen(false);
 
   return (
-    <header className="bg-white shadow-soft sticky top-0 z-50">
+    <header className="bg-white dark:bg-charcoal shadow-soft sticky top-0 z-50 transition-colors">
       {/* Top Bar */}
       <div className="bg-charcoal text-white text-xs py-2.5">
         <div className="container-custom flex items-center justify-between">
@@ -75,17 +76,18 @@ export default function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center space-x-3">
+            <ThemeToggle />
             {!loading && user ? (
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2.5 text-charcoal hover:text-forest font-semibold transition-colors"
+                  className="px-4 py-2.5 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors"
                 >
                   {profile?.first_name ? `Hi, ${profile.first_name}` : 'Dashboard'}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="px-3 py-2 text-sm text-gray-600 hover:text-charcoal"
+                  className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-charcoal"
                 >
                   Sign Out
                 </button>
@@ -94,7 +96,7 @@ export default function Header() {
               <>
                 <Link
                   href="/signin"
-                  className="px-4 py-2.5 text-charcoal hover:text-forest font-semibold transition-colors"
+                  className="px-4 py-2.5 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors"
                 >
                   Sign In
                 </Link>
@@ -111,14 +113,17 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-charcoal hover:bg-ivory"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Menu Toggle + Theme */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-charcoal dark:text-white hover:bg-ivory dark:hover:bg-gray-800"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

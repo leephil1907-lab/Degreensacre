@@ -5,13 +5,15 @@ import dynamic from 'next/dynamic';
 import { properties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import HeroCarousel from '@/components/HeroCarousel';
+import HeroSearch from '@/components/HeroSearch';
+import CACBadge from '@/components/CACBadge';
 import InvestmentCalculator from '@/components/InvestmentCalculator';
 import AIPropertyMatchmaker from '@/components/AIPropertyMatchmaker';
 import MortgageCalculatorHub from '@/components/MortgageCalculatorHub';
 import PropertyCompare from '@/components/PropertyCompare';
 import Testimonials from '@/components/Testimonials';
 import LandTitleVerification from '@/components/LandTitleVerification';
-import { Search, MapPin, ArrowRight, BadgeCheck, Headset, Star, Calculator, Brain, GitCompare, FileCheck, Map as MapIcon, Loader2 } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Headset, Star, Calculator, Brain, GitCompare, FileCheck, Map as MapIcon, Loader2 } from 'lucide-react';
 
 // Dynamic imports for components that use window/browser APIs
 const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
@@ -38,88 +40,23 @@ export default function HomePage() {
         <div className="relative z-10 container-custom w-full py-20">
           <div className="max-w-5xl mx-auto text-center text-white">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2 mb-8 animate-fade-in">
-              <BadgeCheck className="w-4 h-4 text-green-400" />
+              <CACBadge className="w-5 h-5 text-green-400" />
               <span className="text-sm font-medium">CAC-Registered · Verified Listings Across Nigeria</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in leading-tight tracking-tight">
-              Find Property With<br />
+              Where Nigeria&apos;s<br />
               <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-                Confidence.
+                Property Dreams Land
               </span>
             </h1>
             
             <p className="text-lg md:text-xl text-white/90 mb-12 max-w-3xl mx-auto animate-fade-in font-light leading-relaxed">
-              Verified listings, transparent land titles, and local expertise across Lagos, Abuja, Enugu, Akwa Ibom &amp; Southeast Nigeria — so every move you make is backed by trust.
+              Every listing verified. Every title checked. Every agent accountable. 
+              Premium homes, land &amp; commercial property in Lagos, Abuja, Enugu, Akwa Ibom &amp; beyond.
             </p>
 
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 max-w-5xl mx-auto animate-fade-in border border-white/20">
-              <div className="flex flex-wrap gap-2 mb-8">
-                {['Buy', 'Rent', 'Land', 'Commercial', 'Shortlet'].map((tab, index) => (
-                  <button
-                    key={tab}
-                    className={`px-8 py-3 rounded-xl font-semibold transition-all ${
-                      index === 0
-                        ? 'bg-gradient-to-r from-forest to-forest-light text-white shadow-lg scale-105'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
-                  <select className="input-field">
-                    <option>All Locations</option>
-                    <option>Lagos</option>
-                    <option>Abuja</option>
-                    <option>Enugu</option>
-                    <option>Akwa Ibom</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Property Type</label>
-                  <select className="input-field">
-                    <option>All Types</option>
-                    <option>Detached Duplex</option>
-                    <option>Semi-Detached</option>
-                    <option>Land</option>
-                    <option>Apartment</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Price Range</label>
-                  <select className="input-field">
-                    <option>Any Price</option>
-                    <option>Under ₦50M</option>
-                    <option>₦50M - ₦100M</option>
-                    <option>₦100M - ₦200M</option>
-                    <option>Above ₦200M</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Bedrooms</label>
-                  <select className="input-field">
-                    <option>Any</option>
-                    <option>2+</option>
-                    <option>3+</option>
-                    <option>4+</option>
-                    <option>5+</option>
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <button className="btn-primary w-full py-4 text-lg">
-                    <span className="flex items-center justify-center space-x-2">
-                      <Search className="w-5 h-5" />
-                      <span>Search</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <HeroSearch />
           </div>
         </div>
       </section>
@@ -188,7 +125,7 @@ export default function HomePage() {
       </section>
 
       {/* Interactive Map Section */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-charcoal">
         <div className="container-custom">
           <ScrollReveal>
             <div className="text-center mb-12">
@@ -196,14 +133,14 @@ export default function HomePage() {
                 <MapIcon className="w-5 h-5 text-forest" />
                 <span className="text-sm font-semibold text-forest">Explore on Map</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-4">Find Properties Near You</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Interactive map with property locations across Nigeria. Click markers to see details.
+              <h2 className="text-4xl md:text-5xl font-bold text-charcoal dark:text-white mb-4">Explore Properties on the Map</h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Drag, zoom, and tap markers to discover properties across Nigeria
               </p>
             </div>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
-            <div className="rounded-3xl overflow-hidden shadow-2xl h-[500px] md:h-[600px]">
+            <div className="w-full rounded-3xl overflow-hidden shadow-2xl" style={{ height: '600px' }}>
               <InteractiveMap
                 locations={sampleProperties.map(p => ({
                   id: p.id,
@@ -218,6 +155,7 @@ export default function HomePage() {
                 }))}
                 center={{ lat: 7.5, lng: 5.5 }}
                 zoom={6}
+                height="100%"
               />
             </div>
           </ScrollReveal>
@@ -364,7 +302,7 @@ export default function HomePage() {
             <ScrollReveal delay={0}>
               <div className="text-center p-10 rounded-3xl bg-gradient-to-br from-white to-ivory border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-2 group">
                 <div className="w-20 h-20 bg-gradient-to-br from-forest to-forest-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <BadgeCheck className="w-10 h-10 text-white" />
+                  <CACBadge className="w-12 h-12 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-charcoal">CAC Registered</h3>
                 <p className="text-gray-600 leading-relaxed">
