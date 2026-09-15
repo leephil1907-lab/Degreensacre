@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import GoogleMapComponent from './GoogleMap';
+import MapComponent from './InteractiveMap';
 
 interface NeighborhoodData {
   name: string;
@@ -196,9 +196,9 @@ export default function InteractiveNeighborhoodMap() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Google Map */}
+          {/* Interactive Map (OpenStreetMap + Leaflet — no API key needed) */}
           <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-            <GoogleMapComponent
+            <MapComponent
               locations={filteredNeighborhoods.map(n => ({
                 id: n.name,
                 name: n.name,
