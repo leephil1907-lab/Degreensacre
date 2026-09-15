@@ -24,9 +24,9 @@ export default function Header() {
   const closeMobile = () => setMobileMenuOpen(false);
 
   return (
-    <header className="bg-white dark:bg-charcoal shadow-soft sticky top-0 z-50 transition-colors">
-      {/* Top Bar */}
-      <div className="bg-charcoal text-white text-xs py-2.5">
+    <header className="bg-[#fffff8] dark:bg-charcoal shadow-soft sticky top-0 z-50 transition-colors">
+      {/* Top Bar - Deep Forest Green like the banner */}
+      <div className="bg-forest text-ivory text-xs py-2.5">
         <div className="container-custom flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="font-semibold tracking-wide">RC: 1856064</span>
