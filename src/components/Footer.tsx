@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Logo from './Logo';
 
 export default function Footer() {
   return (
@@ -7,14 +8,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Company Info */}
           <div>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-magenta to-plum rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-2xl font-serif">D</span>
-              </div>
-              <div>
-                <div className="font-bold text-lg">De-Greenacres</div>
-                <div className="text-xs text-gray-400">PROPERTIES LIMITED</div>
-              </div>
+            <div className="mb-6 [&_img]:brightness-110">
+              <Logo size="md" href="/" className="[&_div:first-child_img]:drop-shadow-lg" />
             </div>
             <p className="text-gray-400 text-sm mb-4 leading-relaxed">
               Premium property discovery across Nigeria. Homes, land and investment opportunities worth knowing.

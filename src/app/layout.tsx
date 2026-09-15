@@ -89,8 +89,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
@@ -101,7 +101,7 @@ export default function RootLayout({
               "name": "De-Greenacres Properties Limited",
               "description": "Nigeria's trusted property intelligence platform for premium real estate",
               "url": "https://degreenacres.com",
-              "logo": "https://degreenacres.com/favicon.svg",
+              "logo": "https://degreenacres.com/logo-final.png",
               "image": "https://degreenacres.com/og-image.jpg",
               "telephone": "+2348065019971",
               "email": "info@degreenacresproperties.com",

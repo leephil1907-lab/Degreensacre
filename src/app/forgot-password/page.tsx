@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function ForgotPasswordPage() {
@@ -79,10 +80,14 @@ export default function ForgotPasswordPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-3">
-            <div className="w-16 h-16 bg-gradient-to-br from-magenta to-plum rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-3xl font-serif">D</span>
-            </div>
+          <Link href="/" className="inline-block">
+            <Image
+              src="/logo-final.png"
+              alt="De-Greenacres Properties Limited"
+              width={80}
+              height={80}
+              className="object-contain mx-auto"
+            />
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-charcoal">
             Forgot Password?

@@ -195,9 +195,11 @@ export default function PropertyDetailPage({ params }: Props) {
                 
                 {/* Agent Info */}
                 <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-200">
-                  <div className="w-16 h-16 bg-gradient-to-br from-magenta to-plum rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-2xl font-serif">D</span>
-                  </div>
+                  <img
+                    src="/logo-icon.png"
+                    alt="De-Greenacres"
+                    className="w-16 h-16 object-contain rounded-full"
+                  />
                   <div>
                     <p className="font-bold text-charcoal">{property.agent}</p>
                     {property.verified && (

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import Logo from './Logo';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,15 +22,7 @@ export default function Header() {
       <nav className="container-custom">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-magenta to-plum rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-2xl font-serif">D</span>
-            </div>
-            <div>
-              <div className="font-bold text-lg text-charcoal tracking-tight">De-Greenacres</div>
-              <div className="text-xs text-gray-500 tracking-wide">PROPERTIES LIMITED</div>
-            </div>
-          </Link>
+          <Logo size="md" />
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">

@@ -65,9 +65,11 @@ export default function PWARegister() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-fade-in">
       <div className="bg-white rounded-2xl shadow-2xl p-6 border-2 border-forest/20">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-forest to-sage rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-xl font-serif">D</span>
-          </div>
+          <img
+            src="/logo-icon.png"
+            alt="De-Greenacres"
+            className="w-12 h-12 object-contain flex-shrink-0"
+          />
           <div className="flex-1">
             <h3 className="font-bold text-charcoal mb-1">Install De-Greenacres</h3>
             <p className="text-sm text-gray-600 mb-4">

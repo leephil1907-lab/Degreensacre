@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { properties } from '@/data/properties';
 
 export default function HomePage() {
@@ -25,9 +26,14 @@ export default function HomePage() {
             {/* Logo */}
             <div className="mb-8 animate-fade-in">
               <div className="inline-flex items-center space-x-3">
-                <div className="w-16 h-16 bg-gradient-to-br from-magenta to-plum rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-3xl font-serif">D</span>
-                </div>
+                <Image
+                  src="/logo-final.png"
+                  alt="De-Greenacres Properties Limited"
+                  width={72}
+                  height={72}
+                  className="object-contain drop-shadow-xl"
+                  priority
+                />
                 <div className="text-left">
                   <div className="text-2xl font-bold tracking-tight">De-Greenacres</div>
                   <div className="text-sm text-white/80 tracking-wide">PROPERTIES LIMITED</div>
