@@ -146,11 +146,6 @@ export default function Header() {
                     <Link href="/dashboard" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
                       Dashboard
                     </Link>
-                    {profile?.is_admin && (
-                      <Link href="/admin/dashboard" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
-                        Admin Panel
-                      </Link>
-                    )}
                     <button
                       onClick={() => { signOut(); closeMobile(); }}
                       className="block px-4 py-3 text-left text-gray-600 dark:text-gray-400 font-semibold w-full"

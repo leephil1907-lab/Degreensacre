@@ -6,7 +6,7 @@ import { properties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
-import CACBadge from '@/components/CACBadge';
+import CACIcon from '@/components/CACIcon';
 import InvestmentCalculator from '@/components/InvestmentCalculator';
 import AIPropertyMatchmaker from '@/components/AIPropertyMatchmaker';
 import MortgageCalculatorHub from '@/components/MortgageCalculatorHub';
@@ -40,7 +40,7 @@ export default function HomePage() {
         <div className="relative z-10 container-custom w-full py-20">
           <div className="max-w-5xl mx-auto text-center text-white">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2 mb-8 animate-fade-in">
-              <CACBadge className="w-5 h-5 text-green-400" />
+              <CACIcon className="w-5 h-5" />
               <span className="text-sm font-medium">CAC-Registered · Verified Listings Across Nigeria</span>
             </div>
 
@@ -301,8 +301,8 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ScrollReveal delay={0}>
               <div className="text-center p-10 rounded-3xl bg-gradient-to-br from-white to-ivory border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-2 group">
-                <div className="w-20 h-20 bg-gradient-to-br from-forest to-forest-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <CACBadge className="w-12 h-12 text-white" />
+                <div className="w-20 h-20 bg-gradient-to-br from-forest to-forest-light rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg overflow-hidden p-2">
+                  <CACIcon className="w-full h-full" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-charcoal">CAC Registered</h3>
                 <p className="text-gray-600 leading-relaxed">
