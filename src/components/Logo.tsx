@@ -20,7 +20,7 @@ export default function Logo({ size = 'md', showText = true, href = '/', classNa
   const content = (
     <div className={`flex items-center space-x-3 ${className}`}>
       <Image
-        src="/logo-final.png"
+        src="/logo-icon.png"
         alt="De-Greenacres Properties Limited"
         width={s.img}
         height={s.img}

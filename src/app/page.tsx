@@ -27,7 +27,7 @@ export default function HomePage() {
             <div className="mb-8 animate-fade-in">
               <div className="inline-flex items-center space-x-3">
                 <Image
-                  src="/logo-final.png"
+                  src="/logo-icon.png"
                   alt="De-Greenacres Properties Limited"
                   width={72}
                   height={72}

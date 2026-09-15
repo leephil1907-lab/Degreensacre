@@ -18,8 +18,32 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white shadow-soft sticky top-0 z-50 border-b border-gray-100">
-      <nav className="container-custom">
+    <header className="bg-white shadow-soft sticky top-0 z-50">
+      {/* Top Bar */}
+      <div className="bg-charcoal text-white text-xs py-2">
+        <div className="container-custom flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold">RC: 1856064</span>
+            <span className="hidden sm:inline text-gray-400">|</span>
+            <span className="hidden sm:inline text-gray-300">CAC Registered</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="tel:+2348065019971" className="text-gray-300 hover:text-white transition-colors hidden sm:inline">
+              +234 806 501 9971
+            </a>
+            <a
+              href="https://wa.me/2348065019971"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-400 hover:text-green-300 transition-colors font-semibold"
+            >
+              💬 WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <nav className="container-custom border-b border-gray-100">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Logo size="md" />

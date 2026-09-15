@@ -101,7 +101,7 @@ export default function RootLayout({
               "name": "De-Greenacres Properties Limited",
               "description": "Nigeria's trusted property intelligence platform for premium real estate",
               "url": "https://degreenacres.com",
-              "logo": "https://degreenacres.com/logo-final.png",
+              "logo": "https://degreenacres.com/logo-icon.png",
               "image": "https://degreenacres.com/og-image.jpg",
               "telephone": "+2348065019971",
               "email": "info@degreenacresproperties.com",

@@ -79,7 +79,7 @@ export default function SignUpPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <Image
-              src="/logo-final.png"
+              src="/logo-icon.png"
               alt="De-Greenacres Properties Limited"
               width={80}
               height={80}
