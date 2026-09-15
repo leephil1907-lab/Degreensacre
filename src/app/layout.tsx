@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "De-Greenacres Properties Limited | Nigeria's Premium Real Estate Platform",
     description: "Discover premium properties across Nigeria with verified listings, AI-powered search, and investment tools.",
     images: ["/og-image.jpg"],
-    creator: "@degreenacres",
+    creator: "De-Greenacres Properties Limited",
   },
   robots: {
     index: true,
@@ -138,11 +138,7 @@ export default function RootLayout({
               ],
               "priceRange": "₦₦₦",
               "openingHours": "Mo-Fr 09:00-18:00",
-              "sameAs": [
-                "https://twitter.com/degreenacres",
-                "https://facebook.com/degreenacres",
-                "https://instagram.com/degreenacres"
-              ]
+              "sameAs": []
             })
           }}
         />

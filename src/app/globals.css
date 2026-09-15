@@ -3,6 +3,20 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
+@theme {
+  --color-forest: #2D5016;
+  --color-forest-light: #476935;
+  --color-sage: #87A96B;
+  --color-sage-light: #A8C890;
+  --color-ivory: #FAF9F6;
+  --color-charcoal: #1A1A1A;
+  --color-magenta: #C41E7A;
+  --color-magenta-light: #E91E8C;
+  
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
 @layer base {
   :root {
     --charcoal: #1A1A1A;
