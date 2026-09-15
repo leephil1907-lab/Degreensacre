@@ -13,8 +13,8 @@ export const config = {
 
   // Admin Configuration
   admin: {
-    email: 'degreenacrespropertieslimited@gmail.com',
-    defaultPassword: 'Noble1994@',
+    email: process.env.ADMIN_EMAIL || 'degreenacrespropertieslimited@gmail.com',
+    defaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'changeme',
   },
 
   // WhatsApp Configuration

@@ -107,7 +107,7 @@ export default function RootLayout({
               "logo": "https://degreenacres.com/logo-icon.png",
               "image": "https://degreenacres.com/og-image.jpg",
               "telephone": "+2348065019971",
-              "email": "info@degreenacresproperties.com",
+              "email": "degreenacrespropertieslimited@gmail.com",
               "address": {
                 "@type": "PostalAddress",
                 "addressCountry": "NG",
