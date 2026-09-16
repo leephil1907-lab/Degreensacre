@@ -19,7 +19,7 @@ export const config = {
 
   // WhatsApp Configuration
   whatsapp: {
-    number: '2348065019971',
+    number: '2347041754800',
     defaultMessage: 'Hello, I am interested in your property listing on De-Greenacres.',
   },
 

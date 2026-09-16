@@ -445,7 +445,7 @@ export default function MarketIntelligenceDashboard() {
                     </p>
                   </div>
                   <a
-                    href={`https://wa.me/2348065019971?text=${encodeURIComponent(
+                    href={`https://wa.me/2347041754800?text=${encodeURIComponent(
                       `Hello De-Greenacres, I'm interested in investing in ${selectedLocation.location}, ${selectedLocation.state}. The market data looks promising. Please provide more information.`
                     )}`}
                     target="_blank"

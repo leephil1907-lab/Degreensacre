@@ -308,7 +308,7 @@ export default function JointVentureMarketplace() {
               Whether you're a land owner, developer, or investor, post your opportunity and connect with qualified partners.
             </p>
             <a
-              href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I%20have%20a%20joint%20venture%20opportunity%20I'd%20like%20to%20post%20on%20your%20marketplace."
+              href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I%20have%20a%20joint%20venture%20opportunity%20I'd%20like%20to%20post%20on%20your%20marketplace."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary bg-white text-forest hover:bg-ivory inline-block"
@@ -413,7 +413,7 @@ export default function JointVentureMarketplace() {
 
                       <div className="flex gap-3">
                         <a
-                          href={`https://wa.me/2348065019971?text=${encodeURIComponent(
+                          href={`https://wa.me/2347041754800?text=${encodeURIComponent(
                             `Hello De-Greenacres, I'm interested in the JV opportunity: "${selectedOpportunity.title}". Please connect me with ${selectedOpportunity.contactPerson}.`
                           )}`}
                           target="_blank"

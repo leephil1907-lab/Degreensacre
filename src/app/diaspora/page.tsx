@@ -430,7 +430,7 @@ export default function DiasporaInvestmentPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <a
-              href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I'm%20a%20Nigerian%20living%20abroad%20and%20interested%20in%20investing%20in%20property.%20Please%20send%20me%20more%20information."
+              href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20a%20Nigerian%20living%20abroad%20and%20interested%20in%20investing%20in%20property.%20Please%20send%20me%20more%20information."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary bg-white text-forest hover:bg-ivory w-full sm:w-auto"

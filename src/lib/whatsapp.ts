@@ -22,7 +22,7 @@ export const generateWhatsAppMessage = (
 };
 
 export const getWhatsAppUrl = (
-  phoneNumber: string = '2348065019971',
+  phoneNumber: string = '2347041754800',
   propertyTitle?: string,
   location?: string,
   price?: string,

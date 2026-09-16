@@ -42,7 +42,7 @@ export default function Header() {
               <span>+234 806 501 9971</span>
             </a>
             <a
-              href="https://wa.me/2348065019971?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
+              href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-3.5 py-1.5 rounded-full font-semibold transition-all hover:scale-105"
@@ -167,7 +167,7 @@ export default function Header() {
                   List Property
                 </Link>
                 <a
-                  href="https://wa.me/2348065019971?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
+                  href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 bg-green-600 text-white w-full py-3 rounded-lg font-semibold mt-2"

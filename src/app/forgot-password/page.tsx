@@ -185,7 +185,7 @@ export default function ForgotPasswordPage() {
             </p>
             <div className="flex gap-3">
               <a
-                href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I'm%20having%20trouble%20resetting%20my%20password.%20Please%20help."
+                href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20having%20trouble%20resetting%20my%20password.%20Please%20help."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-outline text-sm flex-1"

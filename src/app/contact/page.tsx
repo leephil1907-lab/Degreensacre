@@ -130,7 +130,7 @@ export default function ContactPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* WhatsApp — icon only, no number exposed */}
                   <a
-                    href="https://wa.me/2348065019971?text=Hello%20De-Greenacres%2C%20I%20would%20like%20to%20enquire%20about%20your%20properties."
+                    href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20would%20like%20to%20enquire%20about%20your%20properties."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center gap-2 p-6 bg-green-50 hover:bg-green-100 border-2 border-green-200 hover:border-green-400 rounded-xl transition-all group"
@@ -163,7 +163,7 @@ export default function ContactPage() {
               {/* WhatsApp CTA */}
               <ScrollReveal direction="left" delay={0.5}>
               <a
-                href="https://wa.me/2348065019971"
+                href="https://wa.me/2347041754800"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block bg-magenta hover:bg-magenta-dark text-white rounded-xl shadow-medium p-6 transition-all hover-lift"

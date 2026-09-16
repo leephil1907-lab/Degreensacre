@@ -92,7 +92,7 @@ export default function PropertyCard({ property, showCompareButton = true }: Pro
                 const message = encodeURIComponent(
                   `Hello De-Greenacres, I'm interested in ${property.title} in ${property.area}, ${property.state}, listed at ₦${property.price.toLocaleString()}. Please send me more details.`
                 );
-                window.open(`https://wa.me/2348065019971?text=${message}`, '_blank');
+                window.open(`https://wa.me/2347041754800?text=${message}`, '_blank');
               }}
               className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-lg transition-colors"
               aria-label="Share on WhatsApp"

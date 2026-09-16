@@ -457,7 +457,7 @@ export default function MortgageCalculatorHub() {
                   {/* CTA */}
                   <div className="pt-6 border-t border-gray-200">
                     <a
-                      href={`https://wa.me/2348065019971?text=${encodeURIComponent(
+                      href={`https://wa.me/2347041754800?text=${encodeURIComponent(
                         `Hello De-Greenacres, I'm interested in a mortgage from ${selectedBank.name} for a property valued at ${formatCurrency(propertyValue)}. Monthly payment: ${formatCurrency(calculation.monthlyPayment)}. Please provide more information.`
                       )}`}
                       target="_blank"

@@ -221,7 +221,7 @@ export default function DevelopmentDetailPage({ params }: Props) {
                 {/* Contact Buttons */}
                 <div className="space-y-3">
                   <a
-                    href={`https://wa.me/2348065019971?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in ${development.name}, ${development.location}, ${development.state}. Please provide more information.`)}`}
+                    href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in ${development.name}, ${development.location}, ${development.state}. Please provide more information.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full btn-primary flex items-center justify-center space-x-2"

@@ -89,7 +89,7 @@ export default function EmailLayout({ previewText, children }: EmailLayoutProps)
                       </tr>
                       <tr>
                         <td align="center" style={{ paddingBottom: '16px' }}>
-                          <a href="https://wa.me/2348065019971" style={{ display: 'inline-block', backgroundColor: '#25D366', color: '#ffffff', padding: '8px 20px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}>
+                          <a href="https://wa.me/2347041754800" style={{ display: 'inline-block', backgroundColor: '#25D366', color: '#ffffff', padding: '8px 20px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}>
                             💬 Chat on WhatsApp
                           </a>
                         </td>

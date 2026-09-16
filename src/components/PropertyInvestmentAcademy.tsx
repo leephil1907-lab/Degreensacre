@@ -332,7 +332,7 @@ export default function PropertyInvestmentAcademy() {
               </p>
               <div className="space-y-3">
                 <a
-                  href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20booking%20a%20consultation%20with%20a%20real%20estate%20expert."
+                  href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20booking%20a%20consultation%20with%20a%20real%20estate%20expert."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary bg-white text-forest hover:bg-ivory w-full"

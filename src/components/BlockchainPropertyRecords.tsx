@@ -256,7 +256,7 @@ export default function BlockchainPropertyRecords() {
               Secure your property ownership with immutable blockchain records. Protect against fraud and ensure transparent transfers.
             </p>
             <a
-              href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20registering%20my%20property%20on%20the%20blockchain.%20Please%20provide%20more%20information."
+              href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20registering%20my%20property%20on%20the%20blockchain.%20Please%20provide%20more%20information."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary bg-white text-forest hover:bg-ivory inline-block"

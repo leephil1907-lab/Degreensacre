@@ -313,7 +313,7 @@ export default function LandTitleVerification({
       <div className="p-6 bg-gray-50 border-t border-gray-200">
         <div className="flex flex-col sm:flex-row gap-3">
           <a
-            href={`https://wa.me/2348065019971?text=${encodeURIComponent(`Hello De-Greenacres, I need more information about the verification status of ${propertyTitle} at ${propertyAddress}.`)}`}
+            href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I need more information about the verification status of ${propertyTitle} at ${propertyAddress}.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 btn-secondary flex items-center justify-center gap-2"

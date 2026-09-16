@@ -457,7 +457,7 @@ export default function AIPropertyMatchmaker() {
                     Start Over
                   </button>
                   <a
-                    href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I%20just%20used%20the%20AI%20Property%20Matchmaker%20and%20found%20some%20great%20matches.%20Can%20you%20help%20me%20refine%20my%20search?"
+                    href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I%20just%20used%20the%20AI%20Property%20Matchmaker%20and%20found%20some%20great%20matches.%20Can%20you%20help%20me%20refine%20my%20search?"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary flex-1"

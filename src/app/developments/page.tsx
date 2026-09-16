@@ -111,7 +111,7 @@ export default function DevelopmentsPage() {
                 Contact Our Team
               </Link>
               <a
-                href="https://wa.me/2348065019971?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20property%20developments.%20Please%20send%20me%20more%20information."
+                href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20property%20developments.%20Please%20send%20me%20more%20information."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-outline border-white text-white hover:bg-white hover:text-forest"

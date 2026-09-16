@@ -495,7 +495,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   Call Agent
                 </a>
                 <a
-                  href={`https://wa.me/${(property.agents?.whatsapp || property.agents?.phone || '+2348065019971').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
+                  href={`https://wa.me/${(property.agents?.whatsapp || '+2347041754800').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-lg font-medium hover:bg-[#20BD5A] transition-colors"

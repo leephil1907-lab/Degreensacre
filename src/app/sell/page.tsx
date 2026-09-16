@@ -223,7 +223,7 @@ export default function SellPage() {
               Get Free Valuation
             </Link>
             <a
-              href="https://wa.me/2348065019971"
+              href="https://wa.me/2347041754800"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-800"

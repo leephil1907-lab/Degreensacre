@@ -28,7 +28,7 @@ export default function WhatsAppFloat() {
 
       {/* Button */}
       <a
-        href="https://wa.me/2348065019971?text=Hello%2C%20I%27m%20interested%20in%20your%20properties%20on%20De-Greenacres"
+        href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties%20on%20De-Greenacres"
         target="_blank"
         rel="noopener noreferrer"
         className={`group flex items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full shadow-strong transition-all hover:scale-110 ${

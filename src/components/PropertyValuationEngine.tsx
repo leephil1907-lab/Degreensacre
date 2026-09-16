@@ -502,7 +502,7 @@ export default function PropertyValuationEngine() {
                     Calculate Another Property
                   </button>
                   <a
-                    href={`https://wa.me/2348065019971?text=${encodeURIComponent(`Hello De-Greenacres, I just used your valuation tool and got an estimate of ${formatPrice(result.estimatedValue)} for a property in ${input.area}, ${input.state}. I'd like to discuss this further.`)}`}
+                    href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I just used your valuation tool and got an estimate of ${formatPrice(result.estimatedValue)} for a property in ${input.area}, ${input.state}. I'd like to discuss this further.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary"
