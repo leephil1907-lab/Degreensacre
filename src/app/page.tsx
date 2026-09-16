@@ -44,16 +44,16 @@ export default function HomePage() {
               <span className="text-sm font-medium">CAC-Registered · Verified Listings Across Nigeria</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in leading-tight tracking-tight">
-              Where Nigeria&apos;s<br />
-              <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-                Property Dreams Land
+            <h1 className="font-display text-5xl md:text-7xl mb-6 animate-fade-in leading-tight tracking-tight text-white">
+              Find your next<br />
+              <span className="italic text-sage">
+                place to belong.
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-white/90 mb-12 max-w-3xl mx-auto animate-fade-in font-light leading-relaxed">
-              Every listing verified. Every title checked. Every agent accountable. 
-              Premium homes, land &amp; commercial property in Lagos, Abuja, Enugu, Akwa Ibom &amp; beyond.
+            <p className="text-lg md:text-xl text-white/80 mb-12 max-w-3xl mx-auto animate-fade-in font-light leading-relaxed">
+              Explore the original De-Greenacres property catalogue — verified listings, 
+              clear documentation and confident decisions across Lagos, Abuja, Enugu &amp; Akwa Ibom.
             </p>
 
             <HeroSearch />
@@ -67,8 +67,8 @@ export default function HomePage() {
           <ScrollReveal>
             <div className="flex items-end justify-between mb-16">
               <div>
-                <p className="text-magenta font-semibold text-sm uppercase tracking-wider mb-2">Premium Selection</p>
-                <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-4">Featured Properties</h2>
+                <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">✦ CURATED FROM THE DE-GREENACRES CATALOGUE</p>
+                <h2 className="font-display text-4xl md:text-5xl text-charcoal mb-4">Real listings. <em className="text-forest">Better discovery.</em></h2>
                 <p className="text-lg text-gray-600">Handpicked premium properties across Nigeria</p>
               </div>
               <Link href="/properties" className="hidden md:inline-flex items-center text-forest hover:text-forest-600 font-semibold group">
@@ -120,6 +120,30 @@ export default function HomePage() {
                 </Link>
               </ScrollReveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statistics Section */}
+      <section className="py-16 bg-white border-y border-gray-100">
+        <div className="container-custom">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <p className="font-display text-4xl md:text-5xl text-forest mb-2">6</p>
+              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Source Properties</p>
+            </div>
+            <div className="text-center">
+              <p className="font-display text-4xl md:text-5xl text-forest mb-2">4</p>
+              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Source Markets</p>
+            </div>
+            <div className="text-center">
+              <p className="font-display text-4xl md:text-5xl text-forest mb-2">5</p>
+              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Verified Listings</p>
+            </div>
+            <div className="text-center">
+              <p className="font-display text-4xl md:text-5xl text-forest mb-2">1,314</p>
+              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Catalogue Views</p>
+            </div>
           </div>
         </div>
       </section>
@@ -267,6 +291,52 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Featured Property Spotlight */}
+      <section className="section-padding bg-charcoal text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+        </div>
+        <div className="container-custom relative z-10">
+          <ScrollReveal>
+            <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">FEATURED ADDRESS · ABUJA</p>
+            <h2 className="font-display text-4xl md:text-5xl mb-6 text-white">Exquisite 6 Bedroom Duplex in Maitama</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <p className="text-lg text-white/80 leading-relaxed mb-8">
+                  Magnificent 6 bedroom fully detached duplex in prime Maitama location. Features modern architecture, 
+                  spacious rooms, home office, and beautifully landscaped compound with swimming pool.
+                </p>
+                <div className="grid grid-cols-3 gap-6 mb-8">
+                  <div>
+                    <p className="font-display text-3xl text-sage mb-1">₦380M</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wide">Asking Price</p>
+                  </div>
+                  <div>
+                    <p className="font-display text-3xl text-sage mb-1">6</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wide">Bedrooms</p>
+                  </div>
+                  <div>
+                    <p className="font-display text-3xl text-sage mb-1">650m²</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wide">Floor Area</p>
+                  </div>
+                </div>
+                <Link href="/properties/exquisite-6-bedroom-duplex-maitama-abuja" className="inline-flex items-center gap-2 bg-white text-charcoal px-8 py-3.5 rounded-xl font-bold hover:bg-sage hover:text-white transition-all">
+                  View Property
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="relative">
+                <img
+                  src="/properties/property-3.jpg"
+                  alt="6 Bedroom Duplex Maitama"
+                  className="w-full h-80 lg:h-96 object-cover rounded-2xl shadow-2xl"
+                />
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="section-padding bg-white">
         <div className="container-custom">
@@ -290,10 +360,11 @@ export default function HomePage() {
         <div className="container-custom relative z-10">
           <ScrollReveal>
             <div className="text-center mb-20">
-              <p className="text-magenta font-semibold text-sm uppercase tracking-wider mb-2">Why Choose Us</p>
-              <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-4">The De-Greenacres Difference</h2>
+              <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">01 · DISCOVER</p>
+              <h2 className="font-display text-4xl md:text-5xl text-charcoal mb-4">More than listings. <em className="text-forest">Useful context.</em></h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Trusted property discovery across Nigeria's most promising markets
+                Verification-first approach — surface documentation and verification status before contact.
+                Built for Nigeria. Lagos · Abuja · Enugu · Akwa Ibom.
               </p>
             </div>
           </ScrollReveal>
@@ -346,12 +417,12 @@ export default function HomePage() {
         
         <div className="container-custom text-center relative z-10">
           <ScrollReveal>
-            <p className="text-green-300 font-semibold text-sm uppercase tracking-wider mb-4">Ready to Start?</p>
-            <h2 className="text-5xl md:text-6xl font-bold mb-6">
-              Find Your Property Today
+            <p className="text-sage font-semibold text-xs uppercase tracking-[0.2em] mb-4">FOR OWNERS, AGENTS & DEVELOPERS</p>
+            <h2 className="font-display text-5xl md:text-6xl mb-6">
+              Put a better version <em className="text-sage">of your property online.</em>
             </h2>
-            <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto font-light">
-              Browse our curated selection of premium properties or list yours with Nigeria's most trusted real estate platform.
+            <p className="text-xl text-white/80 mb-12 max-w-3xl mx-auto font-light">
+              Use the same marketplace infrastructure to create a polished listing, capture enquiries and present your property professionally.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
