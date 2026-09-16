@@ -94,6 +94,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="google-site-verification" content="cd6av_JGPdYYcZvR1EY8DLa8ttGhfgCIl_pjoSu3cPQ" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/logo-icon.png" />
         <link rel="manifest" href="/manifest.json" />
