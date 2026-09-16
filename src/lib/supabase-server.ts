@@ -1,57 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      headers: {
+        Cookie: cookieStore.toString(),
       },
-      global: {
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
-      },
-    }
-  );
+    },
+  });
 }
 
+// Admin client — now uses anon key with RLS policies for security
+// No service role key needed. RLS policies handle all access control.
 export async function createAdminSupabaseClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  // If service role key is not set (e.g., on Vercel without the env var),
-  // fall back to anon key. Operations that need service role privileges
-  // will fail gracefully. Most operations work with anon key + RLS policies.
-  if (!serviceRoleKey) {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY not set, falling back to anon key');
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-  }
-
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
 export async function getUser() {

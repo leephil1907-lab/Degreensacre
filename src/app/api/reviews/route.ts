@@ -1,33 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use anon key for public review submission (RLS allows anonymous inserts)
-function getPublicSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  );
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Use service role for reading all reviews (admin)
-function getAdminSupabase() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    // Fallback to anon key if service role not available
-    return getPublicSupabase();
-  }
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    key,
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  );
+function getSupabase() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 // GET /api/reviews — Get approved reviews (public)
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getAdminSupabase();
+    const supabase = getSupabase();
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
 
@@ -65,8 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please write at least 20 characters in your review', success: false }, { status: 400 });
     }
 
-    // Use anon key — RLS policy allows anonymous inserts
-    const supabase = getPublicSupabase();
+    const supabase = getSupabase();
 
     const { data: review, error } = await supabase
       .from('reviews')
@@ -88,7 +73,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    // Log notification in contact_messages (also uses anon key)
+    // Log notification in contact_messages
     const stars = '⭐'.repeat(parseInt(rating));
     try {
       await supabase.from('contact_messages').insert({
