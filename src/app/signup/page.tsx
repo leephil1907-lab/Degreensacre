@@ -143,7 +143,7 @@ export default function SignUpPage() {
                   Your data is protected with enterprise-grade encryption. We take your security seriously.
                 </p>
                 <div className="mt-8 space-y-3">
-                  {['256-bit SSL encryption', 'Supabase row-level security', 'No data shared with third parties'].map((item) => (
+                  {['256-bit SSL encryption', 'Enterprise-grade data security', 'No data shared with third parties'].map((item) => (
                     <div key={item} className="flex items-center gap-3 text-white/50">
                       <Shield className="w-4 h-4 text-sage" />
                       <span className="text-sm">{item}</span>
@@ -453,7 +453,7 @@ export default function SignUpPage() {
           <div className="mt-6 flex items-center justify-center gap-3">
             <Shield className="w-3.5 h-3.5 text-gray-300" />
             <p className="text-[11px] text-gray-400">
-              Secured by Supabase · CAC Registered RC: 1856064
+              256-bit SSL Encrypted · CAC Registered RC: 1856064
             </p>
           </div>
         </div>

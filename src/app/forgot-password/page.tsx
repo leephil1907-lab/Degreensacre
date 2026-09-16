@@ -232,7 +232,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-8 flex items-center justify-center gap-3">
             <Shield className="w-3.5 h-3.5 text-gray-300" />
             <p className="text-[11px] text-gray-400">
-              Secured by Supabase · CAC Registered RC: 1856064
+              256-bit SSL Encrypted · CAC Registered RC: 1856064
             </p>
           </div>
         </div>

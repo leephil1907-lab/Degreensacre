@@ -14,7 +14,7 @@ export default function Header() {
   const navItems = [
     { label: 'Buy', href: '/properties?type=sale' },
     { label: 'Rent', href: '/properties?type=rent' },
-    { label: 'Land', href: '/properties?type=land' },
+    { label: 'Land', href: '/land' },
     { label: 'Commercial', href: '/properties?type=commercial' },
     { label: 'Short Let', href: '/properties?type=short-let' },
     { label: 'Investment', href: '/diaspora' },
@@ -25,21 +25,21 @@ export default function Header() {
 
   return (
     <header className="bg-[#fffff8] dark:bg-charcoal shadow-soft sticky top-0 z-50 transition-colors">
-      {/* Top Bar - Deep Forest Green like the banner */}
+      {/* Top Bar */}
       <div className="bg-forest text-ivory text-xs py-2.5">
-        <div className="container-custom flex items-center justify-between">
+        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="font-semibold tracking-wide">RC: 1856064</span>
-            <span className="hidden sm:inline text-gray-500">|</span>
-            <span className="hidden sm:inline text-gray-300">CAC Registered</span>
+            <span className="hidden sm:inline text-ivory/30">|</span>
+            <span className="hidden sm:inline text-ivory/70">CAC Registered</span>
           </div>
           <div className="flex items-center gap-5">
             <a
               href="tel:+2348065019971"
-              className="text-gray-300 hover:text-white transition-colors hidden sm:flex items-center gap-1.5"
+              className="text-ivory/70 hover:text-white transition-colors hidden sm:flex items-center gap-1.5"
             >
               <Phone className="w-3 h-3" />
-              <span>+234 806 501 9971</span>
+              <span>0806 501 9971</span>
             </a>
             <a
               href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
@@ -57,37 +57,40 @@ export default function Header() {
       </div>
 
       {/* Main Nav */}
-      <nav className="container-custom">
+      <nav className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Logo size="md" />
+          {/* Logo — fixed width so it doesn't push center */}
+          <div className="flex-shrink-0 w-[180px]">
+            <Logo size="md" />
+          </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center space-x-1">
+          {/* Desktop Nav — centered with even spacing */}
+          <div className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-4 py-2 text-charcoal hover:text-forest font-medium transition-colors rounded-lg hover:bg-sage/10"
+                className="px-4 py-2 text-charcoal hover:text-forest font-medium transition-colors rounded-lg hover:bg-sage/10 text-sm"
               >
                 {item.label}
               </Link>
             ))}
           </div>
 
-          {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center space-x-3">
+          {/* Desktop CTA — fixed width right-aligned */}
+          <div className="hidden lg:flex items-center gap-3 justify-end w-[280px]">
             <ThemeToggle />
             {!loading && user ? (
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2.5 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors"
+                  className="px-3 py-2 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors text-sm"
                 >
                   {profile?.first_name ? `Hi, ${profile.first_name}` : 'Dashboard'}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-charcoal"
+                  className="px-3 py-2 text-sm text-gray-500 hover:text-charcoal transition-colors"
                 >
                   Sign Out
                 </button>
@@ -96,24 +99,24 @@ export default function Header() {
               <>
                 <Link
                   href="/signin"
-                  className="px-4 py-2.5 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors"
+                  className="px-3 py-2 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors text-sm whitespace-nowrap"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/signup"
-                  className="btn-primary"
+                  className="btn-primary text-sm !px-4 !py-2.5 whitespace-nowrap"
                 >
                   Sign Up
                 </Link>
               </>
             )}
-            <Link href="/list-property" className="btn-outline text-sm">
+            <Link href="/list-property" className="btn-outline text-sm !px-3 !py-2 whitespace-nowrap">
               List Property
             </Link>
           </div>
 
-          {/* Mobile Menu Toggle + Theme */}
+          {/* Mobile Menu Toggle */}
           <div className="flex items-center gap-2 lg:hidden">
             <ThemeToggle />
             <button
