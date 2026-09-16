@@ -7,7 +7,8 @@ import {
   ArrowLeft, MapPin, Bed, Bath, Square, Car, Heart, Share2,
   Phone, Mail, MessageSquare, CheckCircle, Shield, Clock,
   Calendar, Eye, Bookmark, BookmarkPlus, Loader2, ChevronLeft,
-  ChevronRight, AlertTriangle, FileText, User, Star
+  ChevronRight, AlertTriangle, FileText, User, Star, Navigation,
+  CreditCard, Building, Map, TreePine
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,6 +42,15 @@ interface Property {
   serviced?: boolean;
   gated_estate?: boolean;
   documentation?: string;
+  payment_plan?: string;
+  paymentPlan?: string;
+  development_status?: string;
+  developmentStatus?: string;
+  coordinates?: { lat: number; lng: number };
+  landmarks?: string[];
+  region?: string;
+  available_plots?: number;
+  total_plots?: number;
   date_added: string;
   published_at?: string;
   property_images?: { url: string; display_order: number; is_primary: boolean; alt_text?: string }[];
@@ -462,6 +472,90 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 </div>
               </div>
             </div>
+
+            {/* Investment Details — Payment Plan + Development Status */}
+            {(property.payment_plan || property.paymentPlan || property.development_status || property.developmentStatus || property.region) && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-green-600" />
+                  Investment Details
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {(property.payment_plan || property.paymentPlan) && (
+                    <div className="bg-ivory-50 rounded-lg p-4">
+                      <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Payment Plan</p>
+                      <p className="font-bold text-charcoal-900 text-sm">{property.payment_plan || property.paymentPlan}</p>
+                    </div>
+                  )}
+                  {(property.development_status || property.developmentStatus) && (
+                    <div className="bg-ivory-50 rounded-lg p-4">
+                      <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Development Status</p>
+                      <p className="font-bold text-charcoal-900 text-sm flex items-center gap-1">
+                        <Building className="w-3.5 h-3.5 text-green-600" />
+                        {property.development_status || property.developmentStatus}
+                      </p>
+                    </div>
+                  )}
+                  {property.region && (
+                    <div className="bg-ivory-50 rounded-lg p-4">
+                      <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Region</p>
+                      <p className="font-bold text-charcoal-900 text-sm">{property.region}</p>
+                    </div>
+                  )}
+                  {property.documentation && (
+                    <div className="bg-ivory-50 rounded-lg p-4">
+                      <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Title / Documentation</p>
+                      <p className="font-bold text-charcoal-900 text-sm flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5 text-green-600" />
+                        {property.documentation}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Nearby Landmarks */}
+            {property.landmarks && property.landmarks.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
+                  <Navigation className="w-5 h-5 text-green-600" />
+                  Nearby Landmarks
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {property.landmarks.map((landmark: string) => (
+                    <div key={landmark} className="bg-ivory-50 rounded-lg p-3 text-center">
+                      <MapPin className="w-4 h-4 text-forest mx-auto mb-1" />
+                      <p className="text-xs font-semibold text-charcoal-900">{landmark}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Map */}
+            {property.coordinates && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
+                  <Map className="w-5 h-5 text-green-600" />
+                  Location Map
+                </h2>
+                <div className="rounded-xl overflow-hidden border border-charcoal-200 h-64">
+                  <iframe
+                    title={`Map of ${property.title}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.lng - 0.008}%2C${property.coordinates.lat - 0.004}%2C${property.coordinates.lng + 0.008}%2C${property.coordinates.lat + 0.004}&layer=mapnik&marker=${property.coordinates.lat}%2C${property.coordinates.lng}`}
+                  />
+                </div>
+                <p className="text-xs text-charcoal-500 mt-2 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {property.address && `${property.address}, `}{property.area}, {property.state}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -495,7 +589,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   Call Agent
                 </a>
                 <a
-                  href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in ${property.title} at ${property.area}, ${property.state}, listed at ₦${(property.price || 0).toLocaleString()}. Please send me more information and available inspection dates.`)}`}
+                  href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in: ${property.title} at ${property.area}, ${property.state}. Price: ₦${(property.price || 0).toLocaleString()}.${property.documentation ? ' Documentation: ' + property.documentation + '.' : ''}${property.bedrooms ? ' ' + property.bedrooms + ' bedrooms.' : ''} Please send more details and available inspection dates.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-lg font-medium hover:bg-[#20BD5A] transition-colors"
