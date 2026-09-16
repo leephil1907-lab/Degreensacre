@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -12,215 +13,148 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // TODO: Implement actual password reset
     setTimeout(() => {
       setIsLoading(false);
       setIsSubmitted(true);
     }, 1000);
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-ivory flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
-          {/* Success Message */}
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-charcoal mb-4">
-              Check Your Email
-            </h2>
-            
-            <p className="text-gray-600 mb-6">
-              We've sent password reset instructions to:
+  return (
+    <div className="min-h-screen flex">
+      {/* Left Panel - Branding (Desktop only) */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] bg-forest relative overflow-hidden flex-col justify-between p-12">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+        </div>
+
+        <div className="relative z-10">
+          <Link href="/" className="inline-block mb-16">
+            <Image src="/logo-icon.png" alt="De-Greenacres" width={64} height={64} className="brightness-110 drop-shadow-lg" />
+          </Link>
+          <div>
+            <h1 className="text-4xl xl:text-5xl font-bold text-ivory mb-4 leading-tight">
+              {isSubmitted ? 'Check your inbox' : 'Reset your password'}
+            </h1>
+            <p className="text-lg text-ivory/80 leading-relaxed max-w-md">
+              {isSubmitted
+                ? 'We\'ve sent password reset instructions to your email. Follow the link to create a new password.'
+                : 'No worries — enter your email and we\'ll send you instructions to reset your password securely.'}
             </p>
-            
-            <div className="bg-ivory rounded-lg p-4 mb-6">
-              <p className="font-semibold text-charcoal">{email}</p>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-6">
-              Click the link in the email to reset your password. The link will expire in 24 hours.
-            </p>
-            
-            <div className="space-y-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="btn-outline w-full"
-              >
-                Resend Email
-              </button>
-              
-              <Link href="/signin" className="btn-primary w-full block text-center">
-                Back to Sign In
-              </Link>
-            </div>
-            
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Didn't receive the email? Check your spam folder or{' '}
-                <Link href="/contact" className="text-forest hover:text-forest-light font-semibold">
-                  contact support
-                </Link>
-              </p>
-            </div>
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center gap-3 text-ivory/70">
+            <div className="w-7 h-7 rounded-full bg-sage/30 flex items-center justify-center text-xs font-bold text-white">1</div>
+            <span className="text-sm">Enter your registered email</span>
+          </div>
+          <div className="flex items-center gap-3 text-ivory/70">
+            <div className="w-7 h-7 rounded-full bg-sage/30 flex items-center justify-center text-xs font-bold text-white">2</div>
+            <span className="text-sm">Click the reset link in your inbox</span>
+          </div>
+          <div className="flex items-center gap-3 text-ivory/70">
+            <div className="w-7 h-7 rounded-full bg-sage/30 flex items-center justify-center text-xs font-bold text-white">3</div>
+            <span className="text-sm">Create a strong new password</span>
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-ivory flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/logo-icon.png"
-              alt="De-Greenacres Properties Limited"
-              width={80}
-              height={80}
-              className="object-contain mx-auto"
-            />
-          </Link>
-          <h2 className="mt-6 text-3xl font-bold text-charcoal">
-            Forgot Password?
-          </h2>
-          <p className="mt-2 text-gray-600">
-            No worries, we'll send you reset instructions
-          </p>
-        </div>
-
-        {/* Reset Form */}
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-charcoal mb-2">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                placeholder="you@example.com"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Enter the email address associated with your account
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full"
-            >
-              {isLoading ? 'Sending...' : 'Send Reset Instructions'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <Link href="/signin" className="text-sm text-forest hover:text-forest-light font-semibold inline-flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Sign In
+      {/* Right Panel - Form */}
+      <div className="flex-1 bg-ivory flex items-center justify-center p-6 md:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="inline-block">
+              <Image src="/logo-icon.png" alt="De-Greenacres" width={56} height={56} className="mx-auto" />
             </Link>
           </div>
-        </div>
 
-        {/* Help Section */}
-        <div className="mt-8 bg-white rounded-2xl shadow-soft p-6">
-          <h3 className="font-bold text-charcoal mb-4">Need Help?</h3>
-          
-          <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-forest/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-forest font-bold">1</span>
+          {!isSubmitted ? (
+            <>
+              {/* Header */}
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-charcoal mb-2">Forgot password?</h2>
+                <p className="text-gray-600">No worries, we&apos;ll send you reset instructions</p>
               </div>
-              <div>
-                <p className="font-semibold text-charcoal mb-1">Check your email</p>
-                <p className="text-gray-600">
-                  We'll send reset instructions to your registered email address
+
+              <div className="bg-white rounded-2xl shadow-soft p-6 md:p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label htmlFor="email" className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                      Email Address
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
+                      placeholder="you@example.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Enter the email address associated with your account
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-forest text-ivory py-3.5 rounded-xl font-bold text-sm hover:bg-forest-light transition-all disabled:opacity-50"
+                  >
+                    {isLoading ? 'Sending...' : 'Send Reset Instructions'}
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-6 text-center">
+                <Link href="/signin" className="text-sm text-forest font-bold hover:text-forest-light inline-flex items-center gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Sign In
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Success State */}
+              <div className="bg-white rounded-2xl shadow-soft p-6 md:p-8 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+
+                <h2 className="text-2xl font-bold text-charcoal mb-3">Check Your Email</h2>
+                <p className="text-gray-600 mb-4">We&apos;ve sent password reset instructions to:</p>
+
+                <div className="bg-ivory rounded-xl p-4 mb-6">
+                  <p className="font-bold text-charcoal">{email}</p>
+                </div>
+
+                <p className="text-sm text-gray-600 mb-6">
+                  Click the link in the email to reset your password. The link will expire in 24 hours.
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="w-full border-2 border-gray-200 text-gray-700 py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all"
+                  >
+                    Resend Email
+                  </button>
+                  <Link href="/signin" className="block w-full bg-forest text-ivory py-3 rounded-xl font-bold text-sm text-center hover:bg-forest-light transition-all">
+                    Back to Sign In
+                  </Link>
+                </div>
+
+                <p className="mt-6 text-xs text-gray-500">
+                  Didn&apos;t receive the email? Check your spam folder or{' '}
+                  <a href="https://wa.me/2347041754800" target="_blank" rel="noopener noreferrer" className="text-forest font-semibold underline">
+                    chat with us on WhatsApp
+                  </a>
                 </p>
               </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-forest/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-forest font-bold">2</span>
-              </div>
-              <div>
-                <p className="font-semibold text-charcoal mb-1">Click the reset link</p>
-                <p className="text-gray-600">
-                  The link in the email will take you to a secure page to create a new password
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-forest/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-forest font-bold">3</span>
-              </div>
-              <div>
-                <p className="font-semibold text-charcoal mb-1">Create new password</p>
-                <p className="text-gray-600">
-                  Choose a strong password with at least 8 characters
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-3">
-              Still having trouble? Our support team is here to help.
-            </p>
-            <div className="flex gap-3">
-              <a
-                href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20having%20trouble%20resetting%20my%20password.%20Please%20help."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline text-sm flex-1"
-              >
-                WhatsApp Support
-              </a>
-              <Link href="/contact" className="btn-outline text-sm flex-1 text-center">
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Security Notice */}
-        <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
-          <div className="flex items-start gap-3">
-            <svg className="w-6 h-6 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <div>
-              <p className="font-semibold text-amber-900 mb-1">Security Notice</p>
-              <p className="text-sm text-amber-800">
-                De-Greenacres will never ask for your password via email or phone. Always verify that reset emails come from our official domain.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust Signals */}
-        <div className="mt-8 text-center">
-          <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
-            <span>🔒 Secure Reset</span>
-            <span>✓ Encrypted</span>
-            <span>🛡️ Protected</span>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -36,12 +36,13 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-ivory">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-charcoal to-plum text-white py-20">
+      <section className="bg-gradient-to-br from-charcoal to-forest text-white py-20">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-display-lg font-bold mb-6">Contact Us</h1>
-            <p className="text-xl text-white/90">
-              Get in touch with our team. We&apos;re here to help you with all your real estate needs.
+            <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-4">GET IN TOUCH</p>
+            <h1 className="font-display text-5xl md:text-6xl mb-6">Contact Us</h1>
+            <p className="text-xl text-white/80 leading-relaxed">
+              Get in touch with our team. We&apos;re here to help you with all your property needs across Nigeria.
             </p>
           </div>
         </div>
@@ -185,7 +186,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2">
               <ScrollReveal direction="right">
               <div className="bg-white rounded-xl shadow-soft p-8">
-                <h2 className="text-2xl font-bold text-charcoal mb-6">Send Us a Message</h2>
+                <h2 className="font-display text-2xl text-charcoal mb-6">Send Us a Message</h2>
                 
                 {submitted && (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
