@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Eye, EyeOff, ArrowRight, Shield, MapPin, Building2, Mail, Lock } from 'lucide-react';
+import AuthBrandingPanel from '@/components/AuthBrandingPanel';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -33,80 +34,12 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex bg-ivory">
-      {/* LEFT: Premium Branding Panel */}
-      <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden flex-col justify-between" style={{ background: 'linear-gradient(160deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)' }}>
-        {/* Decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-[0.08]" style={{ background: 'radial-gradient(circle, #788848, transparent 70%)' }} />
-          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #b8b898, transparent 70%)' }} />
-          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        </div>
-
-        {/* Top */}
-        <div className="relative z-10 p-12">
-          <Link href="/" className="inline-flex items-center gap-3 group">
-            <Image src="/logo-icon.png" alt="De-Greenacres" width={48} height={48} className="brightness-110 drop-shadow-lg group-hover:scale-105 transition-transform" />
-            <div>
-              <span className="block text-white/90 font-display text-lg leading-tight">De-Greenacres</span>
-              <span className="block text-[10px] text-white/50 uppercase tracking-[0.2em]">Properties Limited</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Center — Hero Content */}
-        <div className="relative z-10 px-12">
-          <p className="text-sage text-xs font-bold uppercase tracking-[0.25em] mb-4">Welcome Back</p>
-          <h1 className="font-display text-4xl xl:text-[2.75rem] text-white leading-[1.15] mb-6">
-            Find your next<br />
-            <span className="text-sage">place to belong</span>
-          </h1>
-          <p className="text-white/60 text-base leading-relaxed max-w-sm">
-            Sign in to access saved properties, track your enquiries, and discover verified listings across Nigeria.
-          </p>
-
-          {/* Property cards preview */}
-          <div className="mt-10 space-y-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/10">
-              <div className="w-14 h-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-6 h-6 text-sage" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold">600sqm Shelter Afrique, Uyo</p>
-                <p className="text-white/50 text-xs">₦45,000,000 · C of O</p>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/10">
-              <div className="w-14 h-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-6 h-6 text-sage" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold">5 Bedroom Duplex, Lekki</p>
-                <p className="text-white/50 text-xs">₦180,000,000 · Verified</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom — Trust */}
-        <div className="relative z-10 p-12">
-          <div className="h-px bg-white/10 mb-6" />
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-display text-white">CAC</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">Registered</p>
-            </div>
-            <div className="text-center border-x border-white/10">
-              <p className="text-2xl font-display text-white">6</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">States</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-display text-white">₦20K</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">Inspection</p>
-            </div>
-          </div>
-          <p className="text-[10px] text-white/30 text-center mt-4">RC: 1856064 · de-greenacres.com</p>
-        </div>
-      </div>
+      {/* LEFT: Premium Branding Panel with Building Background */}
+      <AuthBrandingPanel
+        eyebrow="Welcome Back"
+        title={<>Find your next<br /><span className="text-sage">place to belong</span></>}
+        description="Sign in to access saved properties, track your enquiries, and discover verified listings across Nigeria."
+      />
 
       {/* RIGHT: Sign In Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative">
