@@ -1,12 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { properties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
-import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone } from 'lucide-react';
+import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
 
 export default function LandPage() {
   const landProperties = properties.filter(p => p.type === 'land');
+  const regions = [...new Set(landProperties.map(p => p.region).filter(Boolean))];
+  const [activeRegion, setActiveRegion] = useState('all');
+  const [expandedMap, setExpandedMap] = useState<string | null>(null);
+
+  const filtered = activeRegion === 'all' ? landProperties : landProperties.filter(p => p.region === activeRegion);
+  const totalAvailable = landProperties.reduce((sum, p) => sum + (p.availablePlots || 0), 0);
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -17,18 +24,23 @@ export default function LandPage() {
         </div>
         <div className="container-custom relative z-10">
           <div className="max-w-3xl">
-            <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-4">🌍 LAND INVESTMENT</p>
+            <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-4">🌍 LAND INVESTMENT OPPORTUNITIES</p>
             <h1 className="font-display text-5xl md:text-6xl mb-6">Verified Land.<br /><em className="text-sage">Secure Your Future.</em></h1>
             <p className="text-xl text-white/80 leading-relaxed mb-8">
               Every plot reviewed by De-Greenacres. Clear documentation. Flexible payment plans available. Physical inspections before you commit.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="#listings" className="bg-white text-forest px-8 py-4 rounded-xl font-bold text-lg hover:bg-sage hover:text-white transition-all inline-flex items-center justify-center gap-2">
                 View Available Plots <ArrowRight className="w-5 h-5" />
               </Link>
               <Link href="/book-inspection" className="border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-forest transition-all inline-flex items-center justify-center gap-2">
                 <Eye className="w-5 h-5" /> Book Inspection — ₦20,000
               </Link>
+            </div>
+            <div className="flex flex-wrap gap-6 text-sm text-white/60">
+              <span className="flex items-center gap-2"><Layers className="w-4 h-4 text-sage" /> {landProperties.length} Locations</span>
+              <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-sage" /> {totalAvailable} Plots Available</span>
+              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-sage" /> All Documentation Reviewed</span>
             </div>
           </div>
         </div>
@@ -40,38 +52,61 @@ export default function LandPage() {
           <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-6 text-center">Where We Have Land</p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { city: 'Uyo', state: 'Akwa Ibom', focus: 'Residential & Commercial' },
-              { city: 'Lagos', state: 'Lagos', focus: 'Premium Estates' },
-              { city: 'Abuja', state: 'Abuja', focus: 'Government Areas' },
-              { city: 'Port Harcourt', state: 'Rivers', focus: 'Oil City Plots' },
-              { city: 'Asaba', state: 'Delta', focus: 'Growing Market' },
-              { city: 'Enugu', state: 'Enugu', focus: 'Southeast Hub' },
+              { city: 'Uyo', state: 'Akwa Ibom', focus: 'Residential & Commercial', region: 'Southeast' },
+              { city: 'Lagos', state: 'Lagos', focus: 'Premium Estates', region: 'Southwest' },
+              { city: 'Abuja', state: 'Abuja FCT', focus: 'Government Areas', region: 'North Central' },
+              { city: 'Port Harcourt', state: 'Rivers', focus: 'Oil City Plots', region: 'South-South' },
+              { city: 'Asaba', state: 'Delta', focus: 'Growing Market', region: 'South-South' },
+              { city: 'Enugu', state: 'Enugu', focus: 'Southeast Hub', region: 'Southeast' },
             ].map((loc) => (
-              <div key={loc.city} className="bg-ivory border border-gray-100 rounded-xl p-4 text-center hover:shadow-lg hover:border-forest/30 transition-all cursor-pointer">
-                <MapPin className="w-5 h-5 text-forest mx-auto mb-2" />
+              <div key={loc.city} className="bg-ivory border border-gray-100 rounded-xl p-4 text-center hover:shadow-lg hover:border-forest/30 transition-all cursor-pointer group">
+                <MapPin className="w-5 h-5 text-forest mx-auto mb-2 group-hover:scale-110 transition-transform" />
                 <h3 className="font-bold text-charcoal text-sm">{loc.city}</h3>
-                <p className="text-[10px] text-gray-500 mt-0.5">{loc.focus}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">{loc.state}</p>
+                <p className="text-[10px] text-sage font-semibold mt-1">{loc.focus}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Land Listings */}
+      {/* Region Filter */}
       <section id="listings" className="section-padding">
         <div className="container-custom">
           <ScrollReveal>
-            <div className="mb-12">
+            <div className="mb-8">
               <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">AVAILABLE PLOTS</p>
               <h2 className="font-display text-4xl text-charcoal mb-2">Land for Sale</h2>
-              <p className="text-gray-600">Each listing shows documentation status, plot size and inspection details.</p>
+              <p className="text-gray-600">Each listing shows full details: documentation, plot size, landmarks, map location and available plots.</p>
             </div>
           </ScrollReveal>
 
-          {landProperties.length === 0 ? (
+          {/* Region filter tabs */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            <button
+              onClick={() => setActiveRegion('all')}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeRegion === 'all' ? 'bg-forest text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-forest'}`}
+            >
+              All Regions ({landProperties.length})
+            </button>
+            {regions.map(region => {
+              const count = landProperties.filter(p => p.region === region).length;
+              return (
+                <button
+                  key={region}
+                  onClick={() => setActiveRegion(region || 'all')}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeRegion === region ? 'bg-forest text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-forest'}`}
+                >
+                  {region} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {filtered.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl shadow-soft">
               <TreePine className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-charcoal mb-2">No land listings right now</h3>
+              <h3 className="text-xl font-bold text-charcoal mb-2">No land listings in this region</h3>
               <p className="text-gray-500 mb-6">New plots are added regularly. Contact us for upcoming availability.</p>
               <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%27m%20interested%20in%20land%20investment.%20Please%20notify%20me%20of%20new%20listings." target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-500 transition-all">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -79,30 +114,40 @@ export default function LandPage() {
               </a>
             </div>
           ) : (
-            <div className="space-y-6">
-              {landProperties.map((property, i) => (
+            <div className="space-y-8">
+              {filtered.map((property, i) => (
                 <ScrollReveal key={property.id} delay={i * 0.1}>
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                       {/* Image */}
                       <div className="relative h-64 lg:h-auto overflow-hidden">
                         <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-                        <div className="absolute top-4 left-4 flex gap-2">
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-amber-600 text-white px-3 py-1 text-xs font-bold rounded-md">LAND</span>
                           {property.verified && (
                             <span className="bg-white/95 text-forest px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" /> Documentation Reviewed
+                              <CheckCircle className="w-3 h-3" /> Docs Reviewed
                             </span>
                           )}
+                          {property.region && (
+                            <span className="bg-sage/90 text-white px-3 py-1 text-xs font-bold rounded-md">{property.region}</span>
+                          )}
                         </div>
+                        {/* Available plots badge */}
+                        {property.availablePlots && (
+                          <div className="absolute bottom-4 left-4 bg-forest text-white px-4 py-2 rounded-xl">
+                            <p className="text-lg font-bold leading-none">{property.availablePlots}{property.totalPlots ? `/${property.totalPlots}` : ''}</p>
+                            <p className="text-[10px] text-white/70">plots available</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Details */}
                       <div className="p-6 lg:p-8 lg:col-span-2">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="font-display text-2xl text-charcoal mb-2">{property.title}</h3>
-                            <p className="text-gray-500 flex items-center gap-1">
+                            <h3 className="font-display text-2xl text-charcoal mb-1">{property.title}</h3>
+                            <p className="text-gray-500 flex items-center gap-1 text-sm">
                               <MapPin className="w-4 h-4 text-forest" />
                               {property.area}, {property.state}
                             </p>
@@ -115,67 +160,112 @@ export default function LandPage() {
                           </div>
                         </div>
 
-                        <p className="text-gray-600 mb-6 leading-relaxed">{property.description}</p>
+                        <p className="text-gray-600 mb-5 leading-relaxed text-sm">{property.description}</p>
 
-                        {/* Land Details Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        {/* Key Details Grid — 6 items */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
                           <div className="bg-ivory rounded-lg p-3">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Plot Size</p>
-                            <p className="font-bold text-charcoal">{property.sqm || property.landSize || '—'} sqm</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Plot Size</p>
+                            <p className="font-bold text-charcoal text-sm">{property.sqm || property.landSize} sqm</p>
                           </div>
                           <div className="bg-ivory rounded-lg p-3">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Documentation</p>
-                            <p className="font-bold text-charcoal flex items-center gap-1">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Documentation</p>
+                            <p className="font-bold text-charcoal text-sm flex items-center gap-1">
                               <FileCheck className="w-3.5 h-3.5 text-forest" />
-                              {property.documentation || 'Available on request'}
+                              {property.documentation || 'On request'}
                             </p>
                           </div>
                           <div className="bg-ivory rounded-lg p-3">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Payment Plan</p>
-                            <p className="font-bold text-charcoal">
-                              {property.paymentPlan || 'Contact us'}
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Payment Plan</p>
+                            <p className="font-bold text-charcoal text-sm">{property.paymentPlan || 'Full payment'}</p>
+                          </div>
+                          <div className="bg-ivory rounded-lg p-3">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Development</p>
+                            <p className="font-bold text-charcoal text-sm">{property.developmentStatus || 'Ready to build'}</p>
+                          </div>
+                          <div className="bg-ivory rounded-lg p-3">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Available Plots</p>
+                            <p className="font-bold text-charcoal text-sm">
+                              {property.availablePlots ? `${property.availablePlots} of ${property.totalPlots || '—'}` : 'Contact us'}
                             </p>
                           </div>
                           <div className="bg-ivory rounded-lg p-3">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Development</p>
-                            <p className="font-bold text-charcoal">
-                              {property.developmentStatus || 'Ready to build'}
-                            </p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5 font-bold">Region</p>
+                            <p className="font-bold text-charcoal text-sm">{property.region || '—'}</p>
                           </div>
                         </div>
 
+                        {/* Nearby Landmarks */}
+                        {property.landmarks && property.landmarks.length > 0 && (
+                          <div className="mb-5">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-bold mb-2 flex items-center gap-1">
+                              <Navigation className="w-3 h-3" /> Nearby Landmarks
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {property.landmarks.map((l: string) => (
+                                <span key={l} className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg font-medium">{l}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Features */}
                         {property.features && property.features.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-6">
+                          <div className="flex flex-wrap gap-2 mb-5">
                             {property.features.map((f: string) => (
                               <span key={f} className="text-xs bg-sage/10 text-forest px-3 py-1 rounded-full font-medium">{f}</span>
                             ))}
                           </div>
                         )}
 
+                        {/* Map Toggle */}
+                        {property.coordinates && (
+                          <div className="mb-5">
+                            <button
+                              onClick={() => setExpandedMap(expandedMap === property.id ? null : property.id)}
+                              className="flex items-center gap-2 text-sm font-bold text-forest hover:text-forest-light transition-colors"
+                            >
+                              <Map className="w-4 h-4" />
+                              {expandedMap === property.id ? 'Hide Map' : 'View on Map'}
+                            </button>
+                            {expandedMap === property.id && (
+                              <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 h-48">
+                                <iframe
+                                  title={`Map of ${property.title}`}
+                                  width="100%"
+                                  height="100%"
+                                  style={{ border: 0 }}
+                                  loading="lazy"
+                                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.lng - 0.01}%2C${property.coordinates.lat - 0.005}%2C${property.coordinates.lng + 0.01}%2C${property.coordinates.lat + 0.005}&layer=mapnik&marker=${property.coordinates.lat}%2C${property.coordinates.lng}`}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* CTAs */}
                         <div className="flex flex-col sm:flex-row gap-3">
                           <a
-                            href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in the land: ${property.title} at ${property.area}, ${property.state} (${property.sqm || property.landSize}sqm, ₦${(property.price / 1000000).toFixed(0)}M). Please send me more details.`)}`}
+                            href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in the land: ${property.title} at ${property.area}, ${property.state} (${property.sqm || property.landSize}sqm, ₦${(property.price / 1000000).toFixed(0)}M). ${property.availablePlots ? property.availablePlots + ' plots available.' : ''} Please send me more details.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-500 transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-green-500 transition-all"
                           >
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                            Enquire on WhatsApp
+                            WhatsApp
                           </a>
                           <Link
                             href={`/book-inspection?property=${encodeURIComponent(property.title)}&location=${encodeURIComponent(property.area)}&state=${encodeURIComponent(property.state)}`}
-                            className="flex items-center justify-center gap-2 bg-forest text-white px-6 py-3 rounded-xl font-bold hover:bg-forest-light transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 bg-forest text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-forest-light transition-all"
                           >
-                            <Eye className="w-5 h-5" /> Book Inspection — ₦20,000
+                            <Eye className="w-5 h-5" /> Inspection — ₦20,000
                           </Link>
-                          <Link
-                            href={`tel:+2348065019971`}
-                            className="flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                          <a
+                            href="tel:+2348065019971"
+                            className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all"
                           >
-                            <Phone className="w-5 h-5" /> Speak With Agent
-                          </Link>
+                            <Phone className="w-4 h-4" /> Call Agent
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -187,8 +277,60 @@ export default function LandPage() {
         </div>
       </section>
 
-      {/* Why Buy Land With De-Greenacres */}
+      {/* Southeast Focus Section */}
       <section className="section-padding bg-white">
+        <div className="container-custom">
+          <ScrollReveal>
+            <div className="bg-gradient-to-br from-forest/5 to-sage/5 rounded-3xl p-8 md:p-12 border border-sage/20">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                  <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">SOUTHEAST NIGERIA</p>
+                  <h2 className="font-display text-3xl md:text-4xl text-charcoal mb-4">Land opportunities in the Southeast</h2>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Uyo, Enugu and surrounding areas offer some of the best value for land investment in Nigeria. Growing infrastructure, government development projects, and rising demand make these locations ideal for both residential and commercial plots.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center gap-2 text-sm text-charcoal">
+                      <CheckCircle className="w-4 h-4 text-forest" /> Affordable entry prices
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-charcoal">
+                      <CheckCircle className="w-4 h-4 text-forest" /> Strong title documentation
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-charcoal">
+                      <CheckCircle className="w-4 h-4 text-forest" /> Rapid infrastructure growth
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-charcoal">
+                      <CheckCircle className="w-4 h-4 text-forest" /> High appreciation potential
+                    </div>
+                  </div>
+                  <button onClick={() => setActiveRegion('Southeast')} className="bg-forest text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-forest-light transition-all inline-flex items-center gap-2">
+                    View Southeast Plots <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { city: 'Uyo', plots: landProperties.filter(p => p.state === 'Akwa Ibom').reduce((s, p) => s + (p.availablePlots || 0), 0), state: 'Akwa Ibom' },
+                    { city: 'Enugu', plots: landProperties.filter(p => p.state === 'Enugu').reduce((s, p) => s + (p.availablePlots || 0), 0), state: 'Enugu' },
+                    { city: 'Asaba', plots: 0, state: 'Delta' },
+                    { city: 'Aba', plots: 0, state: 'Abia' },
+                  ].map((loc) => (
+                    <div key={loc.city} className="bg-white rounded-xl p-5 text-center border border-gray-100">
+                      <Building className="w-8 h-8 text-forest mx-auto mb-2" />
+                      <h4 className="font-bold text-charcoal">{loc.city}</h4>
+                      <p className="text-xs text-gray-500">{loc.state}</p>
+                      <p className="text-lg font-bold text-forest mt-1">{loc.plots || '—'}</p>
+                      <p className="text-[10px] text-gray-400">plots available</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Why Buy Land With Us */}
+      <section className="section-padding">
         <div className="container-custom">
           <ScrollReveal>
             <div className="text-center mb-12">
@@ -204,7 +346,7 @@ export default function LandPage() {
               { icon: MapPin, title: 'Strategic Locations', desc: 'Plots in high-growth areas with road access and development potential.' },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 0.1}>
-                <div className="p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-all text-center group">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-all text-center group">
                   <div className="w-14 h-14 bg-forest/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-forest transition-all">
                     <item.icon className="w-7 h-7 text-forest group-hover:text-white transition-colors" />
                   </div>

@@ -35,6 +35,11 @@ export interface Property {
   documentation?: string;
   paymentPlan?: string;
   developmentStatus?: string;
+  coordinates?: { lat: number; lng: number };
+  availablePlots?: number;
+  totalPlots?: number;
+  landmarks?: string[];
+  region?: string;
   dateAdded: string;
   status: 'available' | 'sold' | 'rented' | 'pending' | 'archived';
   views: number;
@@ -211,6 +216,12 @@ export const properties: Property[] = [
     verificationStatus: 'verified',
     new: true,
     documentation: 'C of O',
+    coordinates: { lat: 5.0377, lng: 7.9128 },
+    availablePlots: 3,
+    totalPlots: 12,
+    landmarks: ['Shelter Afrique Gate', 'Uyo Plaza', 'Ikot Ekpene Road', 'Le Meridien Hotel'],
+    region: 'Southeast',
+    developmentStatus: 'Ready to build',
     dateAdded: '2026-09-08',
     status: 'available',
     views: 156,
@@ -246,6 +257,11 @@ export const properties: Property[] = [
     documentation: 'C of O',
     paymentPlan: '6-month instalments available',
     developmentStatus: 'Ready to build',
+    coordinates: { lat: 5.0175, lng: 7.9375 },
+    availablePlots: 5,
+    totalPlots: 20,
+    landmarks: ['Coastal Highway Junction', 'Ibom Tropicana', 'Godswill Akpabio Stadium', 'Federal Secretariat'],
+    region: 'Southeast',
     dateAdded: '2026-09-15',
     status: 'available',
     views: 89,
@@ -279,6 +295,12 @@ export const properties: Property[] = [
     verificationStatus: 'verified',
     new: true,
     documentation: 'Governor\'s Consent',
+    coordinates: { lat: 6.4744, lng: 3.5497 },
+    availablePlots: 8,
+    totalPlots: 30,
+    landmarks: ['Lekki-Epe Expressway', 'Abraham Adesanya Estate', 'Novare Mall', 'Caleb School'],
+    region: 'Southwest',
+    developmentStatus: 'Developing area — rapid growth',
     dateAdded: '2026-09-14',
     status: 'available',
     views: 67,
@@ -312,6 +334,13 @@ export const properties: Property[] = [
     verificationStatus: 'verified',
     new: true,
     documentation: 'C of O',
+    coordinates: { lat: 9.0864, lng: 7.4877 },
+    availablePlots: 2,
+    totalPlots: 8,
+    landmarks: ['Maitama District Hospital', 'Jabi Motor Park', 'US Embassy', 'Aso Villa'],
+    region: 'North Central',
+    paymentPlan: 'Full payment required',
+    developmentStatus: 'Premium zone — built-up area',
     dateAdded: '2026-09-13',
     status: 'available',
     views: 145,
