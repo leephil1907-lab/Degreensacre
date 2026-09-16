@@ -16,6 +16,7 @@ import {
   Bell,
   Shield,
   BarChart3,
+  Star,
 } from 'lucide-react';
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { label: 'Properties', href: '/admin/properties', icon: Home },
   { label: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
   { label: 'Compose Email', href: '/admin/compose', icon: Mail },
+  { label: 'Reviews', href: '/admin/reviews', icon: Star },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
