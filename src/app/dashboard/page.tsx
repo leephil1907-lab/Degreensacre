@@ -71,7 +71,7 @@ export default function DashboardPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-forest" />
       </div>
     );
   }
@@ -94,21 +94,21 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-ivory-50">
       {/* Dashboard Header */}
-      <div className="bg-white border-b border-charcoal-100">
+      <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 bg-forest/10 rounded-full flex items-center justify-center">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover" />
               ) : (
-                <User className="w-7 h-7 text-green-600" />
+                <User className="w-7 h-7 text-forest" />
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-serif text-charcoal-900">
+              <h1 className="font-display text-2xl text-charcoal">
                 Welcome back, {profile?.first_name || 'User'}
               </h1>
-              <p className="text-charcoal-500 text-sm">{profile?.email}</p>
+              <p className="text-gray-500 text-sm">{profile?.email}</p>
             </div>
           </div>
         </div>
@@ -125,8 +125,8 @@ export default function DashboardPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-green-50 text-green-700'
-                      : 'text-charcoal-600 hover:bg-charcoal-50'
+                      ? 'bg-forest/5 text-forest-light'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export default function DashboardPage() {
                   </div>
                   {tab.count !== undefined && tab.count > 0 && (
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      activeTab === tab.id ? 'bg-green-200 text-green-800' : 'bg-charcoal-100 text-charcoal-600'
+                      activeTab === tab.id ? 'bg-sage/20 text-forest' : 'bg-gray-100 text-gray-600'
                     }`}>
                       {tab.count}
                     </span>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
           <div className="flex-1 min-w-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-forest" />
               </div>
             ) : (
               <>
@@ -160,40 +160,40 @@ export default function DashboardPage() {
                       <div className="bg-white rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
                           <Heart className="w-5 h-5 text-red-500" />
-                          <span className="text-sm text-charcoal-500">Saved Properties</span>
+                          <span className="text-sm text-gray-500">Saved Properties</span>
                         </div>
-                        <p className="text-3xl font-bold text-charcoal-900">{savedProperties.length}</p>
+                        <p className="text-3xl font-bold text-charcoal">{savedProperties.length}</p>
                       </div>
                       <div className="bg-white rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
                           <MessageSquare className="w-5 h-5 text-blue-500" />
-                          <span className="text-sm text-charcoal-500">Enquiries</span>
+                          <span className="text-sm text-gray-500">Enquiries</span>
                         </div>
-                        <p className="text-3xl font-bold text-charcoal-900">{enquiries.length}</p>
+                        <p className="text-3xl font-bold text-charcoal">{enquiries.length}</p>
                       </div>
                       <div className="bg-white rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
                           <Calendar className="w-5 h-5 text-purple-500" />
-                          <span className="text-sm text-charcoal-500">Viewings</span>
+                          <span className="text-sm text-gray-500">Viewings</span>
                         </div>
-                        <p className="text-3xl font-bold text-charcoal-900">{viewings.length}</p>
+                        <p className="text-3xl font-bold text-charcoal">{viewings.length}</p>
                       </div>
                     </div>
 
                     {/* Recent Activity */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
-                      <h2 className="text-lg font-serif text-charcoal-900 mb-4">Recent Activity</h2>
+                      <h2 className="text-lg font-display text-charcoal mb-4">Recent Activity</h2>
                       {notifications.length === 0 ? (
-                        <p className="text-charcoal-400 text-center py-8">No recent activity</p>
+                        <p className="text-gray-400 text-center py-8">No recent activity</p>
                       ) : (
                         <div className="space-y-3">
                           {notifications.slice(0, 5).map((notif) => (
-                            <div key={notif.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal-50">
-                              <Bell className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            <div key={notif.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50">
+                              <Bell className="w-5 h-5 text-forest flex-shrink-0 mt-0.5" />
                               <div>
-                                <p className="text-sm font-medium text-charcoal-900">{notif.title}</p>
-                                <p className="text-sm text-charcoal-500">{notif.message}</p>
-                                <p className="text-xs text-charcoal-400 mt-1">
+                                <p className="text-sm font-medium text-charcoal">{notif.title}</p>
+                                <p className="text-sm text-gray-500">{notif.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">
                                   {new Date(notif.created_at).toLocaleDateString('en-NG')}
                                 </p>
                               </div>
@@ -208,15 +208,15 @@ export default function DashboardPage() {
                 {/* Saved Properties Tab */}
                 {activeTab === 'saved' && (
                   <div>
-                    <h2 className="text-2xl font-serif text-charcoal-900 mb-6">Saved Properties</h2>
+                    <h2 className="text-2xl font-display text-charcoal mb-6">Saved Properties</h2>
                     {savedProperties.length === 0 ? (
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <Heart className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-charcoal-900 mb-2">No saved properties</h3>
-                        <p className="text-charcoal-500 mb-6">Save properties you like to view them later</p>
+                        <h3 className="text-lg font-medium text-charcoal mb-2">No saved properties</h3>
+                        <p className="text-gray-500 mb-6">Save properties you like to view them later</p>
                         <Link
                           href="/properties"
-                          className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                          className="inline-block bg-forest text-white px-6 py-3 rounded-lg font-medium hover:bg-forest-light transition-colors"
                         >
                           Browse Properties
                         </Link>
@@ -237,12 +237,12 @@ export default function DashboardPage() {
                               />
                             )}
                             <div className="p-4">
-                              <h3 className="font-medium text-charcoal-900 mb-1">{property.title}</h3>
-                              <div className="flex items-center gap-1 text-charcoal-500 text-sm mb-2">
+                              <h3 className="font-medium text-charcoal mb-1">{property.title}</h3>
+                              <div className="flex items-center gap-1 text-gray-500 text-sm mb-2">
                                 <MapPin className="w-4 h-4" />
                                 {property.area}, {property.state}
                               </div>
-                              <p className="text-green-600 font-bold">{formatPrice(property.price)}</p>
+                              <p className="text-forest font-bold">{formatPrice(property.price)}</p>
                             </div>
                           </Link>
                         ))}
@@ -254,12 +254,12 @@ export default function DashboardPage() {
                 {/* Enquiries Tab */}
                 {activeTab === 'enquiries' && (
                   <div>
-                    <h2 className="text-2xl font-serif text-charcoal-900 mb-6">My Enquiries</h2>
+                    <h2 className="text-2xl font-display text-charcoal mb-6">My Enquiries</h2>
                     {enquiries.length === 0 ? (
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <MessageSquare className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-charcoal-900 mb-2">No enquiries yet</h3>
-                        <p className="text-charcoal-500">Send enquiries to property agents to get more information</p>
+                        <h3 className="text-lg font-medium text-charcoal mb-2">No enquiries yet</h3>
+                        <p className="text-gray-500">Send enquiries to property agents to get more information</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -267,8 +267,8 @@ export default function DashboardPage() {
                           <div key={enquiry.id} className="bg-white rounded-xl shadow-sm p-5">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h3 className="font-medium text-charcoal-900">{enquiry.properties?.title || 'General Enquiry'}</h3>
-                                <p className="text-sm text-charcoal-500">
+                                <h3 className="font-medium text-charcoal">{enquiry.properties?.title || 'General Enquiry'}</h3>
+                                <p className="text-sm text-gray-500">
                                   {new Date(enquiry.created_at).toLocaleDateString('en-NG', {
                                     day: 'numeric', month: 'short', year: 'numeric'
                                   })}
@@ -278,12 +278,12 @@ export default function DashboardPage() {
                                 enquiry.status === 'new' ? 'bg-blue-100 text-blue-700' :
                                 enquiry.status === 'contacted' ? 'bg-yellow-100 text-yellow-700' :
                                 enquiry.status === 'closed' ? 'bg-gray-100 text-gray-700' :
-                                'bg-green-100 text-green-700'
+                                'bg-green-100 text-forest-light'
                               }`}>
                                 {enquiry.status}
                               </span>
                             </div>
-                            <p className="text-sm text-charcoal-600 line-clamp-2">{enquiry.message}</p>
+                            <p className="text-sm text-gray-600 line-clamp-2">{enquiry.message}</p>
                           </div>
                         ))}
                       </div>
@@ -294,12 +294,12 @@ export default function DashboardPage() {
                 {/* Viewings Tab */}
                 {activeTab === 'viewings' && (
                   <div>
-                    <h2 className="text-2xl font-serif text-charcoal-900 mb-6">My Viewings</h2>
+                    <h2 className="text-2xl font-display text-charcoal mb-6">My Viewings</h2>
                     {viewings.length === 0 ? (
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <Calendar className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-charcoal-900 mb-2">No viewings scheduled</h3>
-                        <p className="text-charcoal-500">Schedule a viewing for properties you're interested in</p>
+                        <h3 className="text-lg font-medium text-charcoal mb-2">No viewings scheduled</h3>
+                        <p className="text-gray-500">Schedule a viewing for properties you're interested in</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -307,8 +307,8 @@ export default function DashboardPage() {
                           <div key={viewing.id} className="bg-white rounded-xl shadow-sm p-5">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h3 className="font-medium text-charcoal-900">{viewing.properties?.title || 'Property Viewing'}</h3>
-                                <div className="flex items-center gap-2 text-sm text-charcoal-500 mt-1">
+                                <h3 className="font-medium text-charcoal">{viewing.properties?.title || 'Property Viewing'}</h3>
+                                <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                                   <Calendar className="w-4 h-4" />
                                   {new Date(viewing.preferred_date).toLocaleDateString('en-NG', {
                                     weekday: 'short', day: 'numeric', month: 'short'
@@ -318,7 +318,7 @@ export default function DashboardPage() {
                                 </div>
                               </div>
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                viewing.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                viewing.status === 'confirmed' ? 'bg-green-100 text-forest-light' :
                                 viewing.status === 'requested' ? 'bg-blue-100 text-blue-700' :
                                 viewing.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                                 'bg-gray-100 text-gray-700'
@@ -327,7 +327,7 @@ export default function DashboardPage() {
                               </span>
                             </div>
                             {viewing.notes && (
-                              <p className="text-sm text-charcoal-600 mt-2">{viewing.notes}</p>
+                              <p className="text-sm text-gray-600 mt-2">{viewing.notes}</p>
                             )}
                           </div>
                         ))}
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                 {activeTab === 'notifications' && (
                   <div>
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-serif text-charcoal-900">Notifications</h2>
+                      <h2 className="text-2xl font-display text-charcoal">Notifications</h2>
                       {unreadCount > 0 && (
                         <button
                           onClick={async () => {
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
                             setUnreadCount(0);
                           }}
-                          className="text-sm text-green-600 hover:text-green-700"
+                          className="text-sm text-forest hover:text-forest-light"
                         >
                           Mark all as read
                         </button>
@@ -361,8 +361,8 @@ export default function DashboardPage() {
                     {notifications.length === 0 ? (
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <Bell className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-charcoal-900 mb-2">No notifications</h3>
-                        <p className="text-charcoal-500">You're all caught up</p>
+                        <h3 className="text-lg font-medium text-charcoal mb-2">No notifications</h3>
+                        <p className="text-gray-500">You're all caught up</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -373,11 +373,11 @@ export default function DashboardPage() {
                               !notif.is_read ? 'border-l-4 border-green-500' : ''
                             }`}
                           >
-                            <Bell className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            <Bell className="w-5 h-5 text-forest flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-charcoal-900">{notif.title}</p>
-                              <p className="text-sm text-charcoal-500">{notif.message}</p>
-                              <p className="text-xs text-charcoal-400 mt-1">
+                              <p className="text-sm font-medium text-charcoal">{notif.title}</p>
+                              <p className="text-sm text-gray-500">{notif.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">
                                 {new Date(notif.created_at).toLocaleDateString('en-NG')}
                               </p>
                             </div>
@@ -440,7 +440,7 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
 
   return (
     <div>
-      <h2 className="text-2xl font-serif text-charcoal-900 mb-6">Profile Settings</h2>
+      <h2 className="text-2xl font-display text-charcoal mb-6">Profile Settings</h2>
       <div className="bg-white rounded-xl shadow-sm p-6">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
@@ -448,7 +448,7 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
           </div>
         )}
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          <div className="mb-4 p-3 bg-forest/5 border border-green-200 rounded-lg text-sm text-forest">
             Profile updated successfully
           </div>
         )}
@@ -456,42 +456,42 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-charcoal-700 mb-1">First Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
               <input
                 type="text"
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                className="w-full px-4 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal-700 mb-1">Last Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
               <input
                 type="text"
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                className="w-full px-4 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest focus:border-transparent"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal-700 mb-1">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest focus:border-transparent"
               placeholder="+234 800 000 0000"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal-700 mb-1">State</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
             <select
               value={formData.state}
               onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-              className="w-full px-4 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest focus:border-transparent"
             >
               <option value="">Select state</option>
               <option value="Lagos">Lagos</option>
@@ -506,12 +506,12 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal-700 mb-1">Bio</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
             <textarea
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest focus:border-transparent"
               placeholder="Tell us about yourself..."
             />
           </div>
@@ -519,7 +519,7 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
           <button
             type="submit"
             disabled={saving}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="bg-forest text-white px-6 py-2 rounded-lg font-medium hover:bg-forest-light transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             Save Changes

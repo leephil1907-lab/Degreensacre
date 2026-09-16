@@ -94,23 +94,35 @@ export default function ListPropertyPage() {
       <div className="container-custom max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-charcoal mb-4">List Your Property</h1>
+          <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">FOR OWNERS, AGENTS & DEVELOPERS</p>
+          <h1 className="font-display text-4xl md:text-5xl text-charcoal mb-4">Put your property <em className="text-forest">in front of serious buyers.</em></h1>
           <p className="text-lg text-gray-600">
-            Reach thousands of potential buyers and tenants across Nigeria
+            Tell us about your property, upload clear photos and we&apos;ll guide you through our Nigerian verification process.
           </p>
         </div>
 
         {/* Progress Bar */}
         <div className="bg-white rounded-2xl shadow-soft p-6 mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Step {step} of {totalSteps}</span>
-            <span className="text-sm font-semibold text-forest">{Math.round((step / totalSteps) * 100)}% Complete</span>
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Step {step} of {totalSteps}</span>
+            <span className="text-sm font-bold text-forest">{Math.round((step / totalSteps) * 100)}% Complete</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-100 rounded-full h-2.5">
             <div
-              className="bg-forest h-2 rounded-full transition-all duration-300"
+              className="bg-forest h-2.5 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             />
+          </div>
+          {/* Step labels */}
+          <div className="flex justify-between mt-3 text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+            <span className={step >= 1 ? 'text-forest font-bold' : ''}>Basics</span>
+            <span className={step >= 2 ? 'text-forest font-bold' : ''}>Location</span>
+            <span className={step >= 3 ? 'text-forest font-bold' : ''}>Details</span>
+            <span className={step >= 4 ? 'text-forest font-bold' : ''}>Price</span>
+            <span className={step >= 5 ? 'text-forest font-bold' : ''}>Features</span>
+            <span className={step >= 6 ? 'text-forest font-bold' : ''}>Images</span>
+            <span className={step >= 7 ? 'text-forest font-bold' : ''}>Docs</span>
+            <span className={step >= 8 ? 'text-forest font-bold' : ''}>Contact</span>
           </div>
         </div>
 
@@ -119,7 +131,7 @@ export default function ListPropertyPage() {
           {/* Step 1: Basic Information */}
           {step === 1 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Basic Information</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Basic Information</h2>
               
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">Property Type</label>
@@ -181,7 +193,7 @@ export default function ListPropertyPage() {
           {/* Step 2: Location */}
           {step === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Location Details</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Location Details</h2>
               
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">State</label>
@@ -235,7 +247,7 @@ export default function ListPropertyPage() {
           {/* Step 3: Property Details */}
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Property Details</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Property Details</h2>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -299,7 +311,7 @@ export default function ListPropertyPage() {
           {/* Step 4: Pricing */}
           {step === 4 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Pricing Information</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Pricing Information</h2>
               
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">Price (₦)</label>
@@ -345,7 +357,7 @@ export default function ListPropertyPage() {
           {/* Step 5: Features */}
           {step === 5 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Features & Amenities</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Features & Amenities</h2>
               
               <div className="grid grid-cols-2 gap-3">
                 {commonFeatures.map(feature => (
@@ -368,7 +380,7 @@ export default function ListPropertyPage() {
           {/* Step 6: Images */}
           {step === 6 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Property Images</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Property Images</h2>
               
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
                 <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,7 +400,7 @@ export default function ListPropertyPage() {
           {/* Step 7: Documentation */}
           {step === 7 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Property Documentation</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Property Documentation</h2>
               
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">Title Document Type</label>
@@ -423,7 +435,7 @@ export default function ListPropertyPage() {
           {/* Step 8: Contact Information */}
           {step === 8 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Contact Information</h2>
+              <h2 className="font-display text-2xl text-charcoal mb-6">Contact Information</h2>
               
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-2">Full Name</label>
