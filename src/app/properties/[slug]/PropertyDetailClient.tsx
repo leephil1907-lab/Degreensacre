@@ -11,6 +11,7 @@ import {
   CreditCard, Building, Map, TreePine
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { properties as sampleProperties } from '@/data/properties';
 
 interface Property {
   id: string;
@@ -87,10 +88,69 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const fetchProperty = async () => {
     setLoading(true);
     try {
+      // First try the database API
       const response = await fetch(`/api/properties/${slug}`);
-      if (!response.ok) throw new Error('Property not found');
-      const data = await response.json();
-      setProperty(data.property);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.property) {
+          setProperty(data.property);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback: check sample properties from static data
+      const sampleMatch = sampleProperties.find(p => p.slug === slug);
+      if (sampleMatch) {
+        // Convert sample property to match the Property interface
+        setProperty({
+          id: sampleMatch.id,
+          slug: sampleMatch.slug,
+          title: sampleMatch.title,
+          type: sampleMatch.type,
+          property_type: sampleMatch.propertyType,
+          price: sampleMatch.price,
+          price_period: sampleMatch.pricePeriod,
+          bedrooms: sampleMatch.bedrooms,
+          bathrooms: sampleMatch.bathrooms,
+          toilets: sampleMatch.toilets,
+          sqm: sampleMatch.sqm,
+          parking: sampleMatch.parking,
+          area: sampleMatch.area,
+          state: sampleMatch.state,
+          lga: sampleMatch.lga,
+          address: sampleMatch.address,
+          description: sampleMatch.description,
+          features: sampleMatch.features,
+          amenities: [],
+          verification_status: sampleMatch.verificationStatus || 'verified',
+          status: sampleMatch.status,
+          featured: sampleMatch.featured,
+          views: sampleMatch.views,
+          saves: 0,
+          furnished: sampleMatch.furnished,
+          serviced: sampleMatch.serviced,
+          gated_estate: sampleMatch.gatedEstate,
+          documentation: sampleMatch.documentation,
+          payment_plan: sampleMatch.paymentPlan,
+          paymentPlan: sampleMatch.paymentPlan,
+          development_status: sampleMatch.developmentStatus,
+          developmentStatus: sampleMatch.developmentStatus,
+          coordinates: sampleMatch.coordinates,
+          landmarks: sampleMatch.landmarks,
+          region: sampleMatch.region,
+          date_added: sampleMatch.dateAdded,
+          property_images: sampleMatch.images.map((url, i) => ({
+            url,
+            display_order: i,
+            is_primary: i === 0,
+          })),
+        });
+        setLoading(false);
+        return;
+      }
+
+      setError('Property not found');
     } catch (err: any) {
       setError(err.message);
     } finally {

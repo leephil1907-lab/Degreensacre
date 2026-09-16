@@ -6,7 +6,7 @@ import ScrollReveal from '@/components/ScrollReveal';
 import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
 import CACIcon from '@/components/CACIcon';
-import Testimonials from '@/components/Testimonials';
+import ReviewsSection from '@/components/ReviewsSection';
 import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
 
 export default function HomePage() {
@@ -317,7 +317,7 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
-            <Testimonials />
+            <ReviewsSection />
           </ScrollReveal>
         </div>
       </section>
