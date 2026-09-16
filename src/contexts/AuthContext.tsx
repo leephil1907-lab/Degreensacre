@@ -100,6 +100,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+
+    // Create profile record in profiles table
+    if (data.user) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: email,
+        first_name: metadata?.first_name || '',
+        last_name: metadata?.last_name || '',
+        phone: metadata?.phone || null,
+        state: metadata?.state || null,
+        country: 'Nigeria',
+        account_type: metadata?.account_type || 'buyer',
+        is_admin: false,
+        is_verified: false,
+      });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Don't throw — auth succeeded, profile can be created later
+      }
+    }
+
     return data;
   };
 
@@ -110,6 +132,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+
+    // Update last login timestamp
+    if (data.user) {
+      await supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', data.user.id);
+    }
+
     return data;
   };
 
