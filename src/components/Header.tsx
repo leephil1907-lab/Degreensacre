@@ -15,10 +15,10 @@ export default function Header() {
     { label: 'Buy', href: '/properties?type=sale' },
     { label: 'Rent', href: '/properties?type=rent' },
     { label: 'Land', href: '/properties?type=land' },
-    { label: 'Developments', href: '/developments' },
-    { label: 'Insights', href: '/insights' },
+    { label: 'Commercial', href: '/properties?type=commercial' },
+    { label: 'Short Let', href: '/properties?type=short-let' },
+    { label: 'Investment', href: '/diaspora' },
     { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact' },
   ];
 
   const closeMobile = () => setMobileMenuOpen(false);

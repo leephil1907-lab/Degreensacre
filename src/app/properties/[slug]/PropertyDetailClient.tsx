@@ -495,7 +495,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   Call Agent
                 </a>
                 <a
-                  href={`https://wa.me/${(property.agents?.whatsapp || '+2347041754800').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in: ${property.title}`)}`}
+                  href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in ${property.title} at ${property.area}, ${property.state}, listed at ₦${(property.price || 0).toLocaleString()}. Please send me more information and available inspection dates.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-lg font-medium hover:bg-[#20BD5A] transition-colors"
@@ -510,13 +510,13 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   <Mail className="w-5 h-5" />
                   Send Enquiry
                 </button>
-                <button
-                  onClick={() => setShowViewing(!showViewing)}
-                  className="w-full flex items-center justify-center gap-2 border border-charcoal-300 text-charcoal-700 py-3 rounded-lg font-medium hover:bg-charcoal-50 transition-colors"
+                <Link
+                  href={`/book-inspection?property=${encodeURIComponent(property.title || '')}&location=${encodeURIComponent(property.area || '')}&state=${encodeURIComponent(property.state || '')}`}
+                  className="w-full flex items-center justify-center gap-2 bg-forest text-white py-3 rounded-lg font-bold hover:bg-forest-light transition-colors"
                 >
                   <Calendar className="w-5 h-5" />
-                  Schedule Viewing
-                </button>
+                  Book Inspection — ₦20,000
+                </Link>
               </div>
 
               {/* Enquiry Form */}
