@@ -85,7 +85,7 @@ export default function EnquiriesPage() {
               </div>
               <div className="flex items-center gap-2">
                 {enquiry.status === 'New' && <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">New</span>}
-                {enquiry.status === 'Replied' && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Replied</span>}
+                {enquiry.status === 'Replied' && <span className="px-2 py-1 bg-forest/10 text-forest-light text-xs font-semibold rounded">Replied</span>}
                 {enquiry.status === 'Closed' && <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded">Closed</span>}
               </div>
             </div>

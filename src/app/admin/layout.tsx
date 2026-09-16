@@ -51,8 +51,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="h-16 flex items-center px-6 border-b border-gray-800">
           <img src="/logo-icon.png" alt="Logo" className="w-8 h-8 mr-3" />
           <div>
-            <div className="font-bold text-sm">Admin Panel</div>
-            <div className="text-[10px] text-gray-400">De-Greenacres</div>
+            <div className="font-display text-sm">Admin Panel</div>
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">De-Greenacres</div>
           </div>
           <button
             className="lg:hidden ml-auto text-gray-400 hover:text-white"
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
 
           <div className="hidden lg:block">
-            <h1 className="text-lg font-bold text-charcoal">
+            <h1 className="font-display text-lg text-charcoal">
               {navItems.find((n) => n.href === pathname)?.label || 'Admin'}
             </h1>
           </div>

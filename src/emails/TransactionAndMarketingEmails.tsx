@@ -17,7 +17,7 @@ export function PaymentReceiptEmail({ name, amount, reference, description, date
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '24px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '4px' }}>Amount Paid</div>
-        <div style={{ fontSize: '36px', fontWeight: 700, color: '#2D5016' }}>₦{amount.toLocaleString()}</div>
+        <div style={{ fontSize: '36px', fontWeight: 700, color: '#283818' }}>₦{amount.toLocaleString()}</div>
       </div>
       <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
         <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
@@ -79,7 +79,7 @@ export function SubscriptionRenewalEmail({ name, plan, amount, renewalDate }: Su
       </p>
       <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' as const, letterSpacing: '1px' }}>Renewal Amount</div>
-        <div style={{ fontSize: '28px', fontWeight: 700, color: '#2D5016', marginTop: '4px' }}>₦{amount.toLocaleString()}</div>
+        <div style={{ fontSize: '28px', fontWeight: 700, color: '#283818', marginTop: '4px' }}>₦{amount.toLocaleString()}</div>
       </div>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
         To manage your subscription, visit your account settings.
@@ -104,7 +104,7 @@ export function RefundProcessedEmail({ name, amount, reference, reason }: Refund
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '12px', color: '#666' }}>Refund Amount</div>
-        <div style={{ fontSize: '28px', fontWeight: 700, color: '#2D5016' }}>₦{amount.toLocaleString()}</div>
+        <div style={{ fontSize: '28px', fontWeight: 700, color: '#283818' }}>₦{amount.toLocaleString()}</div>
       </div>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
         <strong>Reason:</strong> {reason}<br />
@@ -129,7 +129,7 @@ export function WeeklyDigestEmail({ name, newCount, topProperties, marketUpdate 
         Here's what happened this week at De-Greenacres:
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
-        <div style={{ fontSize: '36px', fontWeight: 700, color: '#2D5016' }}>{newCount}</div>
+        <div style={{ fontSize: '36px', fontWeight: 700, color: '#283818' }}>{newCount}</div>
         <div style={{ fontSize: '13px', color: '#666' }}>New properties listed this week</div>
       </div>
       <div style={{ fontSize: '14px', fontWeight: 600, color: '#1A1A1A', marginBottom: '12px' }}>🔥 Top Picks This Week</div>
@@ -137,7 +137,7 @@ export function WeeklyDigestEmail({ name, newCount, topProperties, marketUpdate 
         <div key={i} style={{ border: '1px solid #e5e5e5', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#1A1A1A' }}>{p.title}</div>
           <div style={{ fontSize: '12px', color: '#666', margin: '4px 0' }}>📍 {p.location}</div>
-          <a href={p.url} style={{ fontSize: '16px', fontWeight: 700, color: '#2D5016', textDecoration: 'none' }}>₦{p.price.toLocaleString()} →</a>
+          <a href={p.url} style={{ fontSize: '16px', fontWeight: 700, color: '#283818', textDecoration: 'none' }}>₦{p.price.toLocaleString()} →</a>
         </div>
       ))}
       {marketUpdate && (
@@ -148,7 +148,7 @@ export function WeeklyDigestEmail({ name, newCount, topProperties, marketUpdate 
       )}
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
-          <a href="https://degreenacres.com/properties" style={{ display: 'inline-block', backgroundColor: '#2D5016', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href="https://degreenacres.com/properties" style={{ display: 'inline-block', backgroundColor: '#283818', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             Explore All Properties
           </a>
         </td></tr>
@@ -172,7 +172,7 @@ export function ReEngagementEmail({ name, daysSinceLastVisit, newCount }: ReEnga
         It's been <strong>{daysSinceLastVisit} days</strong> since your last visit. A lot has changed!
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
-        <div style={{ fontSize: '36px', fontWeight: 700, color: '#2D5016' }}>{newCount}</div>
+        <div style={{ fontSize: '36px', fontWeight: 700, color: '#283818' }}>{newCount}</div>
         <div style={{ fontSize: '13px', color: '#666' }}>New properties listed since your last visit</div>
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '24px' }}>
@@ -205,7 +205,7 @@ export function ReferralInvitationEmail({ name, referralCode, referralUrl, bonus
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '24px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '8px' }}>Your Referral Code</div>
-        <div style={{ fontSize: '28px', fontWeight: 700, color: '#2D5016', fontFamily: 'monospace', letterSpacing: '2px' }}>{referralCode}</div>
+        <div style={{ fontSize: '28px', fontWeight: 700, color: '#283818', fontFamily: 'monospace', letterSpacing: '2px' }}>{referralCode}</div>
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
@@ -231,7 +231,7 @@ export function ContactFormEmail({ name, email, phone, subject, message }: Conta
       <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
         <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
           <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>👤 Name:</td><td style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600, paddingBottom: '10px' }}>{name}</td></tr>
-          <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>📧 Email:</td><td style={{ fontSize: '13px', paddingBottom: '10px' }}><a href={`mailto:${email}`} style={{ color: '#2D5016' }}>{email}</a></td></tr>
+          <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>📧 Email:</td><td style={{ fontSize: '13px', paddingBottom: '10px' }}><a href={`mailto:${email}`} style={{ color: '#283818' }}>{email}</a></td></tr>
           {phone && <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>📞 Phone:</td><td style={{ fontSize: '13px', paddingBottom: '10px' }}>{phone}</td></tr>}
           <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>📋 Subject:</td><td style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600, paddingBottom: '10px' }}>{subject}</td></tr>
         </table>
@@ -266,7 +266,7 @@ export function SupportTicketEmail({ name, ticketId, subject }: SupportTicketPro
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
-          <a href={`https://degreenacres.com/dashboard/support/${ticketId}`} style={{ display: 'inline-block', backgroundColor: '#2D5016', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href={`https://degreenacres.com/dashboard/support/${ticketId}`} style={{ display: 'inline-block', backgroundColor: '#283818', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             Track Ticket
           </a>
         </td></tr>
@@ -316,7 +316,7 @@ export function PerformanceReportEmail({ name, totalViews, totalEnquiries, topLi
       </p>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <div style={{ flex: 1, backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', textAlign: 'center' as const }}>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#2D5016' }}>{totalViews}</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#283818' }}>{totalViews}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>Total Views</div>
         </div>
         <div style={{ flex: 1, backgroundColor: '#fff0f7', padding: '20px', borderRadius: '8px', textAlign: 'center' as const }}>
@@ -330,7 +330,7 @@ export function PerformanceReportEmail({ name, totalViews, totalEnquiries, topLi
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
-          <a href="https://degreenacres.com/dashboard/analytics" style={{ display: 'inline-block', backgroundColor: '#2D5016', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href="https://degreenacres.com/dashboard/analytics" style={{ display: 'inline-block', backgroundColor: '#283818', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             View Full Analytics
           </a>
         </td></tr>

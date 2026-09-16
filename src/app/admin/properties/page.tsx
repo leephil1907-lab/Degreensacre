@@ -107,11 +107,11 @@ export default function PropertiesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {property.status === 'Approved' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                      {property.status === 'Approved' && <CheckCircle className="w-4 h-4 text-forest" />}
                       {property.status === 'Pending' && <Clock className="w-4 h-4 text-amber-600" />}
                       {property.status === 'Rejected' && <XCircle className="w-4 h-4 text-red-600" />}
                       <span className={`text-sm font-semibold ${
-                        property.status === 'Approved' ? 'text-green-600' :
+                        property.status === 'Approved' ? 'text-forest' :
                         property.status === 'Pending' ? 'text-amber-600' : 'text-red-600'
                       }`}>
                         {property.status}

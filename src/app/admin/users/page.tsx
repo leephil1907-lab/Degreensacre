@@ -144,11 +144,11 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {user.status === 'Active' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                      {user.status === 'Active' && <CheckCircle className="w-4 h-4 text-forest" />}
                       {user.status === 'Pending' && <Clock className="w-4 h-4 text-amber-600" />}
                       {user.status === 'Suspended' && <XCircle className="w-4 h-4 text-red-600" />}
                       <span className={`text-sm font-semibold ${
-                        user.status === 'Active' ? 'text-green-600' :
+                        user.status === 'Active' ? 'text-forest' :
                         user.status === 'Pending' ? 'text-amber-600' :
                         'text-red-600'
                       }`}>

@@ -12,8 +12,9 @@ export default function EmailLayout({ previewText, children }: EmailLayoutProps)
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>De-Greenacres Properties</title>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body style={{ margin: 0, padding: 0, backgroundColor: '#FAF9F6', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}>
+      <body style={{ margin: 0, padding: 0, backgroundColor: '#f5f5f0', fontFamily: "'Manrope', 'Segoe UI', Arial, sans-serif" }}>
         {previewText && (
           <div style={{ display: 'none', maxHeight: '0', overflow: 'hidden', opacity: 0 }}>
             {previewText}
@@ -21,37 +22,42 @@ export default function EmailLayout({ previewText, children }: EmailLayoutProps)
         )}
 
         {/* Outer wrapper */}
-        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ backgroundColor: '#FAF9F6' }}>
+        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ backgroundColor: '#f5f5f0' }}>
           <tr>
-            <td align="center" style={{ padding: '20px 16px' }}>
+            <td align="center" style={{ padding: '24px 16px' }}>
 
               {/* Email container */}
-              <table role="presentation" width="600" cellPadding={0} cellSpacing={0} style={{ maxWidth: '600px', width: '100%', backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+              <table role="presentation" width="600" cellPadding={0} cellSpacing={0} style={{ maxWidth: '600px', width: '100%', backgroundColor: '#ffffff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
 
-                {/* Header with green gradient */}
+                {/* Header with forest gradient */}
                 <tr>
-                  <td style={{ background: 'linear-gradient(135deg, #2D5016 0%, #3a6b1e 100%)', padding: '32px 40px', textAlign: 'center' as const }}>
+                  <td style={{ background: 'linear-gradient(135deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)', padding: '36px 40px', textAlign: 'center' as const }}>
                     <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
                       <tr>
                         <td align="center">
                           <img
                             src="https://degreenacres.com/logo-icon.png"
                             alt="De-Greenacres"
-                            width={56}
-                            height={56}
-                            style={{ display: 'block', borderRadius: '8px' }}
+                            width={52}
+                            height={52}
+                            style={{ display: 'block', borderRadius: '10px' }}
                           />
-                          <div style={{ height: '12px' }} />
-                          <div style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: '-0.3px' }}>
+                          <div style={{ height: '14px' }} />
+                          <div style={{ color: '#ffffff', fontSize: '22px', fontWeight: 400, fontFamily: "'DM Serif Display', Georgia, serif", letterSpacing: '-0.3px' }}>
                             De-Greenacres
                           </div>
-                          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase' as const, marginTop: '2px' }}>
+                          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase' as const, marginTop: '4px' }}>
                             Properties Limited
                           </div>
                         </td>
                       </tr>
                     </table>
                   </td>
+                </tr>
+
+                {/* Sage accent bar */}
+                <tr>
+                  <td style={{ height: '3px', background: 'linear-gradient(90deg, #788848, #b8b898, #788848)' }} />
                 </tr>
 
                 {/* Body content */}
@@ -64,46 +70,48 @@ export default function EmailLayout({ previewText, children }: EmailLayoutProps)
                 {/* Divider */}
                 <tr>
                   <td style={{ padding: '0 40px' }}>
-                    <div style={{ borderTop: '1px solid #E8E8E8' }} />
+                    <div style={{ borderTop: '1px solid #e8e8d8' }} />
                   </td>
                 </tr>
 
                 {/* Footer */}
                 <tr>
                   <td style={{ padding: '32px 40px', textAlign: 'center' as const }}>
-                    {/* Contact info */}
+                    {/* CAC Badge */}
                     <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
                       <tr>
-                        <td align="center" style={{ paddingBottom: '16px' }}>
-                          <div style={{ fontSize: '13px', color: '#666666', lineHeight: '1.6' }}>
-                            <span style={{ fontWeight: 600, color: '#1A1A1A' }}>RC: 1856064</span> &nbsp;·&nbsp; CAC Registered
+                        <td align="center" style={{ paddingBottom: '12px' }}>
+                          <div style={{ display: 'inline-block', backgroundColor: '#f0f0e8', borderRadius: '20px', padding: '6px 16px', fontSize: '12px', color: '#283818', fontWeight: 600 }}>
+                            🛡️ RC: 1856064 · CAC Registered
                           </div>
                         </td>
                       </tr>
                       <tr>
                         <td align="center" style={{ paddingBottom: '16px' }}>
-                          <div style={{ fontSize: '12px', color: '#999999', lineHeight: '1.6' }}>
-                            📞 +234 806 501 9971 &nbsp;·&nbsp; ✉️ de_greenacrespropertiesltd@yahoo.com
+                          <div style={{ fontSize: '12px', color: '#888888', lineHeight: '1.8' }}>
+                            📞 +234 806 501 9971 &nbsp;·&nbsp; ✉️ degreenacrespropertieslimited@gmail.com
                           </div>
                         </td>
                       </tr>
                       <tr>
                         <td align="center" style={{ paddingBottom: '16px' }}>
-                          <a href="https://wa.me/2347041754800" style={{ display: 'inline-block', backgroundColor: '#25D366', color: '#ffffff', padding: '8px 20px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}>
+                          <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20received%20your%20email%20and%20would%20like%20to%20enquire%20further." style={{ display: 'inline-block', backgroundColor: '#25D366', color: '#ffffff', padding: '10px 24px', borderRadius: '24px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Manrope', sans-serif" }}>
                             💬 Chat on WhatsApp
                           </a>
                         </td>
                       </tr>
                       <tr>
                         <td align="center">
-                          <div style={{ fontSize: '11px', color: '#bbbbbb', lineHeight: '1.6' }}>
+                          <div style={{ fontSize: '11px', color: '#bbbbbb', lineHeight: '1.8' }}>
                             © {new Date().getFullYear()} De-Greenacres Properties Limited. All rights reserved.
                             <br />
-                            <a href="https://degreenacres.com" style={{ color: '#2D5016', textDecoration: 'none' }}>Visit Website</a>
+                            <a href="https://degreenacres.com" style={{ color: '#283818', textDecoration: 'none', fontWeight: 600 }}>Visit Website</a>
                             &nbsp;·&nbsp;
-                            <a href="https://degreenacres.com/privacy" style={{ color: '#999999', textDecoration: 'none' }}>Privacy Policy</a>
+                            <a href="https://degreenacres.com/privacy" style={{ color: '#999999', textDecoration: 'none' }}>Privacy</a>
                             &nbsp;·&nbsp;
-                            <a href="https://degreenacres.com/terms" style={{ color: '#999999', textDecoration: 'none' }}>Terms of Service</a>
+                            <a href="https://degreenacres.com/terms" style={{ color: '#999999', textDecoration: 'none' }}>Terms</a>
+                            &nbsp;·&nbsp;
+                            <a href="https://degreenacres.com/book-inspection" style={{ color: '#283818', textDecoration: 'none', fontWeight: 600 }}>Book Inspection</a>
                           </div>
                         </td>
                       </tr>
@@ -114,7 +122,7 @@ export default function EmailLayout({ previewText, children }: EmailLayoutProps)
 
               {/* Anti-spam notice */}
               <div style={{ marginTop: '16px', fontSize: '10px', color: '#cccccc', textAlign: 'center' as const }}>
-                You received this email because you have an account with De-Greenacres Properties Limited.
+                You received this email because you have an account or enquiry with De-Greenacres Properties Limited.
               </div>
             </td>
           </tr>

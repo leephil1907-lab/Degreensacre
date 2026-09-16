@@ -65,10 +65,10 @@ export default function ComposeEmailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3"
         >
-          <CheckCircle className="w-5 h-5 text-green-600" />
+          <CheckCircle className="w-5 h-5 text-forest" />
           <div>
             <div className="font-semibold text-green-800 text-sm">Email sent successfully!</div>
-            <div className="text-xs text-green-600">Your email has been queued for delivery.</div>
+            <div className="text-xs text-forest">Your email has been queued for delivery.</div>
           </div>
         </motion.div>
       )}
