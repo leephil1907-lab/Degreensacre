@@ -1,14 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
-// GET /api/reviews — Get approved reviews
+// Use anon key for public review submission (RLS allows anonymous inserts)
+function getPublicSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+}
+
+// Use service role for reading all reviews (admin)
+function getAdminSupabase() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) {
+    // Fallback to anon key if service role not available
+    return getPublicSupabase();
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    key,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+}
+
+// GET /api/reviews — Get approved reviews (public)
 export async function GET(request: NextRequest) {
   try {
-    const adminSupabase = await createAdminSupabaseClient();
+    const supabase = getAdminSupabase();
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const { data: reviews, error, count } = await adminSupabase
+    const { data: reviews, error, count } = await supabase
       .from('reviews')
       .select('*', { count: 'exact' })
       .eq('status', 'approved')
@@ -24,7 +47,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/reviews — Submit a new review
+// POST /api/reviews — Submit a new review (public, auto-approved)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -42,9 +65,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please write at least 20 characters in your review', success: false }, { status: 400 });
     }
 
-    const adminSupabase = await createAdminSupabaseClient();
+    // Use anon key — RLS policy allows anonymous inserts
+    const supabase = getPublicSupabase();
 
-    const { data: review, error } = await adminSupabase
+    const { data: review, error } = await supabase
       .from('reviews')
       .insert({
         name: name.trim(),
@@ -59,10 +83,25 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Review insert error:', error);
+      throw error;
+    }
 
-    // Send WhatsApp notification to admin
+    // Log notification in contact_messages (also uses anon key)
     const stars = '⭐'.repeat(parseInt(rating));
+    try {
+      await supabase.from('contact_messages').insert({
+        buyer_name: 'Review Notification',
+        buyer_email: email.trim().toLowerCase(),
+        message: `NEW REVIEW: ${stars} ${title || ''} — From ${name.trim()} — "${message.trim().substring(0, 150)}..."`,
+        status: 'new',
+      });
+    } catch (notifError) {
+      console.error('Notification log error:', notifError);
+    }
+
+    // Build WhatsApp notification URL
     const whatsappMessage = encodeURIComponent(
       `🆕 New Review on De-Greenacres!\n\n` +
       `${stars} (${rating}/5)\n` +
@@ -74,23 +113,10 @@ export async function POST(request: NextRequest) {
       `View in Admin → Reviews`
     );
 
-    // Trigger WhatsApp notification (opens WhatsApp with pre-filled message)
-    // When WhatsApp Business API is configured, this will send automatically
-    try {
-      await adminSupabase.from('contact_messages').insert({
-        buyer_name: 'System Notification',
-        buyer_email: 'system@degreenacres.com',
-        message: `NEW REVIEW: ${stars} ${title || ''} — From ${name.trim()} (${email.trim()}) — "${message.trim().substring(0, 100)}..."`,
-        status: 'new',
-      });
-    } catch (notifError) {
-      console.error('Notification log error:', notifError);
-    }
-
     return NextResponse.json({
       review,
       success: true,
-      message: 'Thank you! Your review has been published.',
+      message: 'Thank you! Your review is now live on the website.',
       whatsapp_notify: `https://wa.me/2347041754800?text=${whatsappMessage}`,
     });
   } catch (error: any) {
