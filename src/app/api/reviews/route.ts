@@ -54,14 +54,45 @@ export async function POST(request: NextRequest) {
         message: message.trim(),
         location: location?.trim() || null,
         property_id: property_id || null,
-        status: 'pending',
+        status: 'approved',
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ review, success: true, message: 'Thank you! Your review has been submitted and will appear after approval.' });
+    // Send WhatsApp notification to admin
+    const stars = '⭐'.repeat(parseInt(rating));
+    const whatsappMessage = encodeURIComponent(
+      `🆕 New Review on De-Greenacres!\n\n` +
+      `${stars} (${rating}/5)\n` +
+      `From: ${name.trim()}\n` +
+      `Email: ${email.trim()}\n` +
+      `Location: ${location?.trim() || 'Not provided'}\n` +
+      `Title: ${title?.trim() || 'No title'}\n` +
+      `Review: ${message.trim().substring(0, 200)}${message.trim().length > 200 ? '...' : ''}\n\n` +
+      `View in Admin → Reviews`
+    );
+
+    // Trigger WhatsApp notification (opens WhatsApp with pre-filled message)
+    // When WhatsApp Business API is configured, this will send automatically
+    try {
+      await adminSupabase.from('contact_messages').insert({
+        buyer_name: 'System Notification',
+        buyer_email: 'system@degreenacres.com',
+        message: `NEW REVIEW: ${stars} ${title || ''} — From ${name.trim()} (${email.trim()}) — "${message.trim().substring(0, 100)}..."`,
+        status: 'new',
+      });
+    } catch (notifError) {
+      console.error('Notification log error:', notifError);
+    }
+
+    return NextResponse.json({
+      review,
+      success: true,
+      message: 'Thank you! Your review has been published.',
+      whatsapp_notify: `https://wa.me/2347041754800?text=${whatsappMessage}`,
+    });
   } catch (error: any) {
     console.error('POST /api/reviews error:', error);
     return NextResponse.json({ error: error.message || 'Failed to submit review', success: false }, { status: 500 });
