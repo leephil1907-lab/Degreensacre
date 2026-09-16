@@ -57,13 +57,13 @@ export default function AuthBrandingPanel({ eyebrow, title, description, extra }
 
       {/* Top — Logo */}
       <div className="relative z-10 p-12">
-        <Link href="/" className="inline-flex items-center gap-4 group">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/10 group-hover:bg-white/15 transition-all">
-            <Image src="/logo-icon.png" alt="De-Greenacres" width={44} height={44} className="brightness-110 drop-shadow-lg" />
+        <Link href="/" className="inline-flex items-center gap-5 group">
+          <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/10 group-hover:bg-white/15 transition-all">
+            <Image src="/logo-icon.png" alt="De-Greenacres" width={72} height={72} className="brightness-110 drop-shadow-lg" />
           </div>
           <div>
-            <span className="block text-white font-display text-xl leading-tight">De-Greenacres</span>
-            <span className="block text-[10px] text-white/40 uppercase tracking-[0.25em]">Properties Limited</span>
+            <span className="block text-white font-display text-2xl leading-tight">De-Greenacres</span>
+            <span className="block text-xs text-white/40 uppercase tracking-[0.25em]">Properties Limited</span>
           </div>
         </Link>
       </div>
