@@ -91,9 +91,9 @@ export default function SignUpPage() {
   const stepLabels = ['Your Details', 'Security', 'Account Type'];
 
   const inputClass = (field: string) =>
-    `w-full pl-11 pr-4 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none`;
+    `w-full pl-12 pr-4 py-4 bg-gray-50/50 rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none focus:bg-white transition-colors duration-200`;
   const wrapperClass = (field: string) =>
-    `relative rounded-xl border-2 transition-all ${focusedField === field ? 'border-forest shadow-[0_0_0_3px_rgba(40,56,24,0.08)]' : 'border-gray-200'}`;
+    `relative rounded-xl border-2 transition-all duration-200 ${focusedField === field ? 'border-forest shadow-[0_0_0_4px_rgba(40,56,24,0.06)]' : 'border-gray-100 hover:border-gray-200'}`;
   const iconColor = (field: string) => focusedField === field ? 'text-forest' : 'text-gray-300';
 
   return (
@@ -124,26 +124,32 @@ export default function SignUpPage() {
       />
 
       {/* RIGHT: Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative">
-        {/* Sage accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-forest via-sage to-forest" />
+      <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative overflow-hidden">
+        {/* Subtle background texture */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #283818 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-forest via-sage to-forest" />
 
-        <div className="w-full max-w-[440px]">
+        <div className="w-full max-w-[440px] relative z-10">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <Image src="/logo-icon.png" alt="De-Greenacres" width={44} height={44} />
+            <Link href="/" className="inline-flex items-center gap-3">
+              <Image src="/logo-icon.png" alt="De-Greenacres" width={48} height={48} />
               <span className="font-display text-xl text-charcoal">De-Greenacres</span>
             </Link>
           </div>
 
           {/* Header */}
           <div className="mb-6">
-            <p className="text-sage text-xs font-bold uppercase tracking-[0.2em] mb-3">Create Account</p>
-            <h2 className="font-display text-3xl md:text-[2rem] text-charcoal leading-tight mb-2">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-px bg-sage" />
+              <p className="text-sage text-[11px] font-bold uppercase tracking-[0.25em]">Create Account</p>
+            </div>
+            <h2 className="font-display text-[2rem] md:text-[2.25rem] text-charcoal leading-[1.15] mb-3 tracking-tight">
               Join De-Greenacres
             </h2>
-            <p className="text-gray-500 text-sm">Create your free account in 3 simple steps</p>
+            <p className="text-gray-400 text-[15px] leading-relaxed">Create your free account in 3 simple steps</p>
           </div>
 
           {/* Progress Steps */}
@@ -151,17 +157,17 @@ export default function SignUpPage() {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex-1 flex items-center">
                 <div className="flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    step > s ? 'bg-forest text-white' : step === s ? 'text-white' : 'bg-gray-100 text-gray-400'
-                  }`} style={step === s ? { background: 'linear-gradient(135deg, #283818, #2D5016)' } : {}}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    step > s ? 'bg-forest text-white shadow-[0_2px_8px_rgba(40,56,24,0.25)]' : step === s ? 'text-white shadow-[0_4px_12px_rgba(40,56,24,0.3)]' : 'bg-gray-100 text-gray-400'
+                  }`} style={step === s ? { background: 'linear-gradient(135deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)' } : {}}>
                     {step > s ? <CheckCircle className="w-4 h-4" /> : s}
                   </div>
-                  <span className={`text-[10px] mt-1.5 font-semibold uppercase tracking-wider ${step >= s ? 'text-forest' : 'text-gray-300'}`}>
+                  <span className={`text-[10px] mt-2 font-semibold uppercase tracking-wider transition-colors duration-200 ${step >= s ? 'text-forest' : 'text-gray-300'}`}>
                     {stepLabels[s - 1]}
                   </span>
                 </div>
                 {s < 3 && (
-                  <div className={`flex-1 h-0.5 mx-3 rounded transition-all mt-[-16px] ${step > s ? 'bg-forest' : 'bg-gray-200'}`} />
+                  <div className={`flex-1 h-[2px] mx-3 rounded transition-all duration-300 mt-[-18px] ${step > s ? 'bg-forest' : 'bg-gray-100'}`} />
                 )}
               </div>
             ))}
@@ -175,7 +181,7 @@ export default function SignUpPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-7 md:p-8">
+          <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] p-7 md:p-8">
             <AnimatePresence mode="wait">
               {/* STEP 1: Personal Info */}
               {step === 1 && (
@@ -224,7 +230,7 @@ export default function SignUpPage() {
                     </div>
                   </div>
 
-                  <button onClick={handleStep1Next} className="w-full mt-6 py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
+                  <button onClick={handleStep1Next} className="w-full mt-6 py-4 rounded-xl font-bold text-[15px] text-white transition-all duration-300 flex items-center justify-center gap-2.5 group" style={{ background: 'linear-gradient(135deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)', boxShadow: '0 4px 16px rgba(40,56,24,0.2), 0 2px 4px rgba(40,56,24,0.1)' }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(40,56,24,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(40,56,24,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                     Continue <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.div>
@@ -243,7 +249,7 @@ export default function SignUpPage() {
                       <div className={wrapperClass('password')}>
                         <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('password')}`} />
                         <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => updateField('password', e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className="w-full pl-11 pr-12 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none" placeholder="Min 8 characters" />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all duration-200" tabIndex={-1}>
                           {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                         </button>
                       </div>
@@ -278,7 +284,7 @@ export default function SignUpPage() {
                     <button onClick={() => setStep(1)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-500 hover:bg-gray-50 transition-all">
                       Back
                     </button>
-                    <button onClick={handleStep2Next} className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
+                    <button onClick={handleStep2Next} className="flex-1 py-4 rounded-xl font-bold text-[15px] text-white transition-all duration-300 flex items-center justify-center gap-2.5 group" style={{ background: 'linear-gradient(135deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)', boxShadow: '0 4px 16px rgba(40,56,24,0.2)' }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(40,56,24,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(40,56,24,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                       Continue <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -339,8 +345,10 @@ export default function SignUpPage() {
                     <button
                       onClick={handleSubmit}
                       disabled={isLoading}
-                      className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                      style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}
+                      className="flex-1 py-4 rounded-xl font-bold text-[15px] text-white transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2.5 group"
+                      style={{ background: 'linear-gradient(135deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)', boxShadow: '0 4px 16px rgba(40,56,24,0.2), 0 2px 4px rgba(40,56,24,0.1)' }}
+                      onMouseOver={(e) => { if (!isLoading) { e.currentTarget.style.boxShadow = '0 6px 24px rgba(40,56,24,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
+                      onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(40,56,24,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                     >
                       {isLoading ? (
                         <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Creating...</>
@@ -362,11 +370,11 @@ export default function SignUpPage() {
             </Link>
           </p>
 
-          {/* Footer trust */}
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <Shield className="w-3.5 h-3.5 text-gray-300" />
-            <p className="text-[11px] text-gray-400">
-              256-bit SSL Encrypted · CAC Registered RC: 1856064
+          {/* Minimal footer trust */}
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <Shield className="w-3 h-3 text-gray-200" />
+            <p className="text-[11px] text-gray-300">
+              256-bit SSL Encrypted · Secure registration
             </p>
           </div>
         </div>
