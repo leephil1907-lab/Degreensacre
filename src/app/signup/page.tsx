@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Phone, Eye, EyeOff, CheckCircle, ArrowRight, ArrowLeft, Building2, Home, Briefcase } from 'lucide-react';
+import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ArrowLeft, Building2, Home, Briefcase, CheckCircle, Shield, MapPin } from 'lucide-react';
 
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
@@ -29,17 +29,12 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState('');
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    state: '',
-    password: '',
-    confirmPassword: '',
-    accountType: 'buyer',
-    agreeTerms: false,
+    firstName: '', lastName: '', email: '', phone: '',
+    state: '', password: '', confirmPassword: '',
+    accountType: 'buyer', agreeTerms: false,
   });
 
   const updateField = (field: string, value: any) => {
@@ -48,45 +43,25 @@ export default function SignUpPage() {
   };
 
   const handleStep1Next = () => {
-    if (!formData.firstName || !formData.lastName) {
-      setError('Please enter your full name');
-      return;
-    }
-    if (!formData.email || !formData.email.includes('@')) {
-      setError('Please enter a valid email');
-      return;
-    }
+    if (!formData.firstName || !formData.lastName) { setError('Please enter your full name'); return; }
+    if (!formData.email || !formData.email.includes('@')) { setError('Please enter a valid email'); return; }
     setStep(2);
   };
 
   const handleStep2Next = () => {
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    if (formData.password.length < 8) { setError('Password must be at least 8 characters'); return; }
+    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return; }
     setStep(3);
   };
 
   const handleSubmit = async () => {
-    if (!formData.agreeTerms) {
-      setError('Please agree to the terms and conditions');
-      return;
-    }
-
+    if (!formData.agreeTerms) { setError('Please agree to the terms and conditions'); return; }
     setIsLoading(true);
     setError('');
-
     try {
       await signUp(formData.email, formData.password, {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone: formData.phone,
-        state: formData.state,
-        account_type: formData.accountType,
+        first_name: formData.firstName, last_name: formData.lastName,
+        phone: formData.phone, state: formData.state, account_type: formData.accountType,
       });
       router.push('/signin?verified=pending');
     } catch (err: any) {
@@ -105,82 +80,175 @@ export default function SignUpPage() {
     if (/[0-9]/.test(p)) score++;
     if (/[^A-Za-z0-9]/.test(p)) score++;
     if (score <= 1) return { label: 'Weak', color: 'bg-red-500', width: '25%' };
-    if (score === 2) return { label: 'Fair', color: 'bg-yellow-500', width: '50%' };
+    if (score === 2) return { label: 'Fair', color: 'bg-amber-500', width: '50%' };
     if (score === 3) return { label: 'Good', color: 'bg-sage', width: '75%' };
     return { label: 'Strong', color: 'bg-forest', width: '100%' };
   };
 
   const strength = passwordStrength();
 
+  const stepLabels = ['Your Details', 'Security', 'Account Type'];
+
+  const inputClass = (field: string) =>
+    `w-full pl-11 pr-4 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none`;
+  const wrapperClass = (field: string) =>
+    `relative rounded-xl border-2 transition-all ${focusedField === field ? 'border-forest shadow-[0_0_0_3px_rgba(40,56,24,0.08)]' : 'border-gray-200'}`;
+  const iconColor = (field: string) => focusedField === field ? 'text-forest' : 'text-gray-300';
+
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Branding (Desktop only) */}
-      <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] bg-forest relative overflow-hidden flex-col justify-between p-12">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+    <div className="min-h-screen flex bg-ivory">
+      {/* LEFT: Premium Branding Panel */}
+      <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden flex-col justify-between" style={{ background: 'linear-gradient(160deg, #283818 0%, #2D5016 50%, #3a6b1e 100%)' }}>
+        {/* Decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-[0.08]" style={{ background: 'radial-gradient(circle, #788848, transparent 70%)' }} />
+          <div className="absolute bottom-20 left-0 w-80 h-80 rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #b8b898, transparent 70%)' }} />
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
         </div>
 
-        <div className="relative z-10">
-          <Link href="/" className="inline-block mb-16">
-            <Image src="/logo-icon.png" alt="De-Greenacres" width={64} height={64} className="brightness-110 drop-shadow-lg" />
+        {/* Top */}
+        <div className="relative z-10 p-12">
+          <Link href="/" className="inline-flex items-center gap-3 group">
+            <Image src="/logo-icon.png" alt="De-Greenacres" width={48} height={48} className="brightness-110 drop-shadow-lg group-hover:scale-105 transition-transform" />
+            <div>
+              <span className="block text-white/90 font-display text-lg leading-tight">De-Greenacres</span>
+              <span className="block text-[10px] text-white/50 uppercase tracking-[0.2em]">Properties Limited</span>
+            </div>
           </Link>
-          <div>
-            <h1 className="text-4xl xl:text-5xl font-bold text-ivory mb-4 leading-tight">
-              Welcome to<br />De-Greenacres
-            </h1>
-            <p className="text-lg text-ivory/80 leading-relaxed max-w-md">
-              Nigeria&apos;s trusted property platform. Join thousands of investors, buyers, and agents discovering verified properties across the nation.
-            </p>
+        </div>
+
+        {/* Center — Dynamic content per step */}
+        <div className="relative z-10 px-12">
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <p className="text-sage text-xs font-bold uppercase tracking-[0.25em] mb-4">Step 1 of 3</p>
+                <h1 className="font-display text-4xl xl:text-[2.75rem] text-white leading-[1.15] mb-6">
+                  Start your property<br />
+                  <span className="text-sage">journey today</span>
+                </h1>
+                <p className="text-white/60 text-base leading-relaxed max-w-sm">
+                  Join De-Greenacres and discover verified properties across Nigeria. Buyers, investors, and agents all start here.
+                </p>
+              </motion.div>
+            )}
+            {step === 2 && (
+              <motion.div key="s2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <p className="text-sage text-xs font-bold uppercase tracking-[0.25em] mb-4">Step 2 of 3</p>
+                <h1 className="font-display text-4xl xl:text-[2.75rem] text-white leading-[1.15] mb-6">
+                  Secure your<br />
+                  <span className="text-sage">account</span>
+                </h1>
+                <p className="text-white/60 text-base leading-relaxed max-w-sm">
+                  Your data is protected with enterprise-grade encryption. We take your security seriously.
+                </p>
+                <div className="mt-8 space-y-3">
+                  {['256-bit SSL encryption', 'Supabase row-level security', 'No data shared with third parties'].map((item) => (
+                    <div key={item} className="flex items-center gap-3 text-white/50">
+                      <Shield className="w-4 h-4 text-sage" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+            {step === 3 && (
+              <motion.div key="s3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <p className="text-sage text-xs font-bold uppercase tracking-[0.25em] mb-4">Step 3 of 3</p>
+                <h1 className="font-display text-4xl xl:text-[2.75rem] text-white leading-[1.15] mb-6">
+                  Almost<br />
+                  <span className="text-sage">there!</span>
+                </h1>
+                <p className="text-white/60 text-base leading-relaxed max-w-sm">
+                  Choose your account type and you&apos;re ready to explore Nigeria&apos;s finest verified properties.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Visual: Property cards */}
+          <div className="mt-10 space-y-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/10">
+              <div className="w-14 h-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-6 h-6 text-sage" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">1000sqm Coastal Road, Uyo</p>
+                <p className="text-white/50 text-xs">₦85,000,000 · Payment plan available</p>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/10">
+              <div className="w-14 h-14 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-6 h-6 text-sage" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">800sqm Maitama, Abuja</p>
+                <p className="text-white/50 text-xs">₦150,000,000 · Embassy zone</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Trust signals */}
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-3 text-ivory/70">
-            <CheckCircle className="w-5 h-5 text-sage" />
-            <span className="text-sm">CAC Registered — RC: 1856064</span>
+        {/* Bottom — Trust */}
+        <div className="relative z-10 p-12">
+          <div className="h-px bg-white/10 mb-6" />
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-display text-white">CAC</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">Registered</p>
+            </div>
+            <div className="text-center border-x border-white/10">
+              <p className="text-2xl font-display text-white">6</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">States</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-display text-white">₦20K</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">Inspection</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-ivory/70">
-            <CheckCircle className="w-5 h-5 text-sage" />
-            <span className="text-sm">Verified property listings</span>
-          </div>
-          <div className="flex items-center gap-3 text-ivory/70">
-            <CheckCircle className="w-5 h-5 text-sage" />
-            <span className="text-sm">Secure transactions & data protection</span>
-          </div>
+          <p className="text-[10px] text-white/30 text-center mt-4">RC: 1856064 · de-greenacres.com</p>
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex-1 bg-ivory flex items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-md">
+      {/* RIGHT: Sign Up Form */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative">
+        {/* Sage accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-forest via-sage to-forest" />
+
+        <div className="w-full max-w-[440px]">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-block">
-              <Image src="/logo-icon.png" alt="De-Greenacres" width={56} height={56} className="mx-auto" />
+            <Link href="/" className="inline-flex items-center gap-2">
+              <Image src="/logo-icon.png" alt="De-Greenacres" width={44} height={44} />
+              <span className="font-display text-xl text-charcoal">De-Greenacres</span>
             </Link>
           </div>
 
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-charcoal mb-2">Create your account</h2>
-            <p className="text-gray-600">Start discovering premium properties today</p>
+          <div className="mb-6">
+            <p className="text-sage text-xs font-bold uppercase tracking-[0.2em] mb-3">Create Account</p>
+            <h2 className="font-display text-3xl md:text-[2rem] text-charcoal leading-tight mb-2">
+              Join De-Greenacres
+            </h2>
+            <p className="text-gray-500 text-sm">Create your free account in 3 simple steps</p>
           </div>
 
           {/* Progress Steps */}
           <div className="flex items-center mb-8">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex-1 flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  step >= s ? 'bg-forest text-white' : 'bg-cream text-gray-400'
-                }`}>
-                  {step > s ? '✓' : s}
+                <div className="flex flex-col items-center">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step > s ? 'bg-forest text-white' : step === s ? 'text-white' : 'bg-gray-100 text-gray-400'
+                  }`} style={step === s ? { background: 'linear-gradient(135deg, #283818, #2D5016)' } : {}}>
+                    {step > s ? <CheckCircle className="w-4 h-4" /> : s}
+                  </div>
+                  <span className={`text-[10px] mt-1.5 font-semibold uppercase tracking-wider ${step >= s ? 'text-forest' : 'text-gray-300'}`}>
+                    {stepLabels[s - 1]}
+                  </span>
                 </div>
                 {s < 3 && (
-                  <div className={`flex-1 h-0.5 mx-2 rounded transition-all ${
-                    step > s ? 'bg-forest' : 'bg-cream'
-                  }`} />
+                  <div className={`flex-1 h-0.5 mx-3 rounded transition-all mt-[-16px] ${step > s ? 'bg-forest' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
@@ -188,94 +256,62 @@ export default function SignUpPage() {
 
           {/* Error */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <div className="mb-4 p-3.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 flex items-start gap-2">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
               {error}
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-soft p-6 md:p-8">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-7 md:p-8">
             <AnimatePresence mode="wait">
               {/* STEP 1: Personal Info */}
               {step === 1 && (
                 <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <h3 className="text-lg font-bold text-charcoal mb-1">Your details</h3>
-                  <p className="text-sm text-gray-500 mb-6">Tell us about yourself</p>
-
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">First Name</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input
-                            type="text"
-                            value={formData.firstName}
-                            onChange={(e) => updateField('firstName', e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                            placeholder="John"
-                          />
+                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">First Name</label>
+                        <div className={wrapperClass('firstName')}>
+                          <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('firstName')}`} />
+                          <input type="text" value={formData.firstName} onChange={(e) => updateField('firstName', e.target.value)} onFocus={() => setFocusedField('firstName')} onBlur={() => setFocusedField('')} className={inputClass('firstName')} placeholder="John" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Last Name</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input
-                            type="text"
-                            value={formData.lastName}
-                            onChange={(e) => updateField('lastName', e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                            placeholder="Doe"
-                          />
+                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Last Name</label>
+                        <div className={wrapperClass('lastName')}>
+                          <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('lastName')}`} />
+                          <input type="text" value={formData.lastName} onChange={(e) => updateField('lastName', e.target.value)} onFocus={() => setFocusedField('lastName')} onBlur={() => setFocusedField('')} className={inputClass('lastName')} placeholder="Doe" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Email</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => updateField('email', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                          placeholder="you@example.com"
-                        />
+                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Email Address</label>
+                      <div className={wrapperClass('email')}>
+                        <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('email')}`} />
+                        <input type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField('')} className={inputClass('email')} placeholder="you@example.com" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Phone <span className="text-gray-400 normal-case">(optional)</span></label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => updateField('phone', e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                            placeholder="+234"
-                          />
+                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Phone <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
+                        <div className={wrapperClass('phone')}>
+                          <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('phone')}`} />
+                          <input type="tel" value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField('')} className={inputClass('phone')} placeholder="+234" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">State <span className="text-gray-400 normal-case">(optional)</span></label>
-                        <select
-                          value={formData.state}
-                          onChange={(e) => updateField('state', e.target.value)}
-                          className="w-full px-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                        >
+                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">State <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
+                        <select value={formData.state} onChange={(e) => updateField('state', e.target.value)} className="w-full px-3 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all">
                           <option value="">Select</option>
-                          {NIGERIAN_STATES.map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
+                          {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </div>
                     </div>
                   </div>
 
-                  <button onClick={handleStep1Next} className="w-full mt-6 bg-forest text-ivory py-3.5 rounded-xl font-bold text-sm hover:bg-forest-light transition-all flex items-center justify-center gap-2">
+                  <button onClick={handleStep1Next} className="w-full mt-6 py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
                     Continue <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.div>
@@ -284,62 +320,52 @@ export default function SignUpPage() {
               {/* STEP 2: Password */}
               {step === 2 && (
                 <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-forest mb-4">
+                  <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-gray-400 hover:text-forest mb-5 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
-                  <h3 className="text-lg font-bold text-charcoal mb-1">Set your password</h3>
-                  <p className="text-sm text-gray-500 mb-6">Create a secure password for your account</p>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={formData.password}
-                          onChange={(e) => updateField('password', e.target.value)}
-                          className="w-full pl-10 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                          placeholder="Min 8 characters"
-                        />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Password</label>
+                      <div className={wrapperClass('password')}>
+                        <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('password')}`} />
+                        <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => updateField('password', e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className="w-full pl-11 pr-12 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none" placeholder="Min 8 characters" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                          {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                         </button>
                       </div>
-                      {/* Password strength */}
                       {formData.password && (
-                        <div className="mt-2">
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className={`h-full ${strength.color} rounded-full transition-all`} style={{ width: strength.width }} />
+                        <div className="mt-3">
+                          <div className="flex gap-1.5">
+                            {[1, 2, 3, 4].map((i) => (
+                              <div key={i} className={`h-1 flex-1 rounded-full transition-all ${
+                                i <= (formData.password.length >= 8 ? 1 : 0) + (/[A-Z]/.test(formData.password) ? 1 : 0) + (/[0-9]/.test(formData.password) ? 1 : 0) + (/[^A-Za-z0-9]/.test(formData.password) ? 1 : 0)
+                                  ? strength.color : 'bg-gray-100'
+                              }`} />
+                            ))}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">Strength: <span className="font-semibold">{strength.label}</span></p>
+                          <p className="text-[11px] text-gray-400 mt-1.5">Strength: <span className="font-semibold">{strength.label}</span></p>
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Confirm Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="password"
-                          value={formData.confirmPassword}
-                          onChange={(e) => updateField('confirmPassword', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all"
-                          placeholder="Re-enter password"
-                        />
+                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Confirm Password</label>
+                      <div className={wrapperClass('confirmPassword')}>
+                        <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('confirmPassword')}`} />
+                        <input type="password" value={formData.confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value)} onFocus={() => setFocusedField('confirmPassword')} onBlur={() => setFocusedField('')} className={inputClass('confirmPassword')} placeholder="Re-enter password" />
                       </div>
                       {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                        <p className="text-xs text-forest mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Passwords match</p>
+                        <p className="text-xs text-forest mt-2 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Passwords match</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex gap-3 mt-6">
-                    <button onClick={() => setStep(1)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-600 hover:bg-gray-50 transition-all">
+                    <button onClick={() => setStep(1)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-500 hover:bg-gray-50 transition-all">
                       Back
                     </button>
-                    <button onClick={handleStep2Next} className="flex-1 bg-forest text-ivory py-3.5 rounded-xl font-bold text-sm hover:bg-forest-light transition-all flex items-center justify-center gap-2">
+                    <button onClick={handleStep2Next} className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
                       Continue <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -349,11 +375,11 @@ export default function SignUpPage() {
               {/* STEP 3: Account Type + Terms */}
               {step === 3 && (
                 <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <button onClick={() => setStep(2)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-forest mb-4">
+                  <button onClick={() => setStep(2)} className="flex items-center gap-1 text-sm text-gray-400 hover:text-forest mb-5 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
-                  <h3 className="text-lg font-bold text-charcoal mb-1">How will you use De-Greenacres?</h3>
-                  <p className="text-sm text-gray-500 mb-6">This helps us personalize your experience</p>
+
+                  <p className="text-sm text-gray-500 mb-5">How will you use De-Greenacres?</p>
 
                   <div className="space-y-3 mb-6">
                     {ACCOUNT_TYPES.map((type) => (
@@ -363,31 +389,29 @@ export default function SignUpPage() {
                         onClick={() => updateField('accountType', type.value)}
                         className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${
                           formData.accountType === type.value
-                            ? 'border-forest bg-forest/5'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-forest bg-forest/[0.03]'
+                            : 'border-gray-100 hover:border-gray-200'
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          formData.accountType === type.value ? 'bg-forest text-white' : 'bg-gray-100 text-gray-500'
-                        }`}>
+                        <div className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
+                          formData.accountType === type.value ? 'text-white' : 'bg-gray-50 text-gray-400'
+                        }`} style={formData.accountType === type.value ? { background: 'linear-gradient(135deg, #283818, #2D5016)' } : {}}>
                           <type.icon className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="font-bold text-sm text-charcoal">{type.label}</div>
-                          <div className="text-xs text-gray-500">{type.desc}</div>
+                          <div className="text-xs text-gray-400">{type.desc}</div>
                         </div>
+                        {formData.accountType === type.value && (
+                          <CheckCircle className="w-5 h-5 text-forest ml-auto" />
+                        )}
                       </button>
                     ))}
                   </div>
 
                   <label className="flex items-start gap-3 mb-6 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.agreeTerms}
-                      onChange={(e) => updateField('agreeTerms', e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-forest border-gray-300 rounded focus:ring-forest"
-                    />
-                    <span className="text-sm text-gray-600">
+                    <input type="checkbox" checked={formData.agreeTerms} onChange={(e) => updateField('agreeTerms', e.target.checked)} className="w-4 h-4 mt-0.5 rounded border-gray-300 text-forest focus:ring-forest/20" />
+                    <span className="text-sm text-gray-500">
                       I agree to the{' '}
                       <Link href="/terms" className="text-forest font-semibold underline">Terms of Service</Link>
                       {' '}and{' '}
@@ -396,15 +420,20 @@ export default function SignUpPage() {
                   </label>
 
                   <div className="flex gap-3">
-                    <button onClick={() => setStep(2)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-600 hover:bg-gray-50 transition-all">
+                    <button onClick={() => setStep(2)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-500 hover:bg-gray-50 transition-all">
                       Back
                     </button>
                     <button
                       onClick={handleSubmit}
                       disabled={isLoading}
-                      className="flex-1 bg-forest text-ivory py-3.5 rounded-xl font-bold text-sm hover:bg-forest-light transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}
                     >
-                      {isLoading ? 'Creating...' : 'Create Account'}
+                      {isLoading ? (
+                        <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Creating...</>
+                      ) : (
+                        'Create Account'
+                      )}
                     </button>
                   </div>
                 </motion.div>
@@ -413,12 +442,20 @@ export default function SignUpPage() {
           </div>
 
           {/* Sign in link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <Link href="/signin" className="text-forest font-bold hover:text-forest-light">
+            <Link href="/signin" className="text-forest font-bold hover:text-forest-light transition-colors">
               Sign in
             </Link>
           </p>
+
+          {/* Footer trust */}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Shield className="w-3.5 h-3.5 text-gray-300" />
+            <p className="text-[11px] text-gray-400">
+              Secured by Supabase · CAC Registered RC: 1856064
+            </p>
+          </div>
         </div>
       </div>
     </div>
