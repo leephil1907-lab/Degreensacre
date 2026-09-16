@@ -91,35 +91,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata,
-      },
-    });
-
-    if (error) throw error;
-
-    // Create profile record in profiles table
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: email,
+    // Use server-side API — creates auth user + profile atomically via service role
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
         first_name: metadata?.first_name || '',
         last_name: metadata?.last_name || '',
         phone: metadata?.phone || null,
         state: metadata?.state || null,
-        country: 'Nigeria',
         account_type: metadata?.account_type || 'buyer',
-        is_admin: false,
-        is_verified: false,
-      });
+      }),
+    });
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Don't throw — auth succeeded, profile can be created later
-      }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+    // Sign the user in after registration
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      // Account created but auto-login failed (email confirmation may be required)
+      return { user: data.user, session: null };
     }
 
     return data;

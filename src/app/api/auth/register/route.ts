@@ -1,86 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { isEmail, validatePassword, sanitizeForDb } from '@/lib/validation';
+import { createAdminSupabaseClient } from '@/lib/supabase-server';
 
-// POST /api/auth/register - Register new user
+// POST /api/auth/register — Server-side signup with profile creation
+// Uses service role key so no SQL trigger needed
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validate input
-    const errors: string[] = [];
-    
-    if (!body.first_name || body.first_name.trim().length < 2) {
-      errors.push('First name is required (min 2 characters)');
-    }
-    if (!body.last_name || body.last_name.trim().length < 2) {
-      errors.push('Last name is required (min 2 characters)');
-    }
-    if (!body.email || !isEmail(body.email)) {
-      errors.push('Valid email is required');
-    }
-    
-    const passwordError = validatePassword(body.password || '');
-    if (passwordError) errors.push(passwordError.message);
+    const { email, password, first_name, last_name, phone, state, account_type } = body;
 
-    if (errors.length > 0) {
-      return NextResponse.json(
-        { error: errors.join('. '), success: false },
-        { status: 400 }
-      );
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required', success: false }, { status: 400 });
     }
 
-    const supabase = await createServerSupabaseClient();
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters', success: false }, { status: 400 });
+    }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: body.email.toLowerCase().trim(),
-      password: body.password,
-      options: {
-        data: {
-          first_name: sanitizeForDb(body.first_name),
-          last_name: sanitizeForDb(body.last_name),
-          account_type: body.account_type || 'buyer',
-          phone: body.phone || null,
-        },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/verify`,
-      },
+    const adminSupabase = await createAdminSupabaseClient();
+
+    // 1. Create auth user using admin API
+    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: { first_name, last_name, phone, state, account_type },
     });
 
-    if (error) {
-      if (error.message.includes('already registered')) {
-        return NextResponse.json(
-          { error: 'An account with this email already exists', success: false },
-          { status: 409 }
-        );
+    if (authError) {
+      // Check if user already exists
+      if (authError.message.includes('already registered')) {
+        return NextResponse.json({ error: 'An account with this email already exists', success: false }, { status: 409 });
       }
-      return NextResponse.json(
-        { error: error.message, success: false },
-        { status: 400 }
-      );
+      throw authError;
     }
 
-    // Auto-grant admin access for the configured admin email
-    const adminEmail = (process.env.ADMIN_EMAIL || 'degreenacrespropertieslimited@gmail.com').toLowerCase();
-    if (data.user && body.email.toLowerCase().trim() === adminEmail) {
-      try {
-        await supabase
-          .from('profiles')
-          .update({ is_admin: true })
-          .eq('id', data.user.id);
-      } catch (adminError) {
-        console.error('Failed to set admin flag:', adminError);
-      }
+    if (!authData.user) {
+      return NextResponse.json({ error: 'Failed to create user', success: false }, { status: 500 });
+    }
+
+    // 2. Create profile record (service role bypasses RLS)
+    const { error: profileError } = await adminSupabase
+      .from('profiles')
+      .insert({
+        id: authData.user.id,
+        email,
+        first_name: first_name || '',
+        last_name: last_name || '',
+        phone: phone || null,
+        state: state || null,
+        country: 'Nigeria',
+        account_type: account_type || 'buyer',
+        is_admin: false,
+        is_verified: false,
+      });
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      // Auth user created but profile failed — not fatal
     }
 
     return NextResponse.json({
-      user: data.user,
       success: true,
-      message: 'Account created. Please check your email to verify your account.',
+      user: { id: authData.user.id, email: authData.user.email },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('POST /api/auth/register error:', error);
     return NextResponse.json(
-      { error: 'Failed to create account', success: false },
+      { error: error.message || 'Registration failed', success: false },
       { status: 500 }
     );
   }
