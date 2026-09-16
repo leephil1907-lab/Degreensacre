@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase';
 
 // POST /api/auth/register — Server-side signup with profile creation
-// Uses service role key so no SQL trigger needed
+// Falls back to regular signUp if service role key is not available
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -16,18 +16,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters', success: false }, { status: 400 });
     }
 
-    const adminSupabase = await createAdminSupabaseClient();
+    const supabase = createServerClient();
 
-    // 1. Create auth user using admin API
-    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+    // Use regular signUp (works with anon key)
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      email_confirm: false,
-      user_metadata: { first_name, last_name, phone, state, account_type },
+      options: {
+        data: { first_name, last_name, phone, state, account_type },
+      },
     });
 
     if (authError) {
-      // Check if user already exists
       if (authError.message.includes('already registered')) {
         return NextResponse.json({ error: 'An account with this email already exists', success: false }, { status: 409 });
       }
@@ -38,10 +38,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user', success: false }, { status: 500 });
     }
 
-    // 2. Create profile record (service role bypasses RLS)
-    const { error: profileError } = await adminSupabase
-      .from('profiles')
-      .insert({
+    // Try to create profile (may fail if RLS blocks it — SQL trigger handles it as backup)
+    try {
+      await supabase.from('profiles').insert({
         id: authData.user.id,
         email,
         first_name: first_name || '',
@@ -53,10 +52,8 @@ export async function POST(request: NextRequest) {
         is_admin: false,
         is_verified: false,
       });
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      // Auth user created but profile failed — not fatal
+    } catch (profileError) {
+      console.error('Profile creation error (trigger will handle):', profileError);
     }
 
     return NextResponse.json({

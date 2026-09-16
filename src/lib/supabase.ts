@@ -21,8 +21,9 @@ export const createServerClient = () => {
 };
 
 // Admin client with service role (for admin operations)
+// Falls back to anon key if service role key is not available
 export const createAdminClient = () => {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,

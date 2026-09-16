@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase';
 
 // POST /api/book-inspection - Anonymous inspection booking
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const supabase = await createAdminSupabaseClient();
+    const supabase = createServerClient();
 
     // Insert into contact_messages (no auth required)
     const message = [
