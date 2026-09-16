@@ -669,7 +669,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   className="w-full flex items-center justify-center gap-2 bg-forest text-white py-3 rounded-lg font-bold hover:bg-forest-light transition-colors"
                 >
                   <Calendar className="w-5 h-5" />
-                  Book Inspection — ₦20,000
+                  Request Property Inspection
                 </Link>
               </div>
 

@@ -86,7 +86,7 @@ export default function AuthBrandingPanel({ eyebrow, title, description, extra }
           <div className="space-y-2.5">
             {[
               'Verified property listings with full documentation',
-              'Physical inspections before you commit — ₦20,000',
+              'Physical inspections before you commit',
               'Flexible payment plans on selected properties',
               'CAC Registered — RC: 1856064',
             ].map((item) => (

@@ -36,7 +36,7 @@ export default function HomePage() {
                 Explore Properties
               </Link>
               <Link href="/book-inspection" className="bg-sage text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-forest transition-all w-full sm:w-auto border border-white/20">
-                Book Inspection — ₦20,000
+                Request Property Inspection
               </Link>
             </div>
             <div className="mt-8">
@@ -291,7 +291,7 @@ export default function HomePage() {
             {[
               { num: '01', title: 'Find', desc: 'Browse our catalogue of verified properties across Nigeria' },
               { num: '02', title: 'Verify', desc: 'Review documentation and verification status before committing' },
-              { num: '03', title: 'Inspect', desc: 'Book a physical inspection with our team (₦20,000)' },
+              { num: '03', title: 'Inspect', desc: 'Request a physical inspection with our team' },
               { num: '04', title: 'Pay', desc: 'Secure payment with flexible plans where available' },
               { num: '05', title: 'Own', desc: 'Complete documentation transfer and take ownership' },
             ].map((step, i) => (
@@ -331,21 +331,20 @@ export default function HomePage() {
           <ScrollReveal>
             <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">SEE IT BEFORE YOU BUY IT</p>
             <h2 className="font-display text-4xl md:text-5xl mb-4">Book a Property Inspection</h2>
-            <p className="text-xl text-white/80 mb-3 max-w-2xl mx-auto">
+            <p className="text-xl text-white/80 mb-6 max-w-2xl mx-auto">
               Don&apos;t buy property blind. Our team will take you to the site, show you the land or building, explain the documentation, and answer every question.
             </p>
-            <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 mb-8">
-              <span className="text-sm text-white/70">Inspection Fee:</span>
-              <span className="font-display text-3xl text-sage">₦20,000</span>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <Link href="/book-inspection" className="bg-white text-forest px-10 py-4 rounded-xl font-bold text-lg hover:bg-sage hover:text-white transition-all w-full sm:w-auto">
-                Pay ₦20,000 &amp; Book Inspection
+                Request Property Inspection
               </Link>
               <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20would%20like%20to%20book%20a%20property%20inspection.%20Please%20assist." target="_blank" rel="noopener noreferrer" className="border-2 border-white text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-forest transition-all w-full sm:w-auto flex items-center justify-center gap-2">
                 <Phone className="w-5 h-5" /> Or Talk to Us First
               </a>
             </div>
+            <p className="text-sm text-white/60 max-w-lg mx-auto">
+              Inspection fee of <span className="text-sage font-semibold">₦20,000</span> applies after your request is confirmed. You&apos;ll receive payment details once we schedule your visit.
+            </p>
           </ScrollReveal>
         </div>
       </section>

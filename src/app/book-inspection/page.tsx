@@ -93,7 +93,7 @@ export default function BookInspectionPage() {
     `Location: ${formData.location}, ${formData.state}\n` +
     `Preferred date: ${formData.preferred_date}\n` +
     `Attendees: ${formData.attendees}\n\n` +
-    `I understand the inspection fee is ₦20,000. Please confirm availability.`
+    `I understand the inspection fee is ₦20,000 (payable after confirmation). Please confirm availability.`
   );
 
   if (isSubmitted) {
@@ -124,7 +124,7 @@ export default function BookInspectionPage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <span className="text-forest font-bold">₦20,000</span>
-                <span className="text-gray-500">inspection fee (payable on confirmation)</span>
+                <span className="text-gray-500">inspection fee — payment details sent after confirmation</span>
               </div>
             </div>
 
@@ -160,13 +160,13 @@ export default function BookInspectionPage() {
             <Image src="/logo-icon.png" alt="De-Greenacres" width={56} height={56} className="brightness-110 drop-shadow-lg" />
           </Link>
           <h1 className="font-display text-4xl xl:text-5xl text-ivory mb-4 leading-tight">
-            Book a Property<br />Inspection
+            Request a Property<br />Inspection
           </h1>
           <p className="text-lg text-ivory/80 leading-relaxed max-w-md mb-8">
             Don&apos;t buy property blind. Our team takes you to the site, shows you the building or land, explains the documentation, and answers every question.
           </p>
           <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3">
-            <span className="text-sm text-ivory/70">Inspection Fee:</span>
+            <span className="text-sm text-ivory/70">Fee applies after confirmation:</span>
             <span className="font-display text-3xl text-sage">₦20,000</span>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function BookInspectionPage() {
             <Link href="/" className="inline-block mb-4">
               <Image src="/logo-icon.png" alt="De-Greenacres" width={48} height={48} className="mx-auto" />
             </Link>
-            <h1 className="font-display text-2xl text-charcoal">Book Inspection — ₦20,000</h1>
+            <h1 className="font-display text-2xl text-charcoal">Request Property Inspection</h1>
           </div>
 
           {/* Progress */}
@@ -332,16 +332,16 @@ export default function BookInspectionPage() {
                 {/* Fee summary */}
                 <div className="mt-6 bg-ivory rounded-xl p-4 border border-gray-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Inspection Fee</span>
+                    <span className="text-sm text-gray-600">Inspection Fee (after confirmation)</span>
                     <span className="font-display text-2xl text-forest">₦20,000</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Payable after our team confirms your booking</p>
+                  <p className="text-xs text-gray-500 mt-1">Our team will send payment details once your inspection is scheduled</p>
                 </div>
 
                 <div className="flex gap-3 mt-6">
                   <button onClick={() => setStep(2)} className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-600 hover:bg-gray-50">Back</button>
                   <button onClick={handleSubmit} disabled={isSubmitting} className="flex-1 bg-forest text-ivory py-3.5 rounded-xl font-bold text-sm hover:bg-forest-light disabled:opacity-50 flex items-center justify-center gap-2">
-                    {isSubmitting ? 'Submitting...' : 'Book Inspection'}
+                    {isSubmitting ? 'Submitting...' : 'Submit Inspection Request'}
                   </button>
                 </div>
               </div>
