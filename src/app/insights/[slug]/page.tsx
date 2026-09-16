@@ -33,7 +33,7 @@ export default function ArticleDetailPage({ params }: Props) {
             <span className="inline-block bg-magenta text-white text-xs font-bold px-3 py-1 rounded-full uppercase mb-4">
               {article.category}
             </span>
-            <h1 className="text-display-md md:text-display-lg font-bold text-white mb-4">
+            <h1 className="text-display-md md:font-display text-5xl font-bold text-white mb-4">
               {article.title}
             </h1>
             <div className="flex items-center space-x-4 text-white/90">

@@ -11,7 +11,7 @@ export default function AboutPage() {
       <section className="bg-gradient-to-br from-charcoal to-plum text-white py-20">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-display-lg font-bold mb-6">About De-Greenacres</h1>
+            <h1 className="font-display text-5xl font-bold mb-6">About De-Greenacres</h1>
             <p className="text-xl text-white/90 leading-relaxed">
               Premium property discovery across Nigeria. We connect discerning buyers with exceptional homes, land, and investment opportunities worth knowing.
             </p>

@@ -19,7 +19,7 @@ export default function DevelopmentsPage() {
         
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="container-custom text-center text-white">
-            <h1 className="text-display-lg md:text-display-xl font-bold mb-4">
+            <h1 className="font-display text-5xl md:text-display-xl font-bold mb-4">
               Property Developments
             </h1>
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
