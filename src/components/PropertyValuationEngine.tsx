@@ -1,7 +1,5 @@
 'use client';
 
-import { DemoBanner } from '@/components/DemoBadge';
-
 import { useState } from 'react';
 
 interface ValuationInput {
@@ -220,7 +218,6 @@ export default function PropertyValuationEngine() {
 
   return (
     <>
-      <DemoBanner description="Valuation Engine — Preview estimates with demo algorithm. Live valuation model will be calibrated with transactions." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-4xl mx-auto">

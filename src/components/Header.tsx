@@ -33,7 +33,12 @@ export default function Header() {
             <span className="hidden sm:inline text-ivory/30">|</span>
             <span className="hidden sm:inline text-ivory/70">CAC Registered</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="hidden xl:flex items-center">
+              <div className="scale-90">
+                <ThemeToggle variant="forest" />
+              </div>
+            </div>
             <a
               href="tel:+2348065019971"
               className="text-ivory/70 hover:text-white transition-colors hidden sm:flex items-center gap-1.5"
@@ -65,12 +70,12 @@ export default function Header() {
           </div>
 
           {/* Desktop Nav — centered with even spacing */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden xl:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-4 py-2 text-charcoal hover:text-forest font-medium transition-colors rounded-lg hover:bg-sage/10 text-sm"
+                className="px-3 xl:px-4 py-2 text-charcoal dark:text-gray-100 hover:text-forest dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-sage/10 dark:hover:bg-white/10 text-sm"
               >
                 {item.label}
               </Link>
@@ -78,8 +83,7 @@ export default function Header() {
           </div>
 
           {/* Desktop CTA — fixed width right-aligned */}
-          <div className="hidden lg:flex items-center gap-3 justify-end w-[280px]">
-            <ThemeToggle />
+          <div className="hidden xl:flex items-center gap-3 justify-end w-[300px]">
             {!loading && user ? (
               <>
                 <Link
@@ -117,7 +121,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -131,7 +135,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-[#fffff8] dark:bg-charcoal animate-fade-in">
+          <div className="xl:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-[#fffff8] dark:bg-charcoal animate-fade-in">
             <div className="flex flex-col space-y-1">
               {navItems.map((item) => (
                 <Link

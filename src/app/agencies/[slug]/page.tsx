@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { DemoBanner } from '@/components/DemoBadge';
 import { Building2, BadgeCheck, Phone, Mail, Globe, MapPin, Users, ArrowRight } from 'lucide-react';
 
 interface Props { params: Promise<{ slug: string }> }
@@ -78,7 +77,6 @@ export default async function AgencyDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-ivory">
       <div className="container-custom py-8">
-        {isDemo && <DemoBanner description="Preview · Demo agency — live agency from Supabase will appear here once seeded." />}
         <Link href="/agencies" className="text-sm text-gray-500 hover:text-forest inline-flex items-center gap-1">← Back to agencies</Link>
 
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden mt-4">

@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { properties as staticProperties } from '@/data/properties';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { DemoBanner } from '@/components/DemoBadge';
-
 export default async function AbujaLocationPage() {
   let abujaProperties: any[] = [];
   let isDemo = false;
@@ -138,11 +136,6 @@ export default async function AbujaLocationPage() {
       </section>
 
       {/* Featured Properties — DB-primary, fallback to demo */}
-      {isDemo && (
-        <div className="container-custom mb-6">
-          <DemoBanner description="Preview · Demo properties — live Abuja listings from Supabase will appear here once available (showing curated demo for now)" />
-        </div>
-      )}
       {featuredProperties.length > 0 && (
         <section className="section-padding bg-white">
           <div className="container-custom">

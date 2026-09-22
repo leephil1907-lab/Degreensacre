@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { DemoBanner } from '@/components/DemoBadge';
 import { Building2, BadgeCheck, MapPin, ArrowRight, Users } from 'lucide-react';
 
 export const metadata = {
@@ -67,10 +66,6 @@ export default async function AgenciesPage() {
 
       <section className="section-padding">
         <div className="container-custom">
-          {isDemo && (
-            <DemoBanner description="Preview · Demo agencies — live agencies from Supabase (table: agencies) will appear here once seeded. Showing curated demo agencies for QA." />
-          )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {agencies.map((ag: any) => (
               <Link key={ag.id || ag.slug} href={`/agencies/${ag.slug}`} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all group flex gap-4">

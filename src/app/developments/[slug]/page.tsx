@@ -1,7 +1,6 @@
 import { developments as staticDevelopments } from '@/data/developments';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { DemoBanner } from '@/components/DemoBadge';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 interface Props {
@@ -90,11 +89,6 @@ export default async function DevelopmentDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-ivory">
-      {isDemo && (
-        <div className="container-custom pt-6">
-          <DemoBanner description="Preview · Demo estate — this is curated demo data. Live development will appear here once Supabase is seeded." />
-        </div>
-      )}
       {/* Hero Section */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <img

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { properties as staticProperties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
-import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
 
@@ -204,13 +203,6 @@ export default function LandPage() {
               <p className="text-gray-600">Each listing shows full details: documentation, plot size, landmarks, map location and available plots.</p>
             </div>
           </ScrollReveal>
-
-          {showDemoBanner && (
-            <div className="mb-6">
-              <DemoBanner description="Preview · Demo land data — live plots from Supabase will appear here once available (currently showing curated demo listings)" />
-            </div>
-          )}
-
           {/* Region filter tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
             <button

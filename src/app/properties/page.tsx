@@ -12,8 +12,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { properties as sampleProperties, Property as SampleProperty } from '@/data/properties';
 import AdSense from '@/components/GoogleAdsense';
-import { DemoBanner } from '@/components/DemoBadge';
-
 // Leaflet types (loaded dynamically)
 let L: any = null;
 
@@ -496,11 +494,6 @@ function PropertiesContent() {
         {/* Results count bar */}
         <div className="px-4 py-1.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
           <p className="text-xs text-gray-600">
-{!loading && dbProperties.length === 0 && (
-            <div className="mb-4">
-              <DemoBanner description="Preview · Demo listings — live properties from Supabase (status=available) will appear here once available. Showing curated demo for now." />
-            </div>
-          )}
             <span className="font-bold text-charcoal">{sortedProperties.length}</span> properties
             {filters.state && <span> in <span className="font-semibold">{filters.state}</span></span>}
             {filters.type && <span> • <span className="font-semibold capitalize">{filters.type === 'sale' ? 'For Sale' : filters.type === 'rent' ? 'For Rent' : filters.type}</span></span>}

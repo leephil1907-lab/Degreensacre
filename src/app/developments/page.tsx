@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { developments as staticDevelopments } from '@/data/developments';
 import ScrollReveal from '@/components/ScrollReveal';
-import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, Building2 } from 'lucide-react';
 
 export default function DevelopmentsPage() {
@@ -61,9 +60,6 @@ export default function DevelopmentsPage() {
       {/* Developments Grid */}
       <section className="section-padding">
         <div className="container-custom">
-          {showDemo && (
-            <DemoBanner description="Preview · Demo estates — live developments from Supabase will appear here once seeded (showing curated demo estates)" />
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {developments.map((development, i) => (
               <ScrollReveal key={development.id} delay={i * 0.1}>

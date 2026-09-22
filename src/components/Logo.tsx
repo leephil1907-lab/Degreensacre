@@ -29,10 +29,10 @@ export default function Logo({ size = 'md', showText = true, href = '/', classNa
       />
       {showText && (
         <div>
-          <div className={`font-bold ${s.text} text-charcoal tracking-tight leading-tight`}>
+          <div className={`font-bold ${s.text} text-charcoal dark:text-white tracking-tight leading-tight`}>
             De-Greenacres
           </div>
-          <div className={`${s.sub} text-gray-500 tracking-wide uppercase leading-tight`}>
+          <div className={`${s.sub} text-gray-500 dark:text-gray-300 tracking-wide uppercase leading-tight`}>
             Properties Limited
           </div>
         </div>

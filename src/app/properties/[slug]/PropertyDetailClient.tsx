@@ -686,12 +686,6 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   )}
                 </div>
               </div>
-              {!agentProfile && (
-                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
-                  Preview · Demo agent — live agent from <code>agents</code> table will appear here once Supabase is seeded via owner_id link.
-                </p>
-              )}
-
               <div className="space-y-3">
                 <a
                   href={`tel:${agentProfile?.phone || property.agents?.phone || '+2348065019971'}`}

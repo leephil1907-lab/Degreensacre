@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { DemoBanner } from '@/components/DemoBadge';
 import { Phone, Mail, BadgeCheck, Building2, MapPin, ArrowRight } from 'lucide-react';
 
 interface Props { params: Promise<{ slug: string }> }
@@ -80,8 +79,6 @@ export default async function AgentDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-ivory">
       <div className="container-custom py-8">
-        {isDemo && <DemoBanner description="Preview · Demo agent — live agent from Supabase will appear here once seeded." />}
-
         <Link href="/agents" className="text-sm text-gray-500 hover:text-forest mb-6 inline-flex items-center gap-1">← Back to agents</Link>
 
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden mt-4">
@@ -117,7 +114,7 @@ export default async function AgentDetailPage({ params }: Props) {
           {properties.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
               <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600">No live listings yet for this agent. {isDemo ? 'Demo profile — live listings will appear here once properties are linked via owner_id.' : 'New listings will appear here.'}</p>
+              <p className="text-gray-600">No live listings yet for this agent. New listings will appear here once properties are linked.</p>
               <Link href="/properties" className="inline-flex items-center gap-1 mt-4 text-forest font-bold">Browse all properties <ArrowRight className="w-4 h-4" /></Link>
             </div>
           ) : (

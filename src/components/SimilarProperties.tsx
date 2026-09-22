@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Property, properties as staticProperties } from '@/data/properties';
-import DemoBadge from '@/components/DemoBadge';
-
 interface SimilarPropertiesProps {
   currentProperty: any; // allow DB shape or static shape
 }
@@ -113,7 +111,7 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
 
   if (similarProperties.length === 0) return null;
 
-  const poolLabel = dbList.length > 0 ? 'Similar Properties' : 'Similar Properties · Demo pool';
+  const poolLabel = 'Similar Properties';
 
   return (
     <section className="section-padding bg-ivory">
@@ -122,11 +120,6 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
           <div>
             <h2 className="text-3xl font-bold text-charcoal mb-2">{poolLabel}</h2>
             <p className="text-gray-600">Properties you might also like</p>
-            {isDemo && (
-              <div className="mt-3">
-                <DemoBadge label="Demo pool — live similar listings from Supabase will appear here once available" />
-              </div>
-            )}
           </div>
           <Link
             href={`/properties?type=${currentProperty.type}&state=${currentProperty.state}`}

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { DemoBanner } from '@/components/DemoBadge';
 import { Users, BadgeCheck, Phone, Mail, ArrowRight } from 'lucide-react';
 
 export const metadata = {
@@ -77,9 +76,6 @@ export default async function AgentsPage() {
 
       <section className="section-padding">
         <div className="container-custom">
-          {isDemo && (
-            <DemoBanner description="Preview · Demo agents — live agents from Supabase (table: agents) will appear here once seeded. Showing curated demo team for QA." />
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {agents.map((agent: any) => (
               <Link key={agent.id || agent.slug} href={`/agents/${agent.slug}`} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all group">

@@ -8,7 +8,6 @@ import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
 import CACIcon from '@/components/CACIcon';
 import ReviewsSection from '@/components/ReviewsSection';
-import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
 
@@ -111,11 +110,6 @@ export default function HomePage() {
               </Link>
             </div>
           </ScrollReveal>
-          {isFeaturedDemo && (
-            <div className="mb-6">
-              <DemoBanner description="Preview · Demo data — live featured listings will appear here once Supabase is seeded (showing fallback from static data)" />
-            </div>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {sampleProperties.map((property: any, i) => (
               <ScrollReveal key={property.id} delay={i * 0.1}>
@@ -272,11 +266,6 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
-          {isLandDemo && (
-            <div className="mb-6">
-              <DemoBanner description="Preview · Demo land data — live land plots will appear here once available in Supabase" />
-            </div>
-          )}
           {landProperties.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {landProperties.slice(0, 2).map((p: any) => (

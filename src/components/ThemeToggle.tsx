@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ variant = 'default' }: { variant?: 'default' | 'forest' }) {
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -25,16 +25,20 @@ export default function ThemeToggle() {
 
   if (!mounted) return <div className="w-9 h-9" />;
 
+  const base = variant === 'forest'
+    ? 'w-9 h-9 rounded-full flex items-center justify-center bg-white/15 backdrop-blur-sm border border-white/20 hover:bg-white/25 transition-colors'
+    : 'w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors';
+
   return (
     <button
       onClick={toggle}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      className={base}
     >
       {dark ? (
-        <Sun className="w-4 h-4 text-yellow-500" />
+        <Sun className={variant === 'forest' ? 'w-4 h-4 text-yellow-300' : 'w-4 h-4 text-yellow-500'} />
       ) : (
-        <Moon className="w-4 h-4 text-charcoal" />
+        <Moon className={variant === 'forest' ? 'w-4 h-4 text-white' : 'w-4 h-4 text-charcoal'} />
       )}
     </button>
   );
