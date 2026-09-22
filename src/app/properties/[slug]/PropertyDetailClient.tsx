@@ -77,6 +77,8 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const [viewingSubmitting, setViewingSubmitting] = useState(false);
   const [viewingSuccess, setViewingSuccess] = useState(false);
   const [slug, setSlug] = useState<string>('');
+  const [agentProfile, setAgentProfile] = useState<any>(null);
+  const [agencyProfile, setAgencyProfile] = useState<any>(null);
 
   useEffect(() => {
     params.then(p => setSlug(p.slug));
@@ -95,6 +97,33 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
         const data = await response.json();
         if (data.property) {
           setProperty(data.property);
+          // Try to fetch linked agent/agency (DB-primary)
+          try {
+            const ownerId = (data.property as any).owner_id;
+            if (ownerId) {
+              const ar = await fetch(`/api/agents?user_id=${ownerId}&limit=1`);
+              if (ar.ok) {
+                const aj = await ar.json();
+                if (aj.agents && aj.agents.length > 0) {
+                  setAgentProfile(aj.agents[0]);
+                  if (aj.agents[0].agency_id) {
+                    const agRes = await fetch(`/api/agencies?limit=100`);
+                    // we could fetch agency by id via agencies/[slug] but we have agency_id, try to fetch single via supabase directly
+                    // fallback: try agencies api with id filter via slug not available, so try to fetch via agents expand already includes agencies
+                    if (aj.agents[0].agencies) setAgencyProfile(aj.agents[0].agencies);
+                    else {
+                      const agFetch = await fetch(`/api/agencies`);
+                      if (agFetch.ok) {
+                        const agJ = await agFetch.json();
+                        const found = (agJ.agencies || []).find((a: any) => a.id === aj.agents[0].agency_id);
+                        if (found) setAgencyProfile(found);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch {}
           setLoading(false);
           return;
         }
@@ -631,31 +660,48 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               <h3 className="font-serif text-lg text-charcoal-900 mb-4">Contact Agent</h3>
               
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  {property.agents?.photo_url ? (
-                    <img src={property.agents.photo_url} alt="" className="w-12 h-12 rounded-full object-cover" />
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center overflow-hidden">
+                  {(agentProfile?.photo_url || property.agents?.photo_url) ? (
+                    <img src={agentProfile?.photo_url || property.agents?.photo_url} alt="" className="w-12 h-12 rounded-full object-cover" />
                   ) : (
                     <User className="w-6 h-6 text-green-600" />
                   )}
                 </div>
-                <div>
-                  <p className="font-medium text-charcoal-900">
-                    {property.agents?.name || 'De-Greenacres Properties'}
+                <div className="flex-1">
+                  <p className="font-medium text-charcoal-900 flex items-center gap-1">
+                    {agentProfile?.name || property.agents?.name || 'De-Greenacres Properties'}
+                    {(agentProfile?.is_verified || !agentProfile) && <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><CheckCircle className="w-3 h-3" /> Verified</span>}
                   </p>
-                  <p className="text-sm text-charcoal-500">Verified Agent</p>
+                  <p className="text-sm text-charcoal-500">
+                    {agencyProfile?.name ? (
+                      <Link href={`/agencies/${agencyProfile.slug}`} className="text-forest hover:underline font-semibold">{agencyProfile.name}</Link>
+                    ) : agentProfile?.agencies?.name ? (
+                      <Link href={`/agencies/${agentProfile.agencies.slug}`} className="text-forest hover:underline font-semibold">{agentProfile.agencies.name}</Link>
+                    ) : (
+                      'Verified Agent'
+                    )}
+                  </p>
+                  {agentProfile && (
+                    <Link href={`/agents/${agentProfile.slug}`} className="text-xs text-forest font-bold hover:underline">View agent profile →</Link>
+                  )}
                 </div>
               </div>
+              {!agentProfile && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                  Preview · Demo agent — live agent from <code>agents</code> table will appear here once Supabase is seeded via owner_id link.
+                </p>
+              )}
 
               <div className="space-y-3">
                 <a
-                  href={`tel:${property.agents?.phone || '+2348065019971'}`}
+                  href={`tel:${agentProfile?.phone || property.agents?.phone || '+2348065019971'}`}
                   className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
                 >
                   <Phone className="w-5 h-5" />
                   Call Agent
                 </a>
                 <a
-                  href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in: ${property.title} at ${property.area}, ${property.state}. Price: ₦${(property.price || 0).toLocaleString()}.${property.documentation ? ' Documentation: ' + property.documentation + '.' : ''}${property.bedrooms ? ' ' + property.bedrooms + ' bedrooms.' : ''} Please send more details and available inspection dates.`)}`}
+                  href={`https://wa.me/${(agentProfile?.whatsapp || agentProfile?.phone || '2347041754800').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${agentProfile?.name || 'De-Greenacres'}, I'm interested in: ${property.title} at ${property.area}, ${property.state}. Price: ₦${(property.price || 0).toLocaleString()}.${property.documentation ? ' Documentation: ' + property.documentation + '.' : ''}${property.bedrooms ? ' ' + property.bedrooms + ' bedrooms.' : ''} Please send more details and available inspection dates.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-lg font-medium hover:bg-[#20BD5A] transition-colors"

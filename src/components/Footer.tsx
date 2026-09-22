@@ -20,7 +20,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-14">
           
           {/* Company Column — wider */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-3">
             <div className="mb-5 [&_img]:brightness-110">
               <Logo size="md" href="/" className="[&_div:first-child_img]:drop-shadow-lg" />
             </div>
@@ -56,6 +56,24 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Network — NEW: connects agencies/agents tables to UX (audit) */}
+          <div className="lg:col-span-2">
+            <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Network</h3>
+            <ul className="space-y-3">
+              {[
+                { label: 'Agencies', href: '/agencies' },
+                { label: 'Agents', href: '/agents' },
+                { label: 'Developments', href: '/developments' },
+                { label: 'Insights', href: '/insights' },
+                { label: 'Diaspora', href: '/diaspora' },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors duration-200">{link.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Locations */}
           <div className="lg:col-span-2">
             <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Locations</h3>
@@ -76,7 +94,7 @@ export default function Footer() {
           </div>
 
           {/* Contact — compact, action-focused */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-3">
             <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Get in Touch</h3>
             <div className="space-y-3">
               {/* WhatsApp */}

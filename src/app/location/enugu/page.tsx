@@ -1,9 +1,26 @@
 import Link from 'next/link';
-import { properties } from '@/data/properties';
+import { properties as staticProperties } from '@/data/properties';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { DemoBanner } from '@/components/DemoBadge';
 
-export default function EnuguLocationPage() {
-  const enuguProperties = properties.filter(p => p.state === 'Enugu' && p.status === 'available');
-  const featuredProperties = enuguProperties.filter(p => p.featured).slice(0, 4);
+export default async function EnuguLocationPage() {
+  let enuguProperties: any[] = [];
+  let isDemo = false;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.from('properties').select('*').eq('state', 'Enugu').eq('status', 'available').order('date_added', { ascending: false }).limit(20);
+    if (data && data.length > 0) {
+      enuguProperties = data.map((p: any) => ({ ...p, images: p.images || [], verified: p.verification_status === 'verified', verificationStatus: p.verification_status }));
+      isDemo = false;
+    } else {
+      enuguProperties = staticProperties.filter(p => p.state === 'Enugu' && p.status === 'available');
+      isDemo = true;
+    }
+  } catch {
+    enuguProperties = staticProperties.filter(p => p.state === 'Enugu' && p.status === 'available');
+    isDemo = true;
+  }
+  const featuredProperties = enuguProperties.filter((p: any) => p.featured).slice(0, 4);
   
   const areas = ['Independence Layout', 'GRA', 'Trans-Ekulu', 'New Haven', 'Ogui', 'Achara Layout', 'Uwani'];
   
@@ -120,7 +137,12 @@ export default function EnuguLocationPage() {
         </div>
       </section>
 
-      {/* Featured Properties */}
+      {/* Featured Properties — DB-primary, fallback to demo */}
+      {isDemo && (
+        <div className="container-custom mb-6">
+          <DemoBanner description="Preview · Demo properties — live Enugu listings from Supabase will appear here once available (showing curated demo for now)" />
+        </div>
+      )}
       {featuredProperties.length > 0 && (
         <section className="section-padding bg-white">
           <div className="container-custom">

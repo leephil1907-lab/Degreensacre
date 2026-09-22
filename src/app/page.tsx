@@ -1,18 +1,68 @@
 'use client';
 
 import Link from 'next/link';
-import { properties } from '@/data/properties';
+import { useState, useEffect } from 'react';
+import { properties as staticProperties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
 import CACIcon from '@/components/CACIcon';
 import ReviewsSection from '@/components/ReviewsSection';
+import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
 
 export default function HomePage() {
-  const sampleProperties = properties.filter(p => p.sample && p.featured).slice(0, 6);
-  const landProperties = properties.filter(p => p.type === 'land');
+  const [dbFeatured, setDbFeatured] = useState<any[] | null>(null);
+  const [dbLand, setDbLand] = useState<any[] | null>(null);
+  const [featuredFallback, setFeaturedFallback] = useState(false);
+  const [landFallback, setLandFallback] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r1 = await fetch('/api/properties?featured=true&status=available&limit=6');
+        if (r1.ok) {
+          const j1 = await r1.json();
+          const list1 = j1.properties || [];
+          if (!cancelled) {
+            if (list1.length > 0) {
+              setDbFeatured(list1);
+              setFeaturedFallback(false);
+            } else {
+              setDbFeatured(null);
+              setFeaturedFallback(true);
+            }
+          }
+        } else if (!cancelled) setFeaturedFallback(true);
+      } catch { if (!cancelled) setFeaturedFallback(true); }
+      try {
+        const r2 = await fetch('/api/properties?type=land&status=available&limit=2');
+        if (r2.ok) {
+          const j2 = await r2.json();
+          const list2 = j2.properties || [];
+          if (!cancelled) {
+            if (list2.length > 0) {
+              setDbLand(list2);
+              setLandFallback(false);
+            } else {
+              // also try property_type=Land fallback — if API supports type only, keep empty and fallback
+              setDbLand(null);
+              setLandFallback(true);
+            }
+          }
+        } else if (!cancelled) setLandFallback(true);
+      } catch { if (!cancelled) setLandFallback(true); }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const sampleProperties = (dbFeatured && dbFeatured.length > 0 ? dbFeatured : staticProperties.filter(p => p.sample && p.featured)).slice(0, 6);
+  const landProperties = (dbLand && dbLand.length > 0 ? dbLand : staticProperties.filter(p => p.type === 'land')).slice(0, 2);
+  const isFeaturedDemo = featuredFallback || !dbFeatured;
+  const isLandDemo = landFallback || !dbLand;
 
   return (
     <>
@@ -61,13 +111,18 @@ export default function HomePage() {
               </Link>
             </div>
           </ScrollReveal>
+          {isFeaturedDemo && (
+            <div className="mb-6">
+              <DemoBanner description="Preview · Demo data — live featured listings will appear here once Supabase is seeded (showing fallback from static data)" />
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sampleProperties.map((property, i) => (
+            {sampleProperties.map((property: any, i) => (
               <ScrollReveal key={property.id} delay={i * 0.1}>
                 <Link href={`/properties/${property.slug}`} className="group block">
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1">
                     <div className="relative h-64 overflow-hidden">
-                      <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <img src={(property.images?.[0] || (property as any).property_images?.[0]?.url || '/properties/property-1.jpg')} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       <div className="absolute top-4 left-4">
                         <span className={`px-3 py-1 text-xs font-bold rounded-md text-white ${property.type === 'sale' ? 'bg-forest' : property.type === 'land' ? 'bg-amber-600' : 'bg-blue-600'}`}>
                           {property.type === 'sale' ? 'FOR SALE' : property.type === 'land' ? 'LAND' : property.type?.toUpperCase()}
@@ -217,12 +272,17 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          {isLandDemo && (
+            <div className="mb-6">
+              <DemoBanner description="Preview · Demo land data — live land plots will appear here once available in Supabase" />
+            </div>
+          )}
           {landProperties.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {landProperties.slice(0, 2).map((p) => (
+              {landProperties.slice(0, 2).map((p: any) => (
                 <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all group">
                   <div className="flex items-start gap-4">
-                    <img src={p.images[0]} alt={p.title} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
+                    <img src={(p.images?.[0] || (p as any).property_images?.[0]?.url || '/properties/property-1.jpg')} alt={p.title} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
                     <div>
                       <h3 className="font-bold text-lg mb-1 group-hover:text-sage transition-colors">{p.title}</h3>
                       <p className="text-sm text-white/70 flex items-center gap-1 mb-2"><MapPin className="w-3 h-3" />{p.area}, {p.state}</p>

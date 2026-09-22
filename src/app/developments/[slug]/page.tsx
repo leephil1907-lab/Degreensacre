@@ -1,13 +1,49 @@
-import { developments } from '@/data/developments';
+import { developments as staticDevelopments } from '@/data/developments';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { DemoBanner } from '@/components/DemoBadge';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export default function DevelopmentDetailPage({ params }: Props) {
-  const development = developments.find(d => d.slug === params.slug);
+export default async function DevelopmentDetailPage({ params }: Props) {
+  const { slug } = await params;
+
+  // Try Supabase first
+  let development: any = null;
+  let isDemo = false;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.from('developments').select('*').eq('slug', slug).single();
+    if (data) {
+      development = {
+        ...data,
+        // normalize snake_case to camelCase expected by UI
+        gallery: data.gallery || [],
+        unitTypes: data.unit_types || data.unitTypes || [],
+        paymentPlans: data.payment_plans || data.paymentPlans || [],
+        totalUnits: data.total_units ?? data.totalUnits ?? 0,
+        availableUnits: data.available_units ?? data.availableUnits ?? 0,
+        completionDate: data.completion_date || data.completionDate || null,
+        siteInspection: data.site_inspection ?? data.siteInspection ?? false,
+        featured: data.featured ?? false,
+      };
+      isDemo = false;
+    }
+  } catch (e) {
+    // ignore, will fallback
+  }
+
+  // Fallback to static
+  if (!development) {
+    const found = staticDevelopments.find(d => d.slug === slug);
+    if (found) {
+      development = found;
+      isDemo = true;
+    }
+  }
 
   if (!development) {
     notFound();
@@ -54,10 +90,15 @@ export default function DevelopmentDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-ivory">
+      {isDemo && (
+        <div className="container-custom pt-6">
+          <DemoBanner description="Preview · Demo estate — this is curated demo data. Live development will appear here once Supabase is seeded." />
+        </div>
+      )}
       {/* Hero Section */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <img
-          src={development.gallery[0]}
+          src={development.gallery?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90'}
           alt={development.name}
           className="w-full h-full object-cover"
         />
@@ -118,8 +159,8 @@ export default function DevelopmentDetailPage({ params }: Props) {
               <div className="bg-white rounded-xl shadow-soft p-8">
                 <h2 className="text-2xl font-bold text-charcoal mb-6">Available Units</h2>
                 <div className="space-y-4">
-                  {development.unitTypes.map((unit, idx) => (
-                    <div key={idx} className="border border-gray-200 rounded-lg p-6 hover:border-magenta transition-colors">
+                  {(development.unitTypes || []).map((unit: any, idx: number) => (
+                    <div key={idx} className="border border-gray-200 rounded-lg p-6 hover:border-forest transition-colors">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex-1">
                           <h3 className="text-lg font-bold text-charcoal mb-2">{unit.type}</h3>
@@ -133,7 +174,7 @@ export default function DevelopmentDetailPage({ params }: Props) {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600 mb-1">Starting from</p>
-                          <p className="text-2xl font-bold text-magenta">{formatPrice(unit.price)}</p>
+                          <p className="text-2xl font-bold text-forest">{formatPrice(unit.price)}</p>
                         </div>
                       </div>
                     </div>
@@ -146,7 +187,7 @@ export default function DevelopmentDetailPage({ params }: Props) {
                 <div className="bg-white rounded-xl shadow-soft p-8">
                   <h2 className="text-2xl font-bold text-charcoal mb-6">Payment Plans</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {development.paymentPlans.map((plan, idx) => (
+                    {development.paymentPlans.map((plan: any, idx: number) => (
                       <div key={idx} className="border border-gray-200 rounded-lg p-6">
                         <h3 className="font-bold text-charcoal mb-2">{plan.name}</h3>
                         <p className="text-sm text-gray-600 mb-3">{plan.description}</p>
@@ -163,9 +204,9 @@ export default function DevelopmentDetailPage({ params }: Props) {
               <div className="bg-white rounded-xl shadow-soft p-8">
                 <h2 className="text-2xl font-bold text-charcoal mb-6">Amenities & Features</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {development.amenities.map((amenity, idx) => (
+                  {(development.amenities || []).map((amenity: string, idx: number) => (
                     <div key={idx} className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-magenta flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-forest flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       <span className="text-gray-700">{amenity}</span>
@@ -178,9 +219,9 @@ export default function DevelopmentDetailPage({ params }: Props) {
               <div className="bg-white rounded-xl shadow-soft p-8">
                 <h2 className="text-2xl font-bold text-charcoal mb-6">Key Features</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {development.features.map((feature, idx) => (
+                  {(development.features || []).map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-plum flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-sage flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       <span className="text-gray-700">{feature}</span>
@@ -190,11 +231,11 @@ export default function DevelopmentDetailPage({ params }: Props) {
               </div>
 
               {/* Gallery */}
-              {development.gallery.length > 1 && (
+              {(development.gallery || []).length > 1 && (
                 <div className="bg-white rounded-xl shadow-soft p-8">
                   <h2 className="text-2xl font-bold text-charcoal mb-6">Gallery</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {development.gallery.map((image, idx) => (
+                    {development.gallery.map((image: string, idx: number) => (
                       <div key={idx} className="relative h-48 rounded-lg overflow-hidden group cursor-pointer">
                         <img
                           src={image}
@@ -242,7 +283,7 @@ export default function DevelopmentDetailPage({ params }: Props) {
                     <span>Call Us</span>
                   </a>
 
-                  {development.siteInspection && (
+                  {(development.siteInspection || development.site_inspection) && (
                     <Link
                       href="/contact?subject=Site%20Inspection"
                       className="w-full btn-outline flex items-center justify-center space-x-2"
@@ -288,8 +329,8 @@ export default function DevelopmentDetailPage({ params }: Props) {
                 {/* Price Range */}
                 <div className="pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-600 mb-2">Price Range</p>
-                  <p className="text-2xl font-bold text-magenta">
-                    {formatPrice(Math.min(...development.unitTypes.map(u => u.price)))} - {formatPrice(Math.max(...development.unitTypes.map(u => u.price)))}
+                  <p className="text-2xl font-bold text-forest">
+                    {formatPrice(Math.min(...(development.unitTypes || [{price:0}]).map((u: any) => u.price)))} - {formatPrice(Math.max(...(development.unitTypes || [{price:0}]).map((u: any) => u.price)))}
                   </p>
                 </div>
               </div>

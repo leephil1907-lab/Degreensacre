@@ -1,11 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import { developments } from '@/data/developments';
+import { useState, useEffect } from 'react';
+import { developments as staticDevelopments } from '@/data/developments';
 import ScrollReveal from '@/components/ScrollReveal';
+import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, Building2 } from 'lucide-react';
 
 export default function DevelopmentsPage() {
+  const [dbList, setDbList] = useState<any[] | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch('/api/developments');
+        if (res.ok) {
+          const j = await res.json();
+          const list = j.developments || [];
+          if (!cancelled) {
+            if (list.length > 0) {
+              setDbList(list);
+              setIsDemo(false);
+            } else {
+              setDbList(null);
+              setIsDemo(true);
+            }
+          }
+        } else if (!cancelled) setIsDemo(true);
+      } catch { if (!cancelled) setIsDemo(true); }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+  const developments = dbList && dbList.length > 0 ? dbList : staticDevelopments;
+  const showDemo = isDemo || !dbList;
   return (
     <div className="min-h-screen bg-ivory">
       {/* Hero Section */}
@@ -32,6 +61,9 @@ export default function DevelopmentsPage() {
       {/* Developments Grid */}
       <section className="section-padding">
         <div className="container-custom">
+          {showDemo && (
+            <DemoBanner description="Preview · Demo estates — live developments from Supabase will appear here once seeded (showing curated demo estates)" />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {developments.map((development, i) => (
               <ScrollReveal key={development.id} delay={i * 0.1}>

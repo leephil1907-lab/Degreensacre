@@ -1,9 +1,26 @@
 import Link from 'next/link';
-import { properties } from '@/data/properties';
+import { properties as staticProperties } from '@/data/properties';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { DemoBanner } from '@/components/DemoBadge';
 
-export default function AkwaIbomLocationPage() {
-  const akwaibomProperties = properties.filter(p => p.state === 'Akwa Ibom' && p.status === 'available');
-  const featuredProperties = akwaibomProperties.filter(p => p.featured).slice(0, 4);
+export default async function AkwaIbomLocationPage() {
+  let akwaibomProperties: any[] = [];
+  let isDemo = false;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.from('properties').select('*').eq('state', 'Akwa Ibom').eq('status', 'available').order('date_added', { ascending: false }).limit(20);
+    if (data && data.length > 0) {
+      akwaibomProperties = data.map((p: any) => ({ ...p, images: p.images || [], verified: p.verification_status === 'verified', verificationStatus: p.verification_status }));
+      isDemo = false;
+    } else {
+      akwaibomProperties = staticProperties.filter(p => p.state === 'Akwa Ibom' && p.status === 'available');
+      isDemo = true;
+    }
+  } catch {
+    akwaibomProperties = staticProperties.filter(p => p.state === 'Akwa Ibom' && p.status === 'available');
+    isDemo = true;
+  }
+  const featuredProperties = akwaibomProperties.filter((p: any) => p.featured).slice(0, 4);
   
   const areas = ['Uyo', 'Eket', 'Ikot Ekpene', 'Oron', 'Shelter Afrique', 'Osongama', 'Ikot Akpan Abia'];
   
@@ -120,7 +137,12 @@ export default function AkwaIbomLocationPage() {
         </div>
       </section>
 
-      {/* Featured Properties */}
+      {/* Featured Properties — DB-primary, fallback to demo */}
+      {isDemo && (
+        <div className="container-custom mb-6">
+          <DemoBanner description="Preview · Demo properties — live Akwa Ibom listings from Supabase will appear here once available (showing curated demo for now)" />
+        </div>
+      )}
       {featuredProperties.length > 0 && (
         <section className="section-padding bg-white">
           <div className="container-custom">

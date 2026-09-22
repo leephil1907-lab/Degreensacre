@@ -1,20 +1,63 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { properties } from '@/data/properties';
+import { useState, useEffect } from 'react';
+import { properties as staticProperties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
+import { DemoBanner } from '@/components/DemoBadge';
 import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
 
 export default function LandPage() {
-  const landProperties = properties.filter(p => p.type === 'land');
-  const regions = [...new Set(landProperties.map(p => p.region).filter(Boolean))];
+  const [dbLand, setDbLand] = useState<any[] | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch('/api/properties?type=land&status=available&limit=50');
+        if (res.ok) {
+          const j = await res.json();
+          const list = (j.properties || []).map((p: any) => ({
+            ...p,
+            // normalize DB shape to static Property shape for this page
+            images: p.images || p.property_images?.map((x: any) => x.url) || [],
+            sqm: p.sqm || p.land_size || 0,
+            landSize: p.land_size || p.sqm || 0,
+            verified: p.verification_status === 'verified',
+            verificationStatus: p.verification_status,
+            availablePlots: p.available_plots ?? p.availablePlots ?? null,
+            totalPlots: p.total_plots ?? p.totalPlots ?? null,
+            paymentPlan: p.payment_plan || p.paymentPlan || null,
+            developmentStatus: p.development_status || p.developmentStatus || null,
+            pricePerSqm: p.price ? Math.round(p.price / (p.sqm || p.land_size || 1)) : undefined,
+            region: p.region || null,
+          }));
+          if (!cancelled) {
+            if (list.length > 0) {
+              setDbLand(list);
+              setIsDemo(false);
+            } else {
+              setDbLand(null);
+              setIsDemo(true);
+            }
+          }
+        } else if (!cancelled) setIsDemo(true);
+      } catch { if (!cancelled) setIsDemo(true); }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const landProperties = dbLand && dbLand.length > 0 ? dbLand : staticProperties.filter(p => p.type === 'land');
+  const showDemoBanner = isDemo;
+  const regions = [...new Set(landProperties.map((p: any) => p.region).filter(Boolean))];
   const [activeRegion, setActiveRegion] = useState('all');
   const [expandedMap, setExpandedMap] = useState<string | null>(null);
 
-  const filtered = activeRegion === 'all' ? landProperties : landProperties.filter(p => p.region === activeRegion);
-  const totalAvailable = landProperties.reduce((sum, p) => sum + (p.availablePlots || 0), 0);
+  const filtered = activeRegion === 'all' ? landProperties : landProperties.filter((p: any) => p.region === activeRegion);
+  const totalAvailable = landProperties.reduce((sum: number, p: any) => sum + (p.availablePlots || 0), 0);
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -162,6 +205,12 @@ export default function LandPage() {
             </div>
           </ScrollReveal>
 
+          {showDemoBanner && (
+            <div className="mb-6">
+              <DemoBanner description="Preview · Demo land data — live plots from Supabase will appear here once available (currently showing curated demo listings)" />
+            </div>
+          )}
+
           {/* Region filter tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
             <button
@@ -202,7 +251,7 @@ export default function LandPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                       {/* Image */}
                       <div className="relative h-64 lg:h-auto overflow-hidden">
-                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
+                        <img src={(property.images?.[0] || (property as any).property_images?.[0]?.url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200')} alt={property.title} className="w-full h-full object-cover" />
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-amber-600 text-white px-3 py-1 text-xs font-bold rounded-md">LAND</span>
                           {property.verified && (

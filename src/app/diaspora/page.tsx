@@ -1,6 +1,7 @@
 'use client';
 
 import ScrollReveal from '@/components/ScrollReveal';
+import DemoBadge from '@/components/DemoBadge';
 import Link from 'next/link';
 import { properties } from '@/data/properties';
 
@@ -234,6 +235,7 @@ export default function DiasporaInvestmentPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="mb-6 flex justify-center"><DemoBadge label="Demo pool — live diaspora opportunities from Supabase will appear here once available" /></div>
             {investmentProperties.map((property) => (
               <Link key={property.id} href={`/properties/${property.slug}`} className="card hover-lift group">
                 <div className="relative h-64 overflow-hidden">
