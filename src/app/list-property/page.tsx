@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import ScrollReveal from '@/components/ScrollReveal';
+import { NIGERIAN_STATES } from '@/lib/validation';
 
 export default function ListPropertyPage() {
   const [step, setStep] = useState(1);
@@ -81,7 +82,7 @@ export default function ListPropertyPage() {
 
   const propertyTypes = ['Detached Duplex', 'Semi-Detached', 'Terraced', 'Apartment', 'Land', 'Commercial'];
   const listingTypes = ['For Sale', 'For Rent', 'Short Let'];
-  const states = ['Lagos', 'Abuja', 'Enugu', 'Akwa Ibom', 'Rivers', 'Oyo'];
+  const states = NIGERIAN_STATES;
   const documentTypes = ['C of O', 'Governor\'s Consent', 'Excision', 'Gazette', 'Deed of Assignment'];
   const commonFeatures = [
     'Swimming Pool', 'Gym', 'Smart Home', '24/7 Security', 'Gated Estate',

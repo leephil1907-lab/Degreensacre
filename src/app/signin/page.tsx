@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowRight, Shield, Mail, Lock } from 'lucide-react';
 import AuthBrandingPanel from '@/components/AuthBrandingPanel';
+import Logo from '@/components/Logo';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -50,12 +51,9 @@ export default function SignInPage() {
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-forest via-sage to-forest" />
 
         <div className="w-full max-w-[440px] relative z-10">
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-10">
-            <Link href="/" className="inline-flex items-center gap-3">
-              <Image src="/logo-icon.png" alt="De-Greenacres" width={48} height={48} />
-              <span className="font-display text-xl text-charcoal">De-Greenacres</span>
-            </Link>
+          {/* Logo — visible on all screens, properly placed at top of sign in */}
+          <div className="flex justify-center mb-10">
+            <Logo size="md" href="/" />
           </div>
 
           {/* Header */}
