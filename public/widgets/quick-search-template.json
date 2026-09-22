@@ -1,0 +1,46 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Quick Search",
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Find your next property in seconds",
+      "isSubtle": true,
+      "size": "Small",
+      "wrap": true
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "state",
+      "label": "Location",
+      "choices": [
+        { "title": "Lagos", "value": "Lagos" },
+        { "title": "Abuja", "value": "Abuja" },
+        { "title": "Enugu", "value": "Enugu" },
+        { "title": "Akwa Ibom", "value": "Akwa Ibom" }
+      ],
+      "value": "Lagos"
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "type",
+      "label": "Type",
+      "choices": [
+        { "title": "For Sale", "value": "sale" },
+        { "title": "For Rent", "value": "rent" },
+        { "title": "Land", "value": "land" }
+      ],
+      "value": "sale"
+    }
+  ],
+  "actions": [
+    { "type": "Action.OpenUrl", "title": "Search Properties", "url": "https://degreensacre.com/properties?source=widget-search", "style": "positive" }
+  ]
+}

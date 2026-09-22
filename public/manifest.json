@@ -6,7 +6,7 @@
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "display_override": ["window-controls-overlay", "tabbed"],
   "orientation": "any",
   "background_color": "#f8f8e8",
   "theme_color": "#283818",
@@ -17,70 +17,70 @@
   "launch_handler": {
     "client_mode": ["navigate-existing", "auto"]
   },
+  "scope_extensions": [
+    { "origin": "https://app.degreensacre.com" },
+    { "origin": "https://api.degreensacre.com" },
+    { "origin": "https://degreensacre.ng" },
+    { "origin": "https://www.degreensacre.ng" }
+  ],
   "edge_side_panel": {
     "preferred_width": 400
   },
-  "icons": [
+  "file_handlers": [
     {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "action": "/open-file",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "image/*": [".jpg", ".jpeg", ".png", ".webp"]
+      }
     }
+  ],
+  "note_taking": {
+    "new_note_url": "/notes/new"
+  },
+  "widgets": [
+    {
+      "name": "Featured Properties",
+      "description": "Browse featured listings — updated hourly",
+      "tag": "featured-properties",
+      "template": "featured-widget",
+      "msAcTemplate": "/widgets/featured-template.json",
+      "data": "/api/widgets/featured",
+      "type": "application/json",
+      "update": 3600,
+      "screenshots": [
+        {
+          "src": "/screenshots/wide-1280x720.jpg",
+          "sizes": "1280x720",
+          "label": "Featured widget preview"
+        }
+      ],
+      "icons": [
+        { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+      ]
+    },
+    {
+      "name": "Quick Search",
+      "description": "Search properties by location and budget",
+      "tag": "quick-search",
+      "template": "quick-search-widget",
+      "msAcTemplate": "/widgets/quick-search-template.json",
+      "data": "/api/widgets/quick-search",
+      "type": "application/json",
+      "update": 86400
+    }
+  ],
+  "icons": [
+    { "src": "/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-144x144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-152x152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
     {
@@ -114,35 +114,58 @@
   ],
   "screenshots": [
     {
-      "src": "/og-image.jpg",
+      "src": "/screenshots/wide-1920x1080.jpg",
+      "sizes": "1920x1080",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "De-Greenacres — Own With Confidence (Desktop)"
+    },
+    {
+      "src": "/screenshots/wide-1280x720.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "De-Greenacres — Premium Property Platform (Wide)"
+    },
+    {
+      "src": "/screenshots/narrow-1080x1920.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "De-Greenacres — Browse verified properties (Mobile)"
+    },
+    {
+      "src": "/screenshots/og-1200x630.jpg",
       "sizes": "1200x630",
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "De-Greenacres — Nigeria's Premium Property Platform"
-    },
-    {
-      "src": "/og-image.jpg",
-      "sizes": "1200x630",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Browse verified properties across Nigeria"
     }
   ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "protocol_handlers": [
+  "related_applications": [
     {
-      "protocol": "web+degreensacre",
-      "url": "/properties?protocol=%s"
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=ng.degreensacre.app",
+      "id": "ng.degreensacre.app"
+    },
+    {
+      "platform": "windows",
+      "url": "https://apps.microsoft.com/detail/9NG6X8V5K3Q2",
+      "id": "DeGreensacre_512q2x7h8wnsa"
+    },
+    {
+      "platform": "webapp",
+      "url": "https://degreensacre.com/manifest.json"
     }
+  ],
+  "prefer_related_applications": false,
+  "iarc_rating_id": "e84b072d-71b3-4d4e-86c7-3e74e5a6d2b6",
+  "protocol_handlers": [
+    { "protocol": "web+degreensacre", "url": "/properties?protocol=%s" }
   ],
   "share_target": {
     "action": "/properties",
     "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
+    "params": { "title": "title", "text": "text", "url": "url" }
   }
 }

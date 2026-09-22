@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "validate": "npm run type-check && npm run lint && npm run build"
+    "validate": "npm run type-check && npm run lint && npm run build",
+    "pwa:package:test": "./scripts/generate-test-package.sh",
+    "pwa:validate": "node -e \"const j=require('./public/manifest.json'); console.log('manifest', Object.keys(j).length, 'keys'); console.log('screenshots', j.screenshots.map(s=>s.sizes)); console.log('display_override', j.display_override); console.log('scope_extensions', !!j.scope_extensions); console.log('file_handlers', !!j.file_handlers); console.log('widgets', j.widgets?.length); console.log('note_taking', !!j.note_taking); console.log('iarc', j.iarc_rating_id);\""
   },
   "keywords": [
     "real-estate",
