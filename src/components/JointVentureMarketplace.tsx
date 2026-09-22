@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import { useState } from 'react';
 
 interface JVOpportunity {
@@ -165,6 +167,8 @@ export default function JointVentureMarketplace() {
   };
 
   return (
+    <>
+      <DemoBanner description="Joint Venture Marketplace — Preview listings with demo opportunities. Live JV matching will be moderated." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
@@ -438,5 +442,6 @@ export default function JointVentureMarketplace() {
         </div>
       </div>
     </section>
+      </>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import { useState } from 'react';
 
 interface MarketData {
@@ -156,6 +158,8 @@ export default function MarketIntelligenceDashboard() {
   };
 
   return (
+    <>
+      <DemoBanner description="Market Intelligence — Preview analytics with sample market data. Live data feeds will be connected." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
@@ -461,5 +465,6 @@ export default function MarketIntelligenceDashboard() {
         </div>
       </div>
     </section>
+      </>
   );
 }

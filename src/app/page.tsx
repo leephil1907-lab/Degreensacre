@@ -8,6 +8,7 @@ import HeroSearch from '@/components/HeroSearch';
 import CACIcon from '@/components/CACIcon';
 import ReviewsSection from '@/components/ReviewsSection';
 import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
+import AdSense from '@/components/GoogleAdsense';
 
 export default function HomePage() {
   const sampleProperties = properties.filter(p => p.sample && p.featured).slice(0, 6);
@@ -91,6 +92,106 @@ export default function HomePage() {
                 </Link>
               </ScrollReveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ AD — HOMEPAGE TOP (AdSense) ═══ */}
+      <section className="py-6 bg-white">
+        <div className="container-custom">
+          <AdSense label="Homepage — Top Banner (below Featured Listings)" format="horizontal" />
+        </div>
+      </section>
+
+      {/* ═══ COASTAL HIGHWAY — GOLDMINE FEATURED (FROM FLYER) ═══ */}
+      <section className="relative bg-charcoal text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200" alt="Premium dry land along Coastal Highway — Uyo" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-forest via-forest/90 to-charcoal/95" />
+        </div>
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '36px 36px' }} />
+        <div className="container-custom relative z-10 py-14 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left — Flyer visual + badge */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-[22px] overflow-hidden shadow-2xl border border-white/10 bg-white p-2">
+                <img src="https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=1200" alt="Dry land plot along New Coastal Highway — Uyo, Akwa Ibom" className="w-full h-72 object-cover rounded-[16px]" />
+                <div className="absolute top-4 left-4 bg-forest text-white px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase border border-white/20">Uyo · Akwa Ibom State</div>
+                <div className="absolute bottom-4 right-4 bg-amber-500 text-charcoal px-4 py-2 rounded-xl font-extrabold text-sm shadow-lg border-2 border-white">SPREAD: ₦2.5M <span className="font-semibold text-xs block">Docs + All Inclusive</span></div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {[
+                  { k: 'PRIME LAND', sub: 'New corridor' },
+                  { k: 'DIRECT ACCESS', sub: 'Coastal Highway' },
+                  { k: 'ENDLESS', sub: 'Possibilities' },
+                ].map(b => (
+                  <div key={b.k} className="bg-white text-charcoal rounded-xl px-3 py-3 text-center border border-white/20">
+                    <p className="text-[11px] font-extrabold tracking-widest text-forest">{b.k}</p>
+                    <p className="text-[11px] text-gray-600">{b.sub}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Right — Copy */}
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 bg-amber-500 text-charcoal px-4 py-1.5 rounded-full text-xs font-extrabold tracking-[0.18em] uppercase mb-4">THE NEXT REAL ESTATE GOLDMINE IS HERE!</div>
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl leading-tight mb-3">
+                Premium Plots<br />
+                <span className="text-amber-400">Along the New Coastal Highway</span><br />
+                <span className="text-white/90 text-2xl md:text-3xl">To Calabar — Uyo, Akwa Ibom State</span>
+              </h2>
+              <p className="text-sage font-semibold text-sm tracking-widest uppercase mb-3">INVEST WHERE THE FUTURE IS BEING BUILT</p>
+              <p className="text-white/80 leading-relaxed mb-5 max-w-2xl">
+                The Coastal Highway is opening up a <b className="text-white">new economic corridor</b>, and smart investors are securing land <b className="text-white">before prices surge</b>. Whether you’re building, developing, or investing for <b className="text-white">capital appreciation</b>, this is your opportunity to own strategically located land in one of Nigeria’s <em className="text-amber-300">fastest-growing investment destinations</em>.
+              </p>
+              {/* Why invest grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                {[
+                  'Strategic location with direct access to Coastal Highway',
+                  'High potential for rapid land value appreciation',
+                  'Ideal for residential estates, commercial, hotels & mixed-use',
+                  'Secure and verified documentation — 100% genuine',
+                  'Flexible payment options available',
+                  'HIGH RETURNS · STRATEGIC LOCATION · LIMITED SUPPLY',
+                ].map(t => (
+                  <div key={t} className="flex items-start gap-2.5 bg-white/10 border border-white/10 rounded-xl px-3.5 py-3">
+                    <CheckCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/90 leading-snug">{t}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Price + Bank */}
+              <div className="bg-white rounded-2xl p-5 md:p-6 text-charcoal shadow-xl">
+                <p className="text-[11px] font-bold tracking-[0.18em] text-forest uppercase mb-2">TODAY’S PRICE WILL NOT BE TOMORROW’S PRICE</p>
+                <div className="flex flex-wrap items-end gap-3 mb-4">
+                  <p className="font-display text-3xl md:text-4xl text-forest">SPREAD: ₦2,500,000</p>
+                  <span className="text-sm text-gray-600 mb-1">(Documentation plus all inclusive — 464 sqm)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-ivory rounded-xl p-4 border border-cream">
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pay Into</p>
+                    <p className="font-extrabold text-forest text-sm">WEMA BANK</p>
+                    <p className="text-xs text-gray-600">Name: <b>De-Greenacres Properties Limited</b></p>
+                    <p className="text-xs text-gray-600">Account: <b className="font-mono text-forest text-sm">0126877218</b></p>
+                  </div>
+                  <div className="flex flex-col justify-center gap-2">
+                    <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20Uyo%20flyer%20(Premium%20Plots%20%E2%82%A62.5M%20spread)%20and%20I%20want%20to%20secure%20my%20plot.%20Please%20send%20location%20and%20payment%20details." target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-forest text-white px-5 py-3 rounded-xl font-bold hover:bg-forest-light transition-all">
+                      <Phone className="w-4 h-4" /> Secure Your Plot on WhatsApp
+                    </a>
+                    <Link href="/properties/premium-plots-new-coastal-highway-uyo" className="inline-flex items-center justify-center gap-2 border-2 border-forest text-forest px-5 py-2.5 rounded-xl font-bold hover:bg-forest hover:text-white transition-all text-sm">
+                      View Plot Details <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-3 text-center">Secure your plot today. <b>Build Wealth for Generations.</b> · For the Diaspora · For Home Investors · Legacy for Generations</p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+                <span className="bg-white/10 border border-white/15 text-white px-3 py-1.5 rounded-full">100% Genuine Land</span>
+                <span className="bg-white/10 border border-white/15 text-white px-3 py-1.5 rounded-full">Verified Documentation</span>
+                <span className="bg-white/10 border border-white/15 text-white px-3 py-1.5 rounded-full">Professional Service</span>
+                <span className="bg-white/10 border border-white/15 text-white px-3 py-1.5 rounded-full">Maximum Value Assurance</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -346,6 +447,13 @@ export default function HomePage() {
               Inspection fee of <span className="text-sage font-semibold">₦20,000</span> applies after your request is confirmed. You&apos;ll receive payment details once we schedule your visit.
             </p>
           </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ═══ AD — HOMEPAGE BOTTOM (AdSense) ═══ */}
+      <section className="py-6 bg-ivory">
+        <div className="container-custom">
+          <AdSense label="Homepage — Bottom Banner (above WhatsApp CTA)" format="horizontal" />
         </div>
       </section>
 

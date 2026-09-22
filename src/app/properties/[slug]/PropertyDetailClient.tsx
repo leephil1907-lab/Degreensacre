@@ -11,6 +11,7 @@ import {
   CreditCard, Building, Map, TreePine
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import AdSense from '@/components/GoogleAdsense';
 import { properties as sampleProperties } from '@/data/properties';
 
 interface Property {
@@ -451,6 +452,11 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               </div>
             )}
 
+            {/* Ad — Property detail (in-content) */}
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <AdSense label="Property Detail — In-content" format="horizontal" />
+            </div>
+
             {/* Property Details */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-serif text-charcoal-900 mb-4">Property Details</h2>
@@ -775,6 +781,11 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Ad — Sidebar rectangle (below agent card, sticky) */}
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <AdSense label="Property Detail — Sidebar" format="rectangle" className="min-h-[250px]" />
             </div>
           </div>
         </div>

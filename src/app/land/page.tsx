@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { properties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
+import AdSense from '@/components/GoogleAdsense';
 
 export default function LandPage() {
   const landProperties = properties.filter(p => p.type === 'land');
@@ -43,6 +44,86 @@ export default function LandPage() {
               <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-sage" /> All Documentation Reviewed</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Coastal Highway Goldmine — Flyer Spotlight (MOST RECENT OFFER) */}
+      <section className="py-12 md:py-16 bg-gradient-to-br from-amber-50 via-ivory to-white border-y border-amber-200/50">
+        <div className="container-custom">
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-amber-200">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+              <div className="lg:col-span-5 bg-charcoal p-2">
+                <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200" alt="Premium dry land along New Coastal Highway — Uyo" className="w-full h-80 object-cover rounded-2xl" />
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <div className="bg-white rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-extrabold text-forest">PRIME LAND</p>
+                    <p className="text-[11px] text-gray-600">New corridor</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-extrabold text-forest">DIRECT ACCESS</p>
+                    <p className="text-[11px] text-gray-600">Coastal Highway</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-extrabold text-forest">ENDLESS</p>
+                    <p className="text-[11px] text-gray-600">Possibilities</p>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:col-span-7 p-6 md:p-8">
+                <div className="inline-flex items-center gap-2 bg-forest text-white px-3 py-1.5 rounded-full text-xs font-extrabold tracking-widest uppercase">FEATURED · LIMITED SUPPLY</div>
+                <h2 className="font-display text-3xl md:text-4xl text-charcoal mt-3 mb-2 leading-tight">The Next Real Estate Goldmine is Here!</h2>
+                <p className="text-sm font-bold text-sage uppercase tracking-[0.18em] mb-3">Premium Plots Along the New Coastal Highway — To Calabar · Uyo, Akwa Ibom State</p>
+                <p className="text-gray-600 leading-relaxed mb-4 text-sm">The Coastal Highway is opening up a <b>new economic corridor</b> — smart investors are securing land <b>before prices surge</b>. Ideal for <b>residential estates, commercial developments, hotels and mixed-use projects</b>. <span className="text-forest font-semibold">High returns · Strategic location · Limited supply.</span></p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-5">
+                  {[
+                    'Strategic location — direct Coastal Highway access',
+                    'High potential for rapid value appreciation',
+                    'Residential, commercial, hotels, mixed-use',
+                    'Secure & verified documentation',
+                    'Flexible payment options',
+                    '100% genuine land · Maximum value assurance',
+                  ].map(t => (
+                    <div key={t} className="flex gap-2 text-sm bg-ivory rounded-xl px-3.5 py-2.5 border border-cream">
+                      <CheckCircle className="w-4 h-4 text-forest mt-0.5 flex-shrink-0" />
+                      <span className="text-charcoal">{t}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-forest text-white rounded-2xl p-5 mb-4">
+                  <p className="text-xs font-bold tracking-widest uppercase text-amber-300 mb-1">TODAY’S PRICE WILL NOT BE TOMORROW’S PRICE</p>
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <p className="font-display text-3xl text-white">SPREAD: ₦2,500,000</p>
+                    <span className="text-sm text-white/70">(Documentation plus all inclusive — 464 sqm)</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white text-charcoal rounded-xl p-3">
+                      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pay Into</p>
+                      <p className="font-extrabold text-forest">WEMA BANK</p>
+                      <p>Name: De-Greenacres Properties Limited</p>
+                      <p>Account: <b className="font-mono">0126877218</b></p>
+                    </div>
+                    <div className="flex flex-col gap-2 justify-center">
+                      <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20Uyo%20flyer%20(%E2%82%A62.5M%20spread)%20and%20want%20to%20secure%20my%20plot." target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-amber-500 text-charcoal px-5 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all">
+                        <Phone className="w-4 h-4" /> Chat on WhatsApp
+                      </a>
+                      <Link href="/properties/premium-plots-new-coastal-highway-uyo" className="inline-flex items-center justify-center gap-2 bg-white text-forest px-5 py-2.5 rounded-xl font-bold border border-white hover:bg-ivory transition-all">
+                        View Plot <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 text-center">Secure your plot today. <b>Build Wealth for Generations.</b> · Diaspora-friendly · Home investors · Legacy</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-[11px] text-gray-500 mt-4">Featured flyer offer — <b>Uyo, Akwa Ibom State · New Coastal Highway to Calabar</b> — Call/WhatsApp <b>+234 704 175 4800</b> · RC: 1856064</p>
+        </div>
+      </section>
+
+      {/* Ad — Land page (after Coastal spotlight) */}
+      <section className="py-8 bg-white">
+        <div className="container-custom">
+          <AdSense label="Land — Below Coastal Highway Spotlight" format="horizontal" />
         </div>
       </section>
 
@@ -274,6 +355,13 @@ export default function LandPage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Ad — Land page (after listings, before Southeast focus) */}
+      <section className="py-8 bg-ivory">
+        <div className="container-custom">
+          <AdSense label="Land — After Listings" format="horizontal" />
         </div>
       </section>
 

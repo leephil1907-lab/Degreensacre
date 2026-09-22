@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { Fragment, useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { properties as sampleProperties, Property as SampleProperty } from '@/data/properties';
+import AdSense from '@/components/GoogleAdsense';
 
 // Leaflet types (loaded dynamically)
 let L: any = null;
@@ -45,36 +46,38 @@ function PropertiesContent() {
   const [dbProperties, setDbProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Merge sample properties with DB properties
+  // Merge sample properties with DB properties — dedupe by slug (DB wins)
+  const sampleMapped = sampleProperties.filter(p => p.status === 'available').map(p => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    type: p.type,
+    property_type: p.propertyType,
+    price: p.price,
+    price_period: p.pricePeriod,
+    bedrooms: p.bedrooms,
+    bathrooms: p.bathrooms,
+    sqm: p.sqm,
+    parking: p.parking,
+    area: p.area,
+    state: p.state,
+    lga: p.lga,
+    features: p.features,
+    verification_status: p.verificationStatus || 'unverified',
+    status: p.status,
+    featured: p.featured,
+    views: p.views,
+    property_images: p.images.map((url, i) => ({ url, display_order: i, is_primary: i === 0 })),
+    furnished: p.furnished,
+    serviced: p.serviced,
+    gated_estate: p.gatedEstate,
+    documentation: p.documentation,
+    date_added: p.dateAdded,
+    sample: true,
+  }));
+  const dbBySlug = new Set(dbProperties.map((p: any) => p.slug));
   const allProperties = [
-    ...sampleProperties.filter(p => p.status === 'available').map(p => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      type: p.type,
-      property_type: p.propertyType,
-      price: p.price,
-      price_period: p.pricePeriod,
-      bedrooms: p.bedrooms,
-      bathrooms: p.bathrooms,
-      sqm: p.sqm,
-      parking: p.parking,
-      area: p.area,
-      state: p.state,
-      lga: p.lga,
-      features: p.features,
-      verification_status: p.verificationStatus || 'unverified',
-      status: p.status,
-      featured: p.featured,
-      views: p.views,
-      property_images: p.images.map((url, i) => ({ url, display_order: i, is_primary: i === 0 })),
-      furnished: p.furnished,
-      serviced: p.serviced,
-      gated_estate: p.gatedEstate,
-      documentation: p.documentation,
-      date_added: p.dateAdded,
-      sample: true,
-    })),
+    ...sampleMapped.filter((p) => !dbBySlug.has(p.slug)),
     ...dbProperties,
   ];
 
@@ -531,15 +534,18 @@ function PropertiesContent() {
               viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' :
               viewMode === 'list' ? 'space-y-3' : 'space-y-3'
             }`}>
-              {sortedProperties.map((property) => {
+              {sortedProperties.map((property, idx) => {
                 const isSelected = selectedPropertyId === property.id;
                 const isHovered = hoveredPropertyId === property.id;
                 const isList = viewMode === 'list';
                 const imageUrl = property.property_images?.[0]?.url || property.images?.[0] || '';
 
+                // In-feed ad every 6 listings — AdSense policy friendly, keeps UX clean
+                const showInFeedAd = (idx + 1) % 6 === 0 && idx !== sortedProperties.length - 1;
+
                 return (
+                  <Fragment key={property.id}>
                   <Link
-                    key={property.id}
                     href={`/properties/${property.slug}`}
                     id={`property-card-${property.id}`}
                     className={`block bg-white rounded-xl overflow-hidden transition-all group ${
@@ -676,6 +682,12 @@ function PropertiesContent() {
                       </div>
                     </div>
                   </Link>
+                  {showInFeedAd && (
+                    <div className="col-span-full">
+                      <AdSense label={`In-feed ad after ${idx + 1} listings`} format="horizontal" className="my-2" />
+                    </div>
+                  )}
+                  </Fragment>
                 );
               })}
             </div>

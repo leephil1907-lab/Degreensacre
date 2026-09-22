@@ -21,6 +21,10 @@
   ],
   "author": "De-Greenacres Properties Limited",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "dependencies": {
     "@react-email/render": "^2.1.0",
     "@supabase/ssr": "^0.12.7",

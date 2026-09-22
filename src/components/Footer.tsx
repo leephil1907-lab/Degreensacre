@@ -4,6 +4,17 @@ import Logo from './Logo';
 export default function Footer() {
   return (
     <footer className="bg-charcoal text-white">
+      {/* Trust & Flyer Strip — from flyer */}
+      <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-charcoal">
+        <div className="container-custom py-3 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs">
+          <span className="inline-flex items-center gap-1.5 font-bold"><span className="w-5 h-5 rounded-full bg-charcoal text-white grid place-items-center text-[10px]">✓</span> 100% Genuine Land</span>
+          <span className="hidden sm:inline text-charcoal/30">|</span>
+          <span className="inline-flex items-center gap-1.5 font-bold"><span className="w-5 h-5 rounded-full bg-charcoal text-white grid place-items-center text-[10px]">✓</span> Verified Documentation</span>
+          <span className="hidden sm:inline text-charcoal/30">|</span>
+          <span className="inline-flex items-center gap-1.5 font-bold"><span className="w-5 h-5 rounded-full bg-charcoal text-white grid place-items-center text-[10px]">✓</span> Professional Service</span>
+          <span className="hidden md:inline-flex items-center gap-2 ml-2 bg-charcoal text-white px-3 py-1.5 rounded-full font-bold">Coastal Highway Uyo — SPREAD ₦2.5M <Link href="/properties/premium-plots-new-coastal-highway-uyo" className="underline decoration-amber-400 hover:text-amber-300">View Plot →</Link></span>
+        </div>
+      </div>
       {/* Main Footer */}
       <div className="container-custom pt-16 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-14">

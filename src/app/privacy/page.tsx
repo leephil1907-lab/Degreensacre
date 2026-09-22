@@ -69,8 +69,20 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>To exercise these rights, contact us at <strong>de_greenacrespropertiesltd@yahoo.com</strong>.</p>
 
-          <h2>7. Cookies</h2>
-          <p>We use essential cookies to maintain your session and preferences. We do not use third-party tracking cookies or advertising cookies.</p>
+          <h2>7. Cookies &amp; Advertising</h2>
+          <p>We use essential cookies to maintain your session and preferences. We also use <strong>Google AdSense</strong> to show advertisements.</p>
+          <ul>
+            <li><strong>Essential cookies:</strong> Required for login, preferences, and security — cannot be disabled.</li>
+            <li><strong>Advertising cookies (Google AdSense):</strong> Google and its partners use cookies to serve personalized and non-personalized ads based on your browsing history. This is controlled by Google’s ad technology. You can see personalized ads only if you consent via our cookie banner.</li>
+          </ul>
+          <p>You can control advertising cookies at any time:</p>
+          <ul>
+            <li>Use our <strong>Cookie Consent banner</strong> (Decline = non-personalized ads only) or clear <code>cookie-consent</code> from your browser storage.</li>
+            <li>Visit <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" className="text-forest underline">Google Ad Settings</a> to opt out of personalized ads.</li>
+            <li>Visit <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener noreferrer" className="text-forest underline">aboutads.info/choices</a> for broader opt-out.</li>
+            <li>See Google’s uses of data at <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-forest underline">policies.google.com/technologies/partner-sites</a>.</li>
+          </ul>
+          <p className="text-sm text-gray-600">Our <code>ads.txt</code> at <a href="/ads.txt" className="text-forest underline">/ads.txt</a> verifies our AdSense publisher ID for ad buyers.</p>
 
           <h2>8. Children&apos;s Privacy</h2>
           <p>Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children.</p>

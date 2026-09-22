@@ -3,104 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - De-Greenacres Properties</title>
+  <meta name="theme-color" content="#283818">
+  <title>Offline — De-Greenacres Properties</title>
+  <link rel="icon" href="/favicon.png" type="image/png">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #2D5016 0%, #87A96B 100%);
+      background: linear-gradient(135deg, #283818 0%, #788848 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #1A1A1A;
       padding: 20px;
+      -webkit-font-smoothing: antialiased;
     }
-    
     .container {
-      background: white;
+      background: #fffff8;
       border-radius: 24px;
-      padding: 60px 40px;
-      max-width: 500px;
+      padding: 48px 36px;
+      max-width: 520px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+      border: 1px solid #e8e8d8;
     }
-    
-    .icon {
-      font-size: 80px;
-      margin-bottom: 30px;
-    }
-    
-    h1 {
-      font-size: 32px;
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #283818;
+      color: #f8f8e8;
+      font-size: 11px;
       font-weight: 700;
-      margin-bottom: 16px;
-      color: #2D5016;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 18px;
     }
-    
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: #283818;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
     p {
-      font-size: 18px;
-      color: #666;
+      font-size: 16px;
+      color: #525250;
       line-height: 1.6;
-      margin-bottom: 30px;
+      margin-bottom: 18px;
     }
-    
-    .button {
-      display: inline-block;
-      background: #2D5016;
-      color: white;
-      padding: 16px 40px;
+    p.small { font-size: 13px; color: #a3a3a0; }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 24px 0 8px;
+    }
+    .button-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #283818;
+      color: #f8f8e8;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .button-primary:hover { background: #384828; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(40,56,24,0.3); }
+    .button-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: #283818;
+      padding: 12px 28px;
       border-radius: 12px;
       text-decoration: none;
       font-weight: 600;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      border: none;
-      cursor: pointer;
-    }
-    
-    .button:hover {
-      background: #1a3009;
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(45, 80, 22, 0.3);
-    }
-    
-    .info {
-      margin-top: 30px;
-      padding-top: 30px;
-      border-top: 1px solid #e5e7eb;
       font-size: 14px;
-      color: #999;
+      border: 2px solid #e8e8d8;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .button-ghost:hover { background: #f8f8e8; border-color: #283818; }
+    .info {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #e8e8d8;
+      font-size: 12px;
+      color: #a3a3a0;
+      line-height: 1.5;
+    }
+    .pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse { 0%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.15)} 100%{opacity:1;transform:scale(1)} }
+    @media (min-width: 480px) {
+      .actions { flex-direction: row; }
+      .actions a, .actions button { width: auto; flex: 1; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="badge"><span class="pulse"></span> Offline mode</div>
     <div class="icon">📡</div>
     <h1>You're Offline</h1>
     <p>
-      It seems you've lost your internet connection. 
-      Don't worry - some features are still available offline.
+      It looks like you've lost your internet connection.<br>
+      Some pages you visited before are still available.
     </p>
-    <button class="button" onclick="window.location.reload()">
-      Try Again
-    </button>
+    <div class="actions">
+      <button class="button-primary" onclick="window.location.reload()">↻ Try Again</button>
+      <a class="button-ghost" href="/">Go to Homepage</a>
+    </div>
+    <p class="small">Cached properties &amp; pages will work offline.<br>New searches need a connection.</p>
     <div class="info">
-      <p>De-Greenacres Properties<br>Nigeria's Property Intelligence Platform</p>
+      <strong>De-Greenacres Properties Limited</strong> &nbsp;·&nbsp; RC: 1856064<br>
+      Nigeria's Property Intelligence Platform<br>
+      <span style="color:#788848;">We’ll reconnect you automatically when you’re back online.</span>
     </div>
   </div>
-  
   <script>
-    // Check connection status
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
+    window.addEventListener('online', () => window.location.reload());
+    // Show cached count if available
+    if ('caches' in window) {
+      caches.keys().then(keys => console.log('[Offline] caches:', keys));
+    }
   </script>
 </body>
 </html>

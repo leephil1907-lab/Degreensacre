@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import { useState } from 'react';
 import { properties } from '@/data/properties';
 
@@ -103,6 +105,8 @@ export default function AIPropertyMatchmaker() {
   };
 
   return (
+    <>
+      <DemoBanner description="AI Property Matchmaker — Preview with sample properties. Live AI matching will be connected to your data." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-4xl mx-auto">
@@ -471,5 +475,6 @@ export default function AIPropertyMatchmaker() {
         </div>
       </div>
     </section>
+      </>
   );
 }

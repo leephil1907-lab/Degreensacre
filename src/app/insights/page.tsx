@@ -2,6 +2,7 @@
 
 import ScrollReveal from '@/components/ScrollReveal';
 import { Calendar, User, ArrowRight } from 'lucide-react';
+import AdSense from '@/components/GoogleAdsense';
 
 import Link from 'next/link';
 
@@ -170,6 +171,13 @@ export default function InsightsPage() {
           </div>
         </section>
       )}
+
+      {/* Ad — Insights (between Featured and All) */}
+      <section className="py-8 bg-ivory">
+        <div className="container-custom">
+          <AdSense label="Insights — Between Featured & All" format="horizontal" />
+        </div>
+      </section>
 
       {/* All Articles */}
       <section className="section-padding">

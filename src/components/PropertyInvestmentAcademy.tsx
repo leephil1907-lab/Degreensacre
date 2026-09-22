@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -135,6 +137,8 @@ export default function PropertyInvestmentAcademy() {
   };
 
   return (
+    <>
+      <DemoBanner description="Investment Academy — Preview curriculum with sample lessons. Full courses will be published before launch." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
@@ -368,5 +372,6 @@ export default function PropertyInvestmentAcademy() {
         </div>
       </div>
     </section>
+      </>
   );
 }

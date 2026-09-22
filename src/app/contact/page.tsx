@@ -123,6 +123,30 @@ export default function ContactPage() {
                 </div>
               </ScrollReveal>
 
+              {/* Coastal Highway — Payment Details (From Flyer) */}
+              <ScrollReveal direction="left" delay={0.35}>
+                <div className="bg-gradient-to-br from-forest to-forest-dark text-white rounded-xl shadow-soft p-6 border border-sage/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-charcoal font-extrabold text-xs">₦</div>
+                    <h3 className="text-lg font-bold">Payment Details</h3>
+                    <span className="ml-auto text-[11px] font-bold tracking-widest uppercase bg-amber-500 text-charcoal px-2.5 py-1 rounded-full">COASTAL HIGHWAY — UYO</span>
+                  </div>
+                  <p className="text-amber-300 text-xs font-bold tracking-widest uppercase mb-1">TODAY’S PRICE WILL NOT BE TOMORROW’S PRICE</p>
+                  <p className="font-display text-2xl mb-1">SPREAD: ₦2,500,000</p>
+                  <p className="text-white/70 text-xs mb-4">(Documentation plus all inclusive — 464 sqm) · Limited supply</p>
+                  <div className="bg-white text-charcoal rounded-xl p-4">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pay Into</p>
+                    <p className="font-extrabold text-forest">WEMA BANK</p>
+                    <p className="text-sm">Name: <b>De-Greenacres Properties Limited</b></p>
+                    <p className="text-sm font-mono">Account Number: <b className="text-forest">0126877218</b></p>
+                  </div>
+                  <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20flyer%20(%E2%82%A62.5M%20spread)%20and%20want%20payment%20confirmation." target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 bg-amber-500 text-charcoal px-4 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all text-sm">
+                    Confirm Payment on WhatsApp
+                  </a>
+                  <p className="text-[11px] text-white/60 mt-3 text-center">Premium Plots · New Coastal Highway To Calabar — Uyo · RC: 1856064</p>
+                </div>
+              </ScrollReveal>
+
               {/* Quick Contact — Icons Only, No Exposed Details */}
               <ScrollReveal direction="left" delay={0.4}>
               <div className="bg-white rounded-xl shadow-soft p-6">

@@ -16,6 +16,7 @@
   --color-charcoal: #1a1a18;
   --color-taupe: #b8b898;
   --color-silver: #d8d8c8;
+  /* Legacy magenta token now maps to forest after rebrand (was #C41E7A) */
   --color-magenta: #283818;
   --color-magenta-light: #384828;
   
@@ -35,6 +36,7 @@
     --taupe: #b8b898;
     --silver: #d8d8c8;
     --cream: #e8e8d8;
+    /* Legacy magenta -> forest after rebrand (was #C41E7A) */
     --magenta: #283818;
     --magenta-dark: #1a2810;
     --magenta-light: #384828;

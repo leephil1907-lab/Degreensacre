@@ -1,0 +1,8 @@
+# ads.txt for De-Greenacres Properties — google.com AdSense
+# Replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID after AdSense approval.
+# How to get it: adsense.google.com → Account → Settings → Publisher ID → ca-pub-...
+# After approval, Google will give you a line like:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+# Keep this line below and also add the one Google generates for you (if different).
+
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import { useState } from 'react';
 
 interface Bank {
@@ -182,6 +184,8 @@ export default function MortgageCalculatorHub() {
   const eligibleBanks = getEligibleBanks();
 
   return (
+    <>
+      <DemoBanner description="Mortgage Hub — Preview rates from 6 banks with sample calculations. Live bank APIs will be integrated." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-6xl mx-auto">
@@ -474,5 +478,6 @@ export default function MortgageCalculatorHub() {
         </div>
       </div>
     </section>
+      </>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { DemoBanner } from '@/components/DemoBadge';
+
 import { useState } from 'react';
 
 interface PropertyRecord {
@@ -79,6 +81,8 @@ export default function BlockchainPropertyRecords() {
   };
 
   return (
+    <>
+      <DemoBanner description="Blockchain Property Records — Preview UI with sample hashes. On-chain verification will be enabled on launch." />
     <section className="section-padding bg-ivory">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
@@ -367,5 +371,6 @@ export default function BlockchainPropertyRecords() {
         </div>
       </div>
     </section>
+      </>
   );
 }

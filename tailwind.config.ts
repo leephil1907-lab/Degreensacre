@@ -98,6 +98,8 @@ const config: Config = {
           400: '#c8c8b8',
           500: '#b8b898',
         },
+        // Legacy `magenta` token — rebrand: original #C41E7A now maps to forest #283818
+        // Keeps old `bg-magenta`/`text-magenta` classes working after brand update
         magenta: {
           DEFAULT: '#283818',
           50: '#f0f2ee',
