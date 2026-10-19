@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [savedProperties, setSavedProperties] = useState<any[]>([]);
+  const [myListings, setMyListings] = useState<any[]>([]);
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [viewings, setViewings] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -31,11 +32,12 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [savedRes, enquiriesRes, viewingsRes, notificationsRes] = await Promise.all([
+      const [savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes] = await Promise.all([
         fetch('/api/saved'),
         fetch('/api/enquiries'),
         fetch('/api/viewings'),
         fetch('/api/notifications'),
+        fetch('/api/properties/mine'),
       ]);
 
       if (savedRes.ok) {
@@ -54,6 +56,10 @@ export default function DashboardPage() {
         const data = await notificationsRes.json();
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
+      }
+      if (listingsRes.ok) {
+        const data = await listingsRes.json();
+        setMyListings(data.properties || []);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -85,6 +91,7 @@ export default function DashboardPage() {
   const tabs = [
     { id: 'overview' as Tab, label: 'Overview', icon: Home },
     { id: 'saved' as Tab, label: 'Saved', icon: Heart, count: savedProperties.length },
+    ...(profile?.account_type === 'seller' || profile?.account_type === 'agent' || profile?.is_admin ? [{ id: 'listings' as Tab, label: 'My Listings', icon: Home, count: myListings.length }] : []),
     { id: 'enquiries' as Tab, label: 'Enquiries', icon: MessageSquare, count: enquiries.length },
     { id: 'viewings' as Tab, label: 'Viewings', icon: Calendar, count: viewings.length },
     { id: 'notifications' as Tab, label: 'Notifications', icon: Bell, count: unreadCount },
@@ -203,6 +210,50 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </div>
+                )}
+
+                {/* Owner / agent listing portfolio */}
+                {activeTab === 'listings' && (
+                  <section>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-2xl font-display text-charcoal">My Listings</h2>
+                        <p className="text-sm text-gray-500 mt-1">Track submissions and see which properties are awaiting review.</p>
+                      </div>
+                      <Link href="/submit-property" className="inline-flex items-center justify-center bg-forest text-white px-5 py-3 rounded-lg font-medium hover:bg-forest-light transition-colors">
+                        Submit a Property
+                      </Link>
+                    </div>
+                    {myListings.length === 0 ? (
+                      <div className="bg-white rounded-xl shadow-sm p-10 text-center">
+                        <Home className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-charcoal mb-2">No property submissions yet</h3>
+                        <p className="text-gray-500 mb-6">Submit a property you own or are authorised to represent. It will remain off the public marketplace while it is reviewed.</p>
+                        <Link href="/submit-property" className="inline-flex bg-forest text-white px-6 py-3 rounded-lg font-medium hover:bg-forest-light transition-colors">Start a Listing</Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {myListings.map((property: any) => (
+                          <div key={property.id} className="bg-white rounded-xl shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
+                            {property.property_images?.[0]?.url ? (
+                              <img src={property.property_images[0].url} alt={property.title} className="w-full sm:w-32 h-28 object-cover rounded-lg" />
+                            ) : (
+                              <div className="w-full sm:w-32 h-28 rounded-lg bg-gray-100 flex items-center justify-center"><Home className="w-8 h-8 text-gray-400" /></div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-charcoal">{property.title}</h3>
+                              <p className="text-sm text-gray-500 mt-1">{property.area}{property.state ? `, ${property.state}` : ''}</p>
+                              <p className="text-forest font-bold mt-2">{formatPrice(Number(property.price || 0))}</p>
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-800">{String(property.status || 'draft').replace(/_/g, ' ')}</span>
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">Verification: {property.verification_status || 'pending'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 )}
 
                 {/* Saved Properties Tab */}
