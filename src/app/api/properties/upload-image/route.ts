@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { uploadPropertyImage, BUCKETS } from '@/lib/storage';
+import { uploadPropertyImage } from '@/lib/storage';
 import { validateImageFile } from '@/lib/validation';
 
 // POST /api/properties/upload-image - Upload property image
