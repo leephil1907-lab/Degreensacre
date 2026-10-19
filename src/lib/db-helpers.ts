@@ -59,13 +59,19 @@ export async function getPropertyBySlug(slug: string) {
 }
 
 export async function incrementPropertyView(propertyId: string) {
-  const supabase = await createServerSupabaseClient();
-  
-  await supabase.rpc('increment_property_views', { property_uuid: propertyId });
-  
-  await supabase.from('property_views').insert({
+  // This helper runs server-side only. Use the service client so the privileged
+  // counter RPC is not exposed to anonymous or ordinary authenticated callers.
+  const supabase = await createAdminSupabaseClient();
+
+  const { error: counterError } = await supabase.rpc('increment_property_views', {
+    property_uuid: propertyId,
+  });
+  if (counterError) throw counterError;
+
+  const { error: viewError } = await supabase.from('property_views').insert({
     property_id: propertyId,
   });
+  if (viewError) throw viewError;
 }
 
 // Enquiry helpers
