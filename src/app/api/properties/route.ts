@@ -49,6 +49,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Only property owners, independent agents, and administrators may submit listings.
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_type, is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'We could not confirm your account type. Please sign in again or contact support.', success: false },
+        { status: 403 }
+      );
+    }
+
+    const canSubmit = profile.is_admin === true || profile.account_type === 'seller' || profile.account_type === 'agent';
+    if (!canSubmit) {
+      return NextResponse.json(
+        { error: 'Property submissions are available to property owners and independent agents. Update your account type or create an owner/agent account to continue.', success: false },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     
     // Validate required fields
