@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase-server';
-import { logAdminActivity } from '@/lib/db-helpers';
+import { logAdminActivity, createNotification } from '@/lib/db-helpers';
 import { sanitizeForDb } from '@/lib/validation';
 
 // GET /api/admin/properties - Get all properties for moderation
@@ -221,6 +221,27 @@ export async function PATCH(request: NextRequest) {
           note: sanitizeForDb(moderationNote),
         });
       if (noteError) throw noteError;
+    }
+
+    // Notify the listing owner when moderation changes the listing's outcome.
+    // Notification delivery must not roll back an otherwise successful moderation.
+    if ((body.action === 'approve' || body.action === 'reject') && property?.owner_id) {
+      const approved = body.action === 'approve';
+      const title = approved ? 'Property listing approved' : 'Property listing needs changes';
+      const message = approved
+        ? `Your property listing "${property.title}" has been approved and is now visible on the marketplace.`
+        : `Your property listing "${property.title}" needs changes before it can be published. Reviewer note: ${moderationNote || 'Please review the listing details and resubmit.'}`;
+      try {
+        await createNotification({
+          user_id: property.owner_id,
+          type: approved ? 'property_approved' : 'property_changes_requested',
+          title,
+          message: sanitizeForDb(message),
+          data: { property_id: property.id, status: property.status },
+        });
+      } catch (notificationError) {
+        console.error('Property moderation notification failed:', notificationError);
+      }
     }
 
     // Log admin activity
