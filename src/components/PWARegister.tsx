@@ -22,9 +22,17 @@ export default function PWARegister() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Show install prompt after a short delay, only if not already installed
-      if (!isStandalone) {
-        setTimeout(() => setShowInstallButton(true), 2000);
+      // Wait for consent and meaningful engagement before suggesting installation.
+      if (!isStandalone && localStorage.getItem('cookie-consent')) {
+        const showAfterEngagement = () => {
+          window.removeEventListener('pointerdown', showAfterEngagement);
+          window.removeEventListener('scroll', showAfterEngagement);
+          window.removeEventListener('keydown', showAfterEngagement);
+          window.setTimeout(() => setShowInstallButton(true), 12000);
+        };
+        window.addEventListener('pointerdown', showAfterEngagement, { once: true, passive: true });
+        window.addEventListener('scroll', showAfterEngagement, { once: true, passive: true });
+        window.addEventListener('keydown', showAfterEngagement, { once: true });
       }
     };
 
