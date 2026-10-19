@@ -8,10 +8,28 @@ export default function LocationPermission() {
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem('location-prompt');
-    if (!dismissed) {
-      const timer = setTimeout(() => setShow(true), 4000);
-      return () => clearTimeout(timer);
-    }
+    const consent = localStorage.getItem('cookie-consent');
+    // Do not stack prompts on the first view. Ask only after consent and a real interaction.
+    if (dismissed || !consent) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedulePrompt = () => {
+      if (timer || sessionStorage.getItem('location-prompt')) return;
+      timer = setTimeout(() => setShow(true), 10000);
+      window.removeEventListener('pointerdown', schedulePrompt);
+      window.removeEventListener('scroll', schedulePrompt);
+      window.removeEventListener('keydown', schedulePrompt);
+    };
+
+    window.addEventListener('pointerdown', schedulePrompt, { once: true, passive: true });
+    window.addEventListener('scroll', schedulePrompt, { once: true, passive: true });
+    window.addEventListener('keydown', schedulePrompt, { once: true });
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('pointerdown', schedulePrompt);
+      window.removeEventListener('scroll', schedulePrompt);
+      window.removeEventListener('keydown', schedulePrompt);
+    };
   }, []);
 
   const allow = () => {
