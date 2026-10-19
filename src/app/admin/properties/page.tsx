@@ -32,7 +32,7 @@ interface Property {
 
 const PROPERTY_TYPES = ['sale', 'rent', 'land', 'commercial', 'short-let'];
 const STATES = ['Lagos', 'Abuja', 'Akwa Ibom', 'Enugu', 'Rivers', 'Delta', 'Oyo', 'Anambra', 'Imo', 'Abia', 'Edo', 'Kaduna', 'Kano', 'Ogun', 'Osun', 'Cross River'];
-const STATUSES = ['available', 'sold', 'rented', 'pending', 'archived'];
+const STATUSES = ['draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn'];
 const DOC_TYPES = ['C of O', "Governor's Consent", 'Excision', 'Gazette', 'Deed of Assignment', 'Registered Survey', 'None'];
 
 export default function AdminPropertiesPage() {
