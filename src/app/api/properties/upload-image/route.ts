@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const propertyId = formData.get('property_id') as string;
-    const displayOrder = parseInt(formData.get('display_order') as string) || 0;
+    const requestedOrder = Number.parseInt(formData.get('display_order') as string, 10);
+    const displayOrder = Number.isInteger(requestedOrder) && requestedOrder >= 0
+      ? Math.min(requestedOrder, 9)
+      : 0;
     const isPrimary = formData.get('is_primary') === 'true';
 
     if (!file || !propertyId) {
@@ -43,9 +46,9 @@ export async function POST(request: NextRequest) {
       .from('properties')
       .select('owner_id')
       .eq('id', propertyId)
-      .single();
+      .maybeSingle();
 
-    if (propError || property.owner_id !== user.id) {
+    if (propError || !property || property.owner_id !== user.id) {
       return NextResponse.json(
         { error: 'Unauthorized to upload images for this property', success: false },
         { status: 403 }
@@ -62,16 +65,18 @@ export async function POST(request: NextRequest) {
 
     // Set as primary if needed
     if (isPrimary) {
-      await supabase
+      const { error: clearPrimaryError } = await supabase
         .from('property_images')
         .update({ is_primary: false })
         .eq('property_id', propertyId)
         .neq('id', imageId);
+      if (clearPrimaryError) throw clearPrimaryError;
 
-      await supabase
+      const { error: setPrimaryError } = await supabase
         .from('property_images')
         .update({ is_primary: true })
         .eq('id', imageId);
+      if (setPrimaryError) throw setPrimaryError;
     }
 
     return NextResponse.json({
