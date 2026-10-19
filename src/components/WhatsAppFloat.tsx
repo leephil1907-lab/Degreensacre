@@ -7,7 +7,7 @@ export default function WhatsAppFloat() {
   const [pulse, setPulse] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShow(true), 2000);
+    const timer = setTimeout(() => setShow(true), 6500);
     const pulseTimer = setTimeout(() => setPulse(false), 8000);
     return () => {
       clearTimeout(timer);
@@ -31,8 +31,8 @@ export default function WhatsAppFloat() {
         href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties%20on%20De-Greenacres"
         target="_blank"
         rel="noopener noreferrer"
-        className={`group flex items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full shadow-strong transition-all hover:scale-110 ${
-          pulse ? 'animate-bounce' : ''
+        className={`group flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-strong transition-transform hover:scale-105 ${
+          pulse ? 'sm:animate-bounce' : ''
         }`}
         aria-label="Chat on WhatsApp"
       >
