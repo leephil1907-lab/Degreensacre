@@ -10,14 +10,8 @@ CREATE POLICY "profiles_select_own"
   ON public.profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
-CREATE POLICY "profiles_select_admin"
-  ON public.profiles FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.profiles AS current_profile
-    WHERE current_profile.id = auth.uid()
-      AND current_profile.is_admin = TRUE
-  ));
+-- Admin APIs use the server-side service client after checking the current
+-- user's own is_admin flag; avoid a recursive profiles policy subquery.
 
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own"
