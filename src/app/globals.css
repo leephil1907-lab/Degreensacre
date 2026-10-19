@@ -26,12 +26,14 @@
 
 @layer base {
   :root {
+    --primary-green: #283818;
+    --primary-green-hover: #384828;
     --charcoal: #1a1a18;
     --charcoal-light: #2e2e2a;
     --ivory: #f8f8e8;
     --ivory-dark: #e8e8d8;
-    --forest: #283818;
-    --forest-light: #384828;
+    --forest: var(--primary-green);
+    --forest-light: var(--primary-green-hover);
     --sage: #788848;
     --taupe: #b8b898;
     --silver: #d8d8c8;
@@ -240,4 +242,11 @@
 }
 .font-body {
   font-family: 'Manrope', sans-serif;
+}
+
+
+/* Mobile polish: preserve the premium palette while reducing hero text density. */
+@media (max-width: 639px) {
+  .heading-primary { line-height: 1.04; letter-spacing: -0.035em; }
+  h1 { text-wrap: balance; }
 }
