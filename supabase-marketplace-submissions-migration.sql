@@ -5,6 +5,43 @@
 
 BEGIN;
 
+-- Preserve the selected owner/agent role when Supabase creates a profile.
+-- Never accept 'admin' from user-editable auth metadata.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $
+DECLARE
+  requested_role TEXT;
+BEGIN
+  requested_role := NEW.raw_user_meta_data->>'account_type';
+  IF requested_role NOT IN ('buyer', 'seller', 'agent') THEN
+    requested_role := 'buyer';
+  END IF;
+
+  INSERT INTO public.profiles (id, email, first_name, last_name, phone, state, account_type)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
+    NULLIF(NEW.raw_user_meta_data->>'phone', ''),
+    NULLIF(NEW.raw_user_meta_data->>'state', ''),
+    requested_role
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    account_type = EXCLUDED.account_type,
+    first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), public.profiles.first_name),
+    last_name = COALESCE(NULLIF(EXCLUDED.last_name, ''), public.profiles.last_name),
+    phone = COALESCE(EXCLUDED.phone, public.profiles.phone),
+    state = COALESCE(EXCLUDED.state, public.profiles.state);
+
+  RETURN NEW;
+END;
+$;
+
 -- The application creates submissions with status='draft'. The original schema
 -- constraint did not include that status, which would cause inserts to fail.
 ALTER TABLE public.properties
