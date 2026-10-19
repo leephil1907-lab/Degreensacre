@@ -17,7 +17,7 @@ DECLARE
   requested_role TEXT;
 BEGIN
   requested_role := NEW.raw_user_meta_data->>'account_type';
-  IF requested_role NOT IN ('buyer', 'seller', 'agent') THEN
+  IF requested_role IS NULL OR requested_role NOT IN ('buyer', 'seller', 'agent') THEN
     requested_role := 'buyer';
   END IF;
 
