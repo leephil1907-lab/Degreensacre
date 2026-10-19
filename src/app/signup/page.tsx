@@ -20,8 +20,8 @@ const NIGERIAN_STATES = [
 
 const ACCOUNT_TYPES = [
   { value: 'buyer', label: 'Buyer / Investor', icon: Home, desc: 'Find and purchase properties' },
-  { value: 'seller', label: 'Seller / Landlord', icon: Building2, desc: 'List your properties for sale or rent' },
-  { value: 'agent', label: 'Agent / Agency', icon: Briefcase, desc: 'Manage client listings' },
+  { value: 'seller', label: 'Property Owner', icon: Building2, desc: 'List property you own or are authorised to manage' },
+  { value: 'agent', label: 'Independent Agent / Agency', icon: Briefcase, desc: 'Submit client properties and manage your listing portfolio' },
 ];
 
 export default function SignUpPage() {
@@ -108,7 +108,7 @@ export default function SignUpPage() {
           <>Almost<br /><span className="text-sage">there!</span></>
         }
         description={
-          step === 1 ? 'Join De-Greenacres and discover verified properties across Nigeria. Buyers, investors, and agents all start here.' :
+          step === 1 ? 'Join De-Greenacres and discover verified properties across Nigeria. Buyers, property owners, and independent agents all start here.' :
           step === 2 ? 'Your data is protected with enterprise-grade encryption. We take your security seriously.' :
           'Choose your account type and you\'re ready to explore Nigeria\'s finest verified properties.'
         }
