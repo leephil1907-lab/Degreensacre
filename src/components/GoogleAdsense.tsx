@@ -60,8 +60,10 @@ export default function AdSense({ slot, format = 'auto', className = '', style, 
   // (AdSense will fallback to non-personalized if consent signal missing)
   // We keep placeholder visible so layout doesn't shift.
 
+  if (isPlaceholder && process.env.NODE_ENV === "production") return null;
+
   if (isPlaceholder) {
-    // Dev placeholder — shows exactly where ad will appear after ID is set
+    // Development-only placeholder — never expose setup instructions to site visitors
     return (
       <div
         className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-amber-200 bg-amber-50/50 py-8 px-4 text-center ${className}`}
