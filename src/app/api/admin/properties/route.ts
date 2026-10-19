@@ -142,8 +142,13 @@ export async function PATCH(request: NextRequest) {
         }
         break;
       case 'add_note':
-        // Add admin note (would need a notes field or separate table)
-        updates.admin_notes = body.note;
+        if (typeof body.note !== 'string' || !body.note.trim()) {
+          return NextResponse.json({ error: 'A non-empty note is required', success: false }, { status: 400 });
+        }
+        if (body.note.length > 5000) {
+          return NextResponse.json({ error: 'Note must be 5,000 characters or fewer', success: false }, { status: 400 });
+        }
+        updates.admin_notes = sanitizeForDb(body.note.trim());
         break;
       default:
         return NextResponse.json(
