@@ -114,11 +114,12 @@ export async function PATCH(request: NextRequest) {
 
     switch (body.action) {
       case 'approve':
-        updates.status = 'published';
+        updates.status = 'available';
         updates.published_at = new Date().toISOString();
         break;
       case 'reject':
-        updates.status = 'rejected';
+        updates.status = 'draft';
+        updates.admin_notes = typeof body.note === 'string' && body.note.trim() ? sanitizeForDb(body.note) : 'Returned for corrections by an administrator.';
         break;
       case 'withdraw':
         updates.status = 'withdrawn';
@@ -133,11 +134,11 @@ export async function PATCH(request: NextRequest) {
         updates.featured = !body.current_featured;
         break;
       case 'update_status':
-        if (body.new_status) {
+        if (['draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn'].includes(body.new_status)) {
           updates.status = body.new_status;
-          if (body.new_status === 'published') {
-            updates.published_at = new Date().toISOString();
-          }
+          if (body.new_status === 'available') updates.published_at = new Date().toISOString();
+        } else {
+          return NextResponse.json({ error: 'Invalid property status', success: false }, { status: 400 });
         }
         break;
       case 'add_note':
