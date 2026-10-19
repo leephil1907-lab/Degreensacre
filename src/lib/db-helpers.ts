@@ -258,8 +258,8 @@ export async function getAdminStats() {
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('properties').select('*', { count: 'exact', head: true }),
-    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'published'),
-    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'under_review'),
+    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available'),
+    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
     supabase.from('enquiries').select('*', { count: 'exact', head: true }),
     supabase.from('enquiries').select('*', { count: 'exact', head: true }).eq('status', 'new'),
     supabase.from('viewing_requests').select('*', { count: 'exact', head: true }),
