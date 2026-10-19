@@ -67,7 +67,22 @@ export default function SubmitPropertyPage() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const invalidType = files.find(file => !allowedTypes.includes(file.type));
+    if (invalidType) {
+      setError('Please use JPEG, PNG, or WebP images only.');
+      e.target.value = '';
+      return;
+    }
+    const oversized = files.find(file => file.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setError('Each property image must be 5 MB or smaller.');
+      e.target.value = '';
+      return;
+    }
+    setError('');
     setFormData({ ...formData, images: [...formData.images, ...files].slice(0, 10) });
+    e.target.value = '';
   };
 
   const removeImage = (index: number) => {
@@ -96,12 +111,14 @@ export default function SubmitPropertyPage() {
     setError('');
 
     try {
-      // Step 1: Create property
+      // Step 1: Create the listing as pending review. Image files are uploaded
+      // separately as multipart data and should not be serialized into this JSON.
+      const { images, ...listingFields } = formData;
       const propertyResponse = await fetch('/api/properties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
+          ...listingFields,
           price: parseInt(formData.price),
           bedrooms: parseInt(formData.bedrooms) || 0,
           bathrooms: parseInt(formData.bathrooms) || 0,
@@ -118,19 +135,24 @@ export default function SubmitPropertyPage() {
 
       const { property } = await propertyResponse.json();
 
-      // Step 2: Upload images
-      if (formData.images.length > 0) {
-        for (let i = 0; i < formData.images.length; i++) {
-          const imageFormData = new FormData();
-          imageFormData.append('file', formData.images[i]);
-          imageFormData.append('property_id', property.id);
-          imageFormData.append('display_order', i.toString());
-          imageFormData.append('is_primary', i === 0 ? 'true' : 'false');
+      // Step 2: Upload images and check every response. Previously, failed image
+      // uploads were silently ignored and the form still reported full success.
+      for (let i = 0; i < images.length; i++) {
+        const imageFormData = new FormData();
+        imageFormData.append('file', images[i]);
+        imageFormData.append('property_id', property.id);
+        imageFormData.append('display_order', i.toString());
+        imageFormData.append('is_primary', i === 0 ? 'true' : 'false');
 
-          await fetch('/api/properties/upload-image', {
-            method: 'POST',
-            body: imageFormData,
-          });
+        const imageResponse = await fetch('/api/properties/upload-image', {
+          method: 'POST',
+          body: imageFormData,
+        });
+        if (!imageResponse.ok) {
+          const imageError = await imageResponse.json().catch(() => ({}));
+          throw new Error(
+            `Your listing was created and is awaiting review, but image ${i + 1} could not be uploaded. ${imageError.error || 'Please open My Listings and contact support if the issue continues.'}`
+          );
         }
       }
 
