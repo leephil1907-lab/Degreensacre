@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       amenities: body.amenities || [],
       documentation: sanitizeForDb(body.documentation || ''),
       owner_id: user.id,
-      status: 'draft',
+      status: 'pending_review',
       verification_status: 'pending',
     };
 
