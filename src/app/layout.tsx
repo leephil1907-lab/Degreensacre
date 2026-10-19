@@ -10,6 +10,8 @@ import LocationPermission from "@/components/LocationPermission";
 import PWARegister from "@/components/PWARegister";
 import { Providers } from "@/components/Providers";
 import { GoogleAdsenseScript } from "@/components/GoogleAdsense";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { getSiteUrl } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,12 +28,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://degreenacres.com'),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "De-Greenacres Properties Limited | Nigeria's Premium Real Estate Platform",
     template: "%s | De-Greenacres Properties"
   },
-  description: "Nigeria's trusted property intelligence platform. Discover premium properties in Lagos, Abuja, Akwa Ibom & Southeast. Verified listings, investment tools, AI-powered search & expert guidance. RC: 1856064",
+  description: "Explore property for sale and rent across Lagos, Abuja, Akwa Ibom and Southeast Nigeria. Browse real estate listings, arrange inspections and get guidance from De-Greenacres Properties Limited (RC 1856064).",
   applicationName: "De-Greenacres",
   referrer: "origin-when-cross-origin",
   keywords: [
@@ -54,7 +56,7 @@ export const metadata: Metadata = {
     "property search Nigeria",
     "real estate platform Nigeria"
   ],
-  authors: [{ name: "De-Greenacres Properties Limited", url: "https://degreenacres.com" }],
+  authors: [{ name: "De-Greenacres Properties Limited", url: getSiteUrl() }],
   creator: "De-Greenacres Properties Limited",
   publisher: "De-Greenacres Properties Limited",
   formatDetection: {
@@ -74,7 +76,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://degreenacres.com",
+    url: getSiteUrl(),
     siteName: "De-Greenacres Properties",
     title: "De-Greenacres Properties Limited | Nigeria's Premium Real Estate Platform",
     description: "Discover premium properties across Nigeria with verified listings, AI-powered search, investment calculators, and expert guidance. Your trusted partner in real estate.",
@@ -106,7 +108,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://degreenacres.com",
+    canonical: getSiteUrl(),
   },
   category: "Real Estate",
   verification: {
@@ -146,6 +148,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
         {/* Google AdSense — loads only when NEXT_PUBLIC_GOOGLE_ADSENSE_ID is set to real ca-pub-... */}
         <GoogleAdsenseScript />
+        <GoogleAnalytics />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -154,9 +157,9 @@ export default function RootLayout({
               "@type": "RealEstateAgent",
               "name": "De-Greenacres Properties Limited",
               "description": "Nigeria's trusted property intelligence platform for premium real estate",
-              "url": "https://degreenacres.com",
-              "logo": "https://degreenacres.com/logo-icon.png",
-              "image": "https://degreenacres.com/og-image.jpg",
+              "url": getSiteUrl(),
+              "logo": `${getSiteUrl()}/logo-icon.png`,
+              "image": `${getSiteUrl()}/og-image.jpg`,
               "telephone": "+2348065019971",
               "email": "degreenacrespropertieslimited@gmail.com",
               "address": {
