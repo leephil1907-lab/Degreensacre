@@ -58,8 +58,27 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
+    const propertyIds = (properties || []).map((property: any) => property.id);
+    let notesByProperty: Record<string, any[]> = {};
+    if (propertyIds.length > 0) {
+      const { data: notes, error: notesError } = await adminSupabase
+        .from('property_moderation_notes')
+        .select('id, property_id, admin_id, note, created_at')
+        .in('property_id', propertyIds)
+        .order('created_at', { ascending: false });
+      if (notesError) throw notesError;
+      for (const note of notes || []) {
+        if (!notesByProperty[note.property_id]) notesByProperty[note.property_id] = [];
+        notesByProperty[note.property_id].push(note);
+      }
+    }
+    const propertiesWithNotes = (properties || []).map((property: any) => ({
+      ...property,
+      moderation_notes: notesByProperty[property.id] || [],
+    }));
+
     return NextResponse.json({
-      properties,
+      properties: propertiesWithNotes,
       count,
       page,
       totalPages: Math.ceil((count || 0) / limit),
@@ -111,6 +130,7 @@ export async function PATCH(request: NextRequest) {
 
     const adminSupabase = await createAdminSupabaseClient();
     const updates: any = {};
+    let moderationNote: string | null = null;
 
     switch (body.action) {
       case 'approve':
@@ -119,7 +139,12 @@ export async function PATCH(request: NextRequest) {
         break;
       case 'reject':
         updates.status = 'draft';
-        updates.admin_notes = typeof body.note === 'string' && body.note.trim() ? sanitizeForDb(body.note) : 'Returned for corrections by an administrator.';
+        moderationNote = typeof body.note === 'string' && body.note.trim()
+          ? body.note.trim()
+          : 'Returned for corrections by an administrator.';
+        if (moderationNote.length > 5000) {
+          return NextResponse.json({ error: 'Note must be 5,000 characters or fewer', success: false }, { status: 400 });
+        }
         break;
       case 'withdraw':
         updates.status = 'withdrawn';
@@ -148,7 +173,7 @@ export async function PATCH(request: NextRequest) {
         if (body.note.length > 5000) {
           return NextResponse.json({ error: 'Note must be 5,000 characters or fewer', success: false }, { status: 400 });
         }
-        updates.admin_notes = sanitizeForDb(body.note.trim());
+        moderationNote = body.note.trim();
         break;
       default:
         return NextResponse.json(
@@ -169,6 +194,17 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    if (moderationNote) {
+      const { error: noteError } = await adminSupabase
+        .from('property_moderation_notes')
+        .insert({
+          property_id: body.property_id,
+          admin_id: user.id,
+          note: sanitizeForDb(moderationNote),
+        });
+      if (noteError) throw noteError;
+    }
 
     // Log admin activity
     await logAdminActivity({
