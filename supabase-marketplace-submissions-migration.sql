@@ -5,43 +5,6 @@
 
 BEGIN;
 
--- Preserve the selected owner/agent role when Supabase creates a profile.
--- Never accept 'admin' from user-editable auth metadata.
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $
-DECLARE
-  requested_role TEXT;
-BEGIN
-  requested_role := NEW.raw_user_meta_data->>'account_type';
-  IF requested_role IS NULL OR requested_role NOT IN ('buyer', 'seller', 'agent') THEN
-    requested_role := 'buyer';
-  END IF;
-
-  INSERT INTO public.profiles (id, email, first_name, last_name, phone, state, account_type)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-    NULLIF(NEW.raw_user_meta_data->>'phone', ''),
-    NULLIF(NEW.raw_user_meta_data->>'state', ''),
-    requested_role
-  )
-  ON CONFLICT (id) DO UPDATE SET
-    account_type = EXCLUDED.account_type,
-    first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), public.profiles.first_name),
-    last_name = COALESCE(NULLIF(EXCLUDED.last_name, ''), public.profiles.last_name),
-    phone = COALESCE(EXCLUDED.phone, public.profiles.phone),
-    state = COALESCE(EXCLUDED.state, public.profiles.state);
-
-  RETURN NEW;
-END;
-$;
-
 -- The application creates submissions with status='draft'. The original schema
 -- constraint did not include that status, which would cause inserts to fail.
 ALTER TABLE public.properties
@@ -60,6 +23,7 @@ CREATE INDEX IF NOT EXISTS properties_public_status_idx
 -- Replace the unrestricted read policy. Public visitors see only published/available
 -- inventory; owners can still see their own drafts and administrators can review all.
 DROP POLICY IF EXISTS "Properties are viewable by everyone" ON public.properties;
+DROP POLICY IF EXISTS "properties_select_all" ON public.properties;
 DROP POLICY IF EXISTS "Public can view available properties" ON public.properties;
 DROP POLICY IF EXISTS "Owners can view own properties" ON public.properties;
 DROP POLICY IF EXISTS "Admins can view all properties" ON public.properties;
@@ -85,6 +49,7 @@ CREATE POLICY "Admins can view all properties"
 
 -- Enforce owner/agent eligibility at the database boundary as well as in the API.
 DROP POLICY IF EXISTS "Authenticated users can insert properties" ON public.properties;
+DROP POLICY IF EXISTS "properties_insert_auth" ON public.properties;
 CREATE POLICY "Owners and agents can submit properties"
   ON public.properties FOR INSERT
   TO authenticated
@@ -99,6 +64,7 @@ CREATE POLICY "Owners and agents can submit properties"
 
 -- Keep ownership on updates. Admins may update any listing to approve or reject it.
 DROP POLICY IF EXISTS "Owners can update own properties" ON public.properties;
+DROP POLICY IF EXISTS "properties_update_owner_or_admin" ON public.properties;
 DROP POLICY IF EXISTS "Admins can update all properties" ON public.properties;
 
 CREATE POLICY "Owners can update own properties"
@@ -124,6 +90,7 @@ CREATE POLICY "Admins can update all properties"
   );
 
 DROP POLICY IF EXISTS "Owners can delete own properties" ON public.properties;
+DROP POLICY IF EXISTS "properties_delete_owner_or_admin" ON public.properties;
 DROP POLICY IF EXISTS "Admins can delete properties" ON public.properties;
 
 CREATE POLICY "Owners can delete own properties"
