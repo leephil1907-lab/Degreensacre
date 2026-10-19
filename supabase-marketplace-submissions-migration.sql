@@ -105,8 +105,9 @@ CREATE POLICY "Admins can delete properties"
   );
 
 -- Only administrators can publish a draft/pending listing or change its
--- verification/featured flags. Service-role operations (auth.uid() IS NULL)
--- remain available for trusted server-side administration and migrations.
+-- verification/featured flags. This protects both INSERT and UPDATE paths.
+-- Service-role operations (auth.uid() IS NULL) remain available for trusted
+-- server-side administration and migrations.
 CREATE OR REPLACE FUNCTION public.guard_property_publication()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -126,12 +127,20 @@ BEGIN
   WHERE p.id = auth.uid();
 
   IF NOT requester_is_admin THEN
-    IF NEW.status = 'available' AND OLD.status IS DISTINCT FROM 'available' THEN
-      RAISE EXCEPTION 'A Degreensacre administrator must approve a listing before publication.';
-    END IF;
+    IF TG_OP = 'INSERT' THEN
+      IF NEW.status = 'available' THEN
+        RAISE EXCEPTION 'A Degreensacre administrator must approve a listing before publication.';
+      END IF;
+      NEW.verification_status := 'pending';
+      NEW.featured := FALSE;
+    ELSE
+      IF NEW.status = 'available' AND OLD.status IS DISTINCT FROM 'available' THEN
+        RAISE EXCEPTION 'A Degreensacre administrator must approve a listing before publication.';
+      END IF;
 
-    NEW.verification_status := OLD.verification_status;
-    NEW.featured := OLD.featured;
+      NEW.verification_status := OLD.verification_status;
+      NEW.featured := OLD.featured;
+    END IF;
   END IF;
 
   RETURN NEW;
@@ -140,7 +149,7 @@ $$;
 
 DROP TRIGGER IF EXISTS guard_property_publication ON public.properties;
 CREATE TRIGGER guard_property_publication
-  BEFORE UPDATE ON public.properties
+  BEFORE INSERT OR UPDATE ON public.properties
   FOR EACH ROW
   EXECUTE FUNCTION public.guard_property_publication();
 
