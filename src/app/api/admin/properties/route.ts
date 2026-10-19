@@ -132,6 +132,23 @@ export async function PATCH(request: NextRequest) {
     const updates: any = {};
     let moderationNote: string | null = null;
 
+    // Approval is only allowed once at least one property photo is present.
+    // This prevents an apparently published listing from appearing incomplete.
+    if (body.action === 'approve') {
+      const { count: imageCount, error: imageCountError } = await adminSupabase
+        .from('property_images')
+        .select('id', { count: 'exact', head: true })
+        .eq('property_id', body.property_id);
+
+      if (imageCountError) throw imageCountError;
+      if (!imageCount || imageCount < 1) {
+        return NextResponse.json({
+          error: 'Add at least one property image before approving this listing.',
+          success: false,
+        }, { status: 400 });
+      }
+    }
+
     switch (body.action) {
       case 'approve':
         updates.status = 'available';
