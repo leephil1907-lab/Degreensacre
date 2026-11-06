@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -130,7 +131,7 @@ export default function MessagesPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.push('/auth/login');
+      router.push('/signin?redirect=/messages');
       return;
     }
 
@@ -222,7 +223,8 @@ export default function MessagesPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal-400" />
                   <input
-                    type="text"
+                    type="search"
+                    aria-label="Search conversations"
                     placeholder="Search conversations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -237,7 +239,8 @@ export default function MessagesPage() {
                   <div className="flex flex-col items-center justify-center h-full text-center p-8">
                     <MessageSquare className="w-16 h-16 text-charcoal-300 mb-4" />
                     <p className="text-charcoal-600 font-medium mb-2">No conversations yet</p>
-                    <p className="text-sm text-charcoal-400">Start a conversation by sending a message</p>
+                    <p className="text-sm text-charcoal-400">Enquire from a property listing to start a conversation.</p>
+                    <Link href="/properties" className="mt-4 text-sm font-bold text-forest hover:underline">Browse properties →</Link>
                   </div>
                 ) : (
                   visibleConversations.map((conversation) => (
@@ -295,6 +298,7 @@ export default function MessagesPage() {
                   <div className="p-4 border-b border-charcoal-200 flex items-center gap-3">
                     <button
                       onClick={() => setSelectedConversation(null)}
+                      aria-label="Back to conversations"
                       className="md:hidden p-2 hover:bg-charcoal-50 rounded-lg"
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -341,6 +345,8 @@ export default function MessagesPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
+                        aria-label="Message"
+                        maxLength={5000}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
@@ -348,6 +354,7 @@ export default function MessagesPage() {
                       />
                       <button
                         type="submit"
+                        aria-label={sending ? 'Sending message' : 'Send message'}
                         disabled={!newMessage.trim() || sending}
                         className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >

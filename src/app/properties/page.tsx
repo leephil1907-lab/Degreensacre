@@ -72,6 +72,7 @@ const categoryTabs = [
   { label: 'Short let', value: 'short-let' },
 ];
 const propertyTypes = ['Detached Duplex', 'Semi-Detached Duplex', 'Terrace Duplex', 'Bungalow', 'Apartment', 'Flat', 'Penthouse', 'Mansion', 'Commercial Building', 'Office Space', 'Shop', 'Warehouse', 'Land', 'Mixed Use'];
+const commercialPropertyTypes = new Set(['Commercial Building', 'Office Space', 'Shop', 'Warehouse', 'Mixed Use']);
 
 function typeLabel(type: string) {
   return ({ sale: 'For sale', rent: 'For rent', land: 'Land', commercial: 'Commercial', 'short-let': 'Short let' } as Record<string, string>)[type] || type.replaceAll('-', ' ');
@@ -93,6 +94,7 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
   const coordinates = getPropertyCoordinates(property);
   const photoCount = Math.max(property.images?.length || 0, property.property_images?.length || 0);
   const size = Number(property.sqm || property.land_size || 0);
+  const displayType = property.property_type === 'Land' ? 'land' : commercialPropertyTypes.has(property.property_type || '') ? 'commercial' : property.type;
   const tags = [property.documentation, property.gated_estate ? 'Gated estate' : '', property.serviced ? 'Serviced' : '', property.furnished ? 'Furnished' : ''].filter(Boolean).slice(0, compact ? 2 : 3);
 
   return (
@@ -102,7 +104,7 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
           <img src={image} alt={hasPhoto ? property.title : ''} className={`w-full transition-transform duration-500 group-hover:scale-[1.03] ${hasPhoto ? 'object-cover' : 'bg-forest-50 object-contain p-10'} ${isList ? 'h-56 sm:h-full sm:min-h-[19rem]' : compact ? 'h-48' : 'h-60'}`} loading="lazy" />
         </Link>
         <div className="pointer-events-none absolute left-3 top-3 flex max-w-[75%] flex-wrap gap-1.5">
-          <span className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white ${property.type === 'sale' ? 'bg-forest' : property.type === 'rent' ? 'bg-blue-700' : property.type === 'land' ? 'bg-amber-700' : 'bg-charcoal'}`}>{typeLabel(property.type)}</span>
+          <span className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white ${displayType === 'sale' ? 'bg-forest' : displayType === 'rent' ? 'bg-blue-700' : displayType === 'land' ? 'bg-amber-700' : 'bg-charcoal'}`}>{typeLabel(displayType)}</span>
           {property.featured && <span className="rounded-md bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-forest">Featured</span>}
           {(property.verification_status === 'verified' || property.verified) && <span className="inline-flex items-center gap-1 rounded-md bg-white/95 px-2.5 py-1 text-[10px] font-extrabold text-forest"><CheckCircle className="h-3 w-3" /> Verified</span>}
         </div>
@@ -172,7 +174,7 @@ function PropertiesContent() {
     else setLoading(true);
     setLoadError('');
     try {
-      const params = new URLSearchParams({ status: 'available', limit: String(PAGE_SIZE), offset: String(offset) });
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
       const response = await fetch(`/api/properties?${params}`, { cache: 'no-store' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Properties could not be loaded.');
@@ -224,7 +226,12 @@ function PropertiesContent() {
   useEffect(() => { setVisibleCount(CARD_INCREMENT); }, [filters, sortBy]);
 
   const filteredProperties = useMemo(() => properties.filter((property) => {
-    if (filters.type && property.type !== filters.type) return false;
+    // Land and commercial are property categories, not values of the listing
+    // `type` column (sale/rent/short-let). Keep those searches compatible with
+    // the public URL scheme without requiring impossible database values.
+    if (filters.type === 'land' && property.property_type !== 'Land') return false;
+    if (filters.type === 'commercial' && !commercialPropertyTypes.has(property.property_type || '')) return false;
+    if (filters.type && !['land', 'commercial'].includes(filters.type) && property.type !== filters.type) return false;
     if (filters.state) {
       const state = String(property.state || '').toLowerCase();
       const matches = filters.state === 'FCT' ? ['fct', 'abuja', 'abuja (fct)'].includes(state) : state === filters.state.toLowerCase();
@@ -275,7 +282,8 @@ function PropertiesContent() {
 
   const toggleSaved = async (property: Property) => {
     if (!user) {
-      router.push('/signin');
+      const returnPath = `${window.location.pathname}${window.location.search}`;
+      router.push(`/signin?redirect=${encodeURIComponent(returnPath)}`);
       return;
     }
     setSavingId(property.id);

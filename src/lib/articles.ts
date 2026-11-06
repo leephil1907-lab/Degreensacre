@@ -1,5 +1,19 @@
-import { articles as editorialFallback, type Article } from '@/data/articles';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+
+export type Article = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  author: string;
+  publishDate: string;
+  readTime: number;
+  image: string;
+  featured: boolean;
+  tags: string[];
+};
 
 function normalizeArticle(row: Record<string, any>): Article {
   return {
@@ -30,7 +44,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
     if (error) throw error;
     return (data || []).map(normalizeArticle);
   } catch (error) {
-    console.error('Published articles could not be loaded; using editorial fallback.', error);
-    return editorialFallback;
+    console.error('Published articles could not be loaded.', error);
+    return [];
   }
 }

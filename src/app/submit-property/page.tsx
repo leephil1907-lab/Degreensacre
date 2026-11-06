@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -8,6 +9,7 @@ import {
   Home, MapPin, DollarSign, Image, FileText, CheckCircle
 } from 'lucide-react';
 import { NIGERIAN_STATES } from '@/lib/validation';
+import LocationPicker from '@/components/LocationPicker';
 
 export default function SubmitPropertyPage() {
   const { user, profile } = useAuth();
@@ -34,6 +36,8 @@ export default function SubmitPropertyPage() {
     lga: '',
     city: '',
     state: '',
+    latitude: '',
+    longitude: '',
     features: [] as string[],
     furnished: false,
     serviced: false,
@@ -103,7 +107,7 @@ export default function SubmitPropertyPage() {
 
   const handleSubmit = async () => {
     if (!user) {
-      router.push('/auth/login');
+      router.push('/signin?redirect=/submit-property');
       return;
     }
 
@@ -113,12 +117,13 @@ export default function SubmitPropertyPage() {
     try {
       // Step 1: Create the listing as pending review. Image files are uploaded
       // separately as multipart data and should not be serialized into this JSON.
-      const { images, ...listingFields } = formData;
+      const { images, latitude, longitude, ...listingFields } = formData;
       const propertyResponse = await fetch('/api/properties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...listingFields,
+          coordinates: latitude && longitude ? { lat: Number(latitude), lng: Number(longitude) } : null,
           price: parseInt(formData.price),
           bedrooms: parseInt(formData.bedrooms) || 0,
           bathrooms: parseInt(formData.bathrooms) || 0,
@@ -170,11 +175,11 @@ export default function SubmitPropertyPage() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return formData.title && formData.description && formData.property_type;
+        return formData.title.trim().length >= 5 && formData.description.trim().length >= 50 && Boolean(formData.property_type);
       case 2:
-        return formData.address && formData.area && formData.state;
+        return Boolean(formData.address.trim() && formData.area.trim() && formData.state);
       case 3:
-        return formData.price;
+        return Number(formData.price) > 0 && (formData.type === 'sale' || Boolean(formData.price_period));
       case 4:
         return formData.images.length > 0;
       default:
@@ -191,7 +196,7 @@ export default function SubmitPropertyPage() {
           </div>
           <h1 className="text-3xl font-serif text-charcoal-900 mb-4">Property Submitted!</h1>
           <p className="text-charcoal-600 mb-6">
-            Your property has been submitted for review. We&apos;ll notify you once it&apos;s approved.
+            Your property has been submitted for review. You can track its status from My Listings in your dashboard.
           </p>
           <button
             onClick={() => router.push('/dashboard')}
@@ -199,6 +204,22 @@ export default function SubmitPropertyPage() {
           >
             Go to Dashboard
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user && profile && !profile.is_admin && profile.account_type !== 'seller' && profile.account_type !== 'agent') {
+    return (
+      <div className="grid min-h-screen place-items-center bg-ivory-50 px-4 py-12">
+        <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-xl">
+          <Home className="mx-auto mb-4 h-10 w-10 text-forest" />
+          <h1 className="font-serif text-3xl text-charcoal-900">Owner or agent account required</h1>
+          <p className="mt-4 text-sm leading-6 text-charcoal-600">This account is registered as a buyer/renter. Property submission is available to property owners and independent agents. Contact our team if you need your account type reviewed.</p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/contact" className="rounded-lg bg-forest px-5 py-3 text-sm font-bold text-white hover:bg-forest-light">Contact support</Link>
+            <Link href="/dashboard" className="rounded-lg border border-charcoal-200 px-5 py-3 text-sm font-bold text-charcoal-700 hover:bg-ivory-50">Return to dashboard</Link>
+          </div>
         </div>
       </div>
     );
@@ -214,11 +235,11 @@ export default function SubmitPropertyPage() {
         </div>
 
         {/* Progress Steps */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
+          <div className="flex items-center justify-between gap-1">
             {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+              <div key={step.number} className={`flex items-center ${index < steps.length - 1 ? 'min-w-0 flex-1' : 'shrink-0'}`}>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
                   currentStep >= step.number
                     ? 'bg-green-600 text-white'
                     : 'bg-charcoal-100 text-charcoal-400'
@@ -237,7 +258,7 @@ export default function SubmitPropertyPage() {
                   </p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-4 ${
+                  <div className={`mx-1 h-0.5 min-w-1 flex-1 sm:mx-2 ${
                     currentStep > step.number ? 'bg-green-600' : 'bg-charcoal-200'
                   }`} />
                 )}
@@ -247,7 +268,7 @@ export default function SubmitPropertyPage() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-xl shadow-sm p-8">
+        <div className="bg-white rounded-xl shadow-sm p-5 sm:p-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
               {error}
@@ -265,6 +286,7 @@ export default function SubmitPropertyPage() {
                 </label>
                 <input
                   type="text"
+                  aria-label="Property Title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Luxury 5 Bedroom Detached Duplex"
@@ -277,12 +299,14 @@ export default function SubmitPropertyPage() {
                   Description *
                 </label>
                 <textarea
+                  aria-label="Description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={5}
                   placeholder="Describe your property in detail..."
                   className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
+                <p className="mt-1.5 text-xs text-charcoal-500">Include at least 50 characters covering the layout, condition and key details.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -291,6 +315,7 @@ export default function SubmitPropertyPage() {
                     Property Type *
                   </label>
                   <select
+                    aria-label="Property Type"
                     value={formData.property_type}
                     onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -307,8 +332,9 @@ export default function SubmitPropertyPage() {
                     Listing Type *
                   </label>
                   <select
+                    aria-label="Listing Type"
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value, price_period: '' })}
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="sale">For Sale</option>
@@ -331,6 +357,7 @@ export default function SubmitPropertyPage() {
                 </label>
                 <input
                   type="text"
+                  aria-label="Street Address"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="e.g., 15 Admiralty Way"
@@ -344,8 +371,9 @@ export default function SubmitPropertyPage() {
                     Area *
                   </label>
                   <input
-                    type="text"
-                    value={formData.area}
+                  type="text"
+                  aria-label="Area"
+                  value={formData.area}
                     onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                     placeholder="e.g., Lekki Phase 1"
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -357,6 +385,7 @@ export default function SubmitPropertyPage() {
                     State *
                   </label>
                   <select
+                    aria-label="State"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -375,8 +404,9 @@ export default function SubmitPropertyPage() {
                     City
                   </label>
                   <input
-                    type="text"
-                    value={formData.city}
+                  type="text"
+                  aria-label="City"
+                  value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     placeholder="e.g., Lagos"
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -388,14 +418,22 @@ export default function SubmitPropertyPage() {
                     LGA
                   </label>
                   <input
-                    type="text"
-                    value={formData.lga}
+                  type="text"
+                  aria-label="LGA"
+                  value={formData.lga}
                     onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
                     placeholder="e.g., Eti-Osa"
                     className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
               </div>
+
+              <LocationPicker
+                location={formData}
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onChange={(latitude, longitude) => setFormData((current) => ({ ...current, latitude, longitude }))}
+              />
             </div>
           )}
 
@@ -411,6 +449,8 @@ export default function SubmitPropertyPage() {
                   </label>
                   <input
                     type="number"
+                    aria-label="Price in naira"
+                    min="1"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="e.g., 150000000"
@@ -424,11 +464,14 @@ export default function SubmitPropertyPage() {
                       Price Period
                     </label>
                     <select
+                      aria-label="Price Period"
                       value={formData.price_period}
                       onChange={(e) => setFormData({ ...formData, price_period: e.target.value })}
                       className="w-full px-4 py-3 border border-charcoal-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">Select period</option>
+                      {formData.type === 'short-let' && <option value="night">Per Night</option>}
+                      <option value="week">Per Week</option>
                       <option value="month">Per Month</option>
                       <option value="year">Per Year</option>
                     </select>
@@ -496,6 +539,8 @@ export default function SubmitPropertyPage() {
                 </label>
                 <input
                   type="number"
+                  aria-label="Size in square metres"
+                  min="0"
                   value={formData.sqm}
                   onChange={(e) => setFormData({ ...formData, sqm: e.target.value })}
                   placeholder="e.g., 450"
@@ -565,14 +610,15 @@ export default function SubmitPropertyPage() {
                 <label className="block text-sm font-medium text-charcoal-700 mb-2">
                   Upload Images * (Max 10)
                 </label>
-                <div className="border-2 border-dashed border-charcoal-300 rounded-lg p-8 text-center">
+                <div className="relative overflow-hidden rounded-lg border-2 border-dashed border-charcoal-300 p-8 text-center">
                   <Upload className="w-12 h-12 text-charcoal-400 mx-auto mb-4" />
                   <p className="text-charcoal-600 mb-2">Click to upload or drag and drop</p>
-                  <p className="text-sm text-charcoal-400">PNG, JPG up to 5MB each</p>
+                  <p className="text-sm text-charcoal-400">JPEG, PNG or WebP · up to 5MB each</p>
                   <input
                     type="file"
+                    aria-label="Select property images"
                     multiple
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleImageUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -593,8 +639,10 @@ export default function SubmitPropertyPage() {
                           className="w-full h-32 object-cover rounded-lg"
                         />
                         <button
+                          type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove image ${index + 1}`}
+                          className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -627,6 +675,7 @@ export default function SubmitPropertyPage() {
                   <p className="font-medium text-charcoal-900">
                     {formData.address}, {formData.area}, {formData.state}
                   </p>
+                  <p className="mt-1 text-xs text-charcoal-500">{formData.latitude && formData.longitude ? `Map coordinates included: ${formData.latitude}, ${formData.longitude}. Confirm the point before submitting.` : 'No map coordinates included; the public listing will show that its location is awaiting confirmation.'}</p>
                 </div>
 
                 <div>
@@ -644,14 +693,13 @@ export default function SubmitPropertyPage() {
 
                 <div>
                   <p className="text-sm text-charcoal-500">Images</p>
-                  <p className="font-medium text-charcoal-900">{formData.images.length} images uploaded</p>
+                  <p className="font-medium text-charcoal-900">{formData.images.length} {formData.images.length === 1 ? 'image' : 'images'} selected for upload</p>
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900">
-                  <strong>Note:</strong> Your property will be reviewed by our team before being published. 
-                  This usually takes 24-48 hours.
+                  <strong>Review required:</strong> Our team must approve the listing before it becomes public. You can follow its status from My Listings.
                 </p>
               </div>
             </div>

@@ -24,8 +24,8 @@ export default function HomePage() {
     async function load() {
       try {
         const [featuredResponse, landResponse] = await Promise.all([
-          fetch('/api/properties?featured=true&status=available&limit=6'),
-          fetch('/api/properties?type=land&status=available&limit=2'),
+          fetch('/api/properties?featured=true&limit=6'),
+          fetch('/api/properties?propertyType=Land&limit=2'),
         ]);
         const [featuredData, landData] = await Promise.all([featuredResponse.json(), landResponse.json()]);
         if (!featuredResponse.ok || !landResponse.ok) throw new Error('Live listings could not be loaded.');
@@ -44,7 +44,7 @@ export default function HomePage() {
     return () => { cancelled = true; };
   }, []);
 
-  const sampleProperties = dbFeatured.slice(0, 6);
+  const featuredProperties = dbFeatured.slice(0, 6);
   const landProperties = dbLand.slice(0, 2);
 
   return (
@@ -97,8 +97,8 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {listingsError && <div role="alert" className="col-span-full rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{listingsError}</div>}
             {listingsLoading && <div className="col-span-full flex min-h-48 items-center justify-center rounded-2xl border border-gray-100 bg-white text-sm text-gray-500">Loading featured properties…</div>}
-            {!listingsLoading && !listingsError && sampleProperties.length === 0 && <div className="col-span-full rounded-2xl border border-gray-100 bg-white py-12 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-gray-300" /><p className="font-display text-xl text-charcoal">No featured listings published yet</p><Link href="/properties" className="mt-3 inline-block text-sm font-bold text-forest">Search all available properties →</Link></div>}
-            {sampleProperties.map((property: any, i) => (
+            {!listingsLoading && !listingsError && featuredProperties.length === 0 && <div className="col-span-full rounded-2xl border border-gray-100 bg-white py-12 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-gray-300" /><p className="font-display text-xl text-charcoal">No featured listings published yet</p><Link href="/properties" className="mt-3 inline-block text-sm font-bold text-forest">Search all available properties →</Link></div>}
+            {featuredProperties.map((property: any, i) => (
               <ScrollReveal key={property.id} delay={i * 0.1}>
                 <Link href={`/properties/${property.slug}`} className="group block">
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1">
@@ -215,8 +215,8 @@ export default function HomePage() {
                     <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20Uyo%20flyer%20(Premium%20Plots%20%E2%82%A62.5M%20spread)%20and%20I%20want%20to%20secure%20my%20plot.%20Please%20send%20location%20and%20payment%20details." target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-forest text-white px-5 py-3 rounded-xl font-bold hover:bg-forest-light transition-all">
                       <Phone className="w-4 h-4" /> Secure Your Plot on WhatsApp
                     </a>
-                    <Link href="/properties/premium-plots-new-coastal-highway-uyo" className="inline-flex items-center justify-center gap-2 border-2 border-forest text-forest px-5 py-2.5 rounded-xl font-bold hover:bg-forest hover:text-white transition-all text-sm">
-                      View Plot Details <ArrowRight className="w-4 h-4" />
+                    <Link href="/properties?type=land&area=Uyo" className="inline-flex items-center justify-center gap-2 border-2 border-forest text-forest px-5 py-2.5 rounded-xl font-bold hover:bg-forest hover:text-white transition-all text-sm">
+                      Find Uyo Land <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>

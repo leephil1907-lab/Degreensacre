@@ -72,7 +72,7 @@ export default function AdminDashboard() {
       return;
     }
     if (profile && !profile.is_admin) {
-      router.push('/');
+      router.push('/dashboard');
       return;
     }
     fetchDashboardData();

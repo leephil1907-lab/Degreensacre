@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase-server';
-import { getAdminStats, logAdminActivity } from '@/lib/db-helpers';
+import { getAdminStats } from '@/lib/db-helpers';
 
 // GET /api/admin/dashboard - Admin dashboard stats
 export async function GET() {
@@ -43,7 +43,7 @@ export async function GET() {
     const { data: pendingProperties } = await adminSupabase
       .from('properties')
       .select('id, title, slug, status, owner_id, date_added, profiles(first_name, last_name)')
-      .in('status', ['submitted', 'under_review'])
+      .eq('status', 'pending_review')
       .order('date_added', { ascending: false })
       .limit(5);
 

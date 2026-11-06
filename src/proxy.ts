@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
   });
 
   // Protected routes
-  const protectedPaths = ['/dashboard', '/submit-property', '/account'];
+  const protectedPaths = ['/dashboard', '/submit-property', '/account', '/messages', '/notifications'];
   const isProtected = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   // Admin routes
@@ -38,7 +38,7 @@ export async function proxy(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/signin';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
+      url.searchParams.set('redirect', `${request.nextUrl.pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(url);
     }
 
@@ -52,7 +52,8 @@ export async function proxy(request: NextRequest) {
 
       if (!profile?.is_admin) {
         const url = request.nextUrl.clone();
-        url.pathname = '/';
+        url.pathname = '/dashboard';
+        url.search = '';
         return NextResponse.redirect(url);
       }
     }
@@ -66,6 +67,8 @@ export const config = {
     '/dashboard/:path*',
     '/submit-property/:path*',
     '/account/:path*',
+    '/messages/:path*',
+    '/notifications/:path*',
     '/admin/:path*',
   ],
 };

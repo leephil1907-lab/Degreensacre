@@ -9,7 +9,7 @@ export async function getProperties(filters: {
   maxPrice?: number;
   bedrooms?: number;
   featured?: boolean;
-  status?: string;
+  propertyType?: string;
   limit?: number;
   offset?: number;
   orderBy?: string;
@@ -20,9 +20,10 @@ export async function getProperties(filters: {
   let query = supabase
     .from('properties')
     .select('*, property_images(*)', { count: 'exact' })
-    .eq('status', filters.status || 'available');
+    .eq('status', 'available');
 
   if (filters.type) query = query.eq('type', filters.type);
+  if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
   if (filters.state) query = query.eq('state', filters.state);
   if (filters.area) query = query.ilike('area', `%${filters.area}%`);
   if (filters.minPrice) query = query.gte('price', filters.minPrice);

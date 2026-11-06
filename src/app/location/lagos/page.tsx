@@ -143,7 +143,7 @@ export default async function LagosLocationPage() {
         </div>
       </section>
 
-      {/* Featured Properties — DB-primary, fallback to demo */}
+      {/* Published properties from Supabase */}
 {loadError && <section className="section-padding bg-white"><div className="container-custom"><p role="alert" className="mx-auto max-w-2xl rounded-xl border border-red-200 bg-red-50 p-5 text-center text-sm text-red-700">{loadError}</p></div></section>}
       {!loadError && featuredProperties.length === 0 && <section className="section-padding bg-white"><div className="container-custom text-center"><h2 className="font-display text-2xl text-charcoal">No Lagos listings are currently available</h2><p className="mt-3 text-gray-600">New properties will appear here after they are published. You can also browse all locations or contact our team.</p><Link href="/properties" className="btn-primary mt-6 inline-flex">Browse all properties</Link></div></section>}
 

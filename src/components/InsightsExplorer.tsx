@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowRight, BookOpenText, Calendar, Clock, Search } from 'lucide-react';
-import type { Article } from '@/data/articles';
+import type { Article } from '@/lib/articles';
 
 function ArticleCard({ article, featured = false }: { article: Article; featured?: boolean }) {
   return (

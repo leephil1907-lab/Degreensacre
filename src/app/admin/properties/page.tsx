@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { NIGERIAN_STATES } from '@/lib/validation';
 import { getPropertyCoordinates, type PropertyLocation } from '@/lib/property';
-import LocationPicker from '@/components/admin/LocationPicker';
+import LocationPicker from '@/components/LocationPicker';
 
 type Property = Record<string, any> & { id: string; title: string; status: string };
 type FormState = {

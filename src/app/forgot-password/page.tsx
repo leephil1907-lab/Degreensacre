@@ -4,22 +4,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { whatsappLink } from '@/lib/site-settings';
 import { ArrowLeft, CheckCircle, Shield, Mail, ArrowRight, Lock, KeyRound } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const { resetPassword } = useAuth();
+  const { settings } = useSiteSettings();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState('');
+  const supportHref = whatsappLink(settings, 'Hello De-Greenacres, I need help resetting my password');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     try {
-      await resetPassword(email);
+      await resetPassword(email.trim());
       setIsSubmitted(true);
     } catch (err: any) {
       setError(err.message || 'Failed to send reset email. Please try again.');
@@ -104,7 +108,7 @@ export default function ForgotPasswordPage() {
               <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">Inspection</p>
             </div>
           </div>
-          <p className="text-[10px] text-white/30 text-center mt-4">RC: 1856064 · de-greenacres.com</p>
+          <p className="text-[10px] text-white/30 text-center mt-4">RC: 1856064 · De-Greenacres Properties Limited</p>
         </div>
       </div>
 
@@ -144,12 +148,15 @@ export default function ForgotPasswordPage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-7 md:p-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Email Address</label>
+                    <label htmlFor="recovery-email" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Email Address</label>
                     <div className={`relative rounded-xl border-2 transition-all ${focusedField === 'email' ? 'border-forest shadow-[0_0_0_3px_rgba(40,56,24,0.08)]' : 'border-gray-200'}`}>
                       <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${focusedField === 'email' ? 'text-forest' : 'text-gray-300'}`} />
                       <input
+                        id="recovery-email"
                         type="email"
+                        autoComplete="email"
                         required
+                        maxLength={254}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedField('email')}
@@ -203,15 +210,17 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <p className="text-sm text-gray-500 mb-6">
-                  Click the link in the email to reset your password. The link will expire in 1 hour.
+                  Use the most recent reset link. If it has expired or already been used, request a new one below.
                 </p>
 
                 <div className="space-y-3">
                   <button
+                    type="button"
                     onClick={handleSubmit}
-                    className="w-full border-2 border-gray-200 text-gray-600 py-3 rounded-xl font-semibold text-sm hover:border-sage hover:text-forest transition-all"
+                    disabled={isLoading}
+                    className="w-full border-2 border-gray-200 text-gray-600 py-3 rounded-xl font-semibold text-sm hover:border-sage hover:text-forest transition-all disabled:opacity-50"
                   >
-                    Resend Email
+                    {isLoading ? 'Sending…' : 'Resend Email'}
                   </button>
                   <Link href="/signin" className="block w-full py-3 rounded-xl font-bold text-sm text-white text-center transition-all" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
                     Back to Sign In
@@ -220,7 +229,7 @@ export default function ForgotPasswordPage() {
 
                 <p className="mt-6 text-xs text-gray-400">
                   Didn&apos;t receive the email? Check your spam folder or{' '}
-                  <a href="https://wa.me/2347041754800" target="_blank" rel="noopener noreferrer" className="text-forest font-semibold underline">
+                  <a href={supportHref} target="_blank" rel="noopener noreferrer" className="text-forest font-semibold underline">
                     chat with us on WhatsApp
                   </a>
                 </p>
@@ -232,7 +241,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-8 flex items-center justify-center gap-3">
             <Shield className="w-3.5 h-3.5 text-gray-300" />
             <p className="text-[11px] text-gray-400">
-              256-bit SSL Encrypted · CAC Registered RC: 1856064
+              Encrypted connection · CAC Registered RC: 1856064
             </p>
           </div>
         </div>

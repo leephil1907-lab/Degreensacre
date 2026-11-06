@@ -118,9 +118,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: getSiteUrl(),
-  },
   category: "Real Estate",
   verification: {
     google: "cd6av_JGPdYYcZvR1EY8DLa8ttGhfgCIl_pjoSu3cPQ",

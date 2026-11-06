@@ -91,8 +91,7 @@ export async function PATCH(
       'title', 'description', 'property_type', 'type', 'price', 'price_period',
       'bedrooms', 'bathrooms', 'toilets', 'parking', 'sqm', 'land_size',
       'furnished', 'serviced', 'gated_estate', 'address', 'area', 'lga',
-      'city', 'state', 'coordinates', 'features', 'amenities', 'documentation',
-      'status'
+      'city', 'state', 'coordinates', 'features', 'amenities', 'documentation'
     ];
 
     for (const field of allowedFields) {
@@ -107,9 +106,26 @@ export async function PATCH(
       updates.coordinates = coordinates;
     }
 
-    // If submitting for review
-    if (body.submit === true && existing.status === 'draft') {
-      updates.status = 'submitted';
+    // Publication status is never accepted directly from an owner. Admins use
+    // the dedicated moderation endpoint; owners can only request a new review.
+    if (profile?.is_admin && body.status !== undefined) {
+      const statuses = ['draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn'];
+      if (!statuses.includes(String(body.status))) {
+        return NextResponse.json({ error: 'Invalid publication status.', success: false }, { status: 400 });
+      }
+      updates.status = body.status;
+    } else if (body.status !== undefined && body.status !== existing.status) {
+      return NextResponse.json({ error: 'Use the review submission action instead of changing publication status directly.', success: false }, { status: 403 });
+    }
+
+    if (!profile?.is_admin && body.submit === true) {
+      if (!['draft', 'withdrawn'].includes(existing.status)) {
+        return NextResponse.json({ error: 'Only draft or withdrawn properties can be submitted for review.', success: false }, { status: 400 });
+      }
+      updates.status = 'pending_review';
+    } else if (!profile?.is_admin && existing.status === 'available' && Object.keys(updates).length > 0) {
+      // Edits to a live listing must be moderated again before publication.
+      updates.status = 'pending_review';
     }
 
     const { data: property, error } = await supabase

@@ -1,5 +1,5 @@
-/* De-Greenacres Service Worker — production PWA v2.1 */
-const CACHE_VERSION = 'de-greenacres-v2.2';
+/* De-Greenacres Service Worker — production PWA v2.3 */
+const CACHE_VERSION = 'de-greenacres-v2.3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_URL = '/offline.html';
@@ -103,7 +103,7 @@ async function navigationHandler(event) {
       event.waitUntil(caches.open(RUNTIME_CACHE).then((c) => c.put(request, clone)));
     }
     return network;
-  } catch (err) {
+  } catch {
     const cached = await caches.match(request);
     if (cached) return cached;
     const shell = await caches.match('/');
@@ -127,20 +127,6 @@ async function cacheFirst(request, cacheName) {
     }
     return network;
   } catch {
-    return cached || Response.error();
-  }
-}
-
-async function networkFirst(request, cacheName) {
-  try {
-    const network = await fetch(request);
-    if (network.ok) {
-      const clone = network.clone();
-      await caches.open(cacheName).then((c) => c.put(request, clone));
-    }
-    return network;
-  } catch {
-    const cached = await caches.match(request);
     return cached || Response.error();
   }
 }

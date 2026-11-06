@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 type Tab = 'overview' | 'saved' | 'enquiries' | 'viewings' | 'listings' | 'messages' | 'notifications' | 'settings';
+const TAB_VALUES: Tab[] = ['overview', 'saved', 'enquiries', 'viewings', 'listings', 'messages', 'notifications', 'settings'];
 
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -25,8 +26,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/auth/login');
+      const returnPath = `${window.location.pathname}${window.location.search}`;
+      router.push(`/signin?redirect=${encodeURIComponent(returnPath)}`);
+      return;
     }
+    const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+    if (requestedTab && TAB_VALUES.includes(requestedTab)) setActiveTab(requestedTab);
   }, [authLoading, user, router]);
 
   const fetchDashboardData = useCallback(async () => {

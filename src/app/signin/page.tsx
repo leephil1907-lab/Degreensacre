@@ -1,31 +1,45 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { whatsappLink } from '@/lib/site-settings';
 import { Eye, EyeOff, ArrowRight, Shield, Mail, Lock } from 'lucide-react';
 import AuthBrandingPanel from '@/components/AuthBrandingPanel';
 import Logo from '@/components/Logo';
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn } = useAuth();
+  const { settings } = useSiteSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState('');
+  const requestedRedirect = searchParams.get('redirect');
+  const destination = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//') ? requestedRedirect : '/dashboard';
+  const verificationState = searchParams.get('verified');
+  const authNotice = verificationState === 'pending'
+    ? 'Your account was created. Check your inbox to confirm your email before signing in.'
+    : verificationState === 'confirmed'
+      ? 'Your email is confirmed. You can now sign in.'
+      : verificationState === 'created'
+        ? 'Your account was created. Sign in with your email and password to continue.'
+        : '';
+  const supportHref = whatsappLink(settings, 'Hello De-Greenacres, I need help signing in');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     try {
-      await signIn(email, password);
-      router.push('/');
+      await signIn(email.trim(), password);
+      router.replace(destination);
     } catch (err: any) {
       setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
@@ -68,6 +82,12 @@ export default function SignInPage() {
             <p className="text-gray-400 text-[15px] leading-relaxed">Enter your credentials to access your account</p>
           </div>
 
+          {authNotice && (
+            <div role="status" className="mb-6 rounded-xl border border-forest/15 bg-forest-50 p-4 text-sm leading-6 text-forest">
+              {authNotice}
+            </div>
+          )}
+
           {/* Error */}
           {error && (
             <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 rounded-xl text-sm text-red-700 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -83,12 +103,15 @@ export default function SignInPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-2.5 uppercase tracking-[0.18em]">Email Address</label>
+                <label htmlFor="signin-email" className="block text-[11px] font-bold text-gray-400 mb-2.5 uppercase tracking-[0.18em]">Email Address</label>
                 <div className={`relative rounded-xl border-2 transition-all duration-200 ${focusedField === 'email' ? 'border-forest shadow-[0_0_0_4px_rgba(40,56,24,0.06)]' : 'border-gray-100 hover:border-gray-200'}`}>
                   <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors duration-200 ${focusedField === 'email' ? 'text-forest' : 'text-gray-300'}`} />
                   <input
+                    id="signin-email"
                     type="email"
+                    autoComplete="email"
                     required
+                    maxLength={254}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setFocusedField('email')}
@@ -101,12 +124,15 @@ export default function SignInPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 mb-2.5 uppercase tracking-[0.18em]">Password</label>
+                <label htmlFor="signin-password" className="block text-[11px] font-bold text-gray-400 mb-2.5 uppercase tracking-[0.18em]">Password</label>
                 <div className={`relative rounded-xl border-2 transition-all duration-200 ${focusedField === 'password' ? 'border-forest shadow-[0_0_0_4px_rgba(40,56,24,0.06)]' : 'border-gray-100 hover:border-gray-200'}`}>
                   <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors duration-200 ${focusedField === 'password' ? 'text-forest' : 'text-gray-300'}`} />
                   <input
+                    id="signin-password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     required
+                    maxLength={128}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setFocusedField('password')}
@@ -117,25 +143,16 @@ export default function SignInPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
                     className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all duration-200"
-                    tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                   </button>
                 </div>
               </div>
 
-              {/* Remember + Forgot */}
-              <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <div className="relative">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-[18px] h-[18px] rounded border-2 border-gray-200 peer-checked:border-forest peer-checked:bg-forest transition-all duration-200 flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">Remember me</span>
-                </label>
+              <div className="flex items-center justify-end pt-2">
                 <Link href="/forgot-password" className="text-sm text-forest font-semibold hover:text-forest-light transition-colors hover:underline underline-offset-2">
                   Forgot password?
                 </Link>
@@ -174,7 +191,7 @@ export default function SignInPage() {
 
           {/* WhatsApp Support */}
           <a
-            href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20need%20help%20signing%20in"
+            href={supportHref}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-3.5 border-2 border-gray-100 rounded-xl text-sm font-semibold text-gray-500 hover:border-green-200 hover:text-green-700 hover:bg-green-50/50 transition-all duration-200 flex items-center justify-center gap-2.5 group"
@@ -195,11 +212,19 @@ export default function SignInPage() {
           <div className="mt-8 flex items-center justify-center gap-2">
             <Shield className="w-3 h-3 text-gray-200" />
             <p className="text-[11px] text-gray-300">
-              256-bit SSL Encrypted · Secure authentication
+              Encrypted connection · Secure authentication
             </p>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-ivory" aria-label="Loading sign in" />}>
+      <SignInContent />
+    </Suspense>
   );
 }

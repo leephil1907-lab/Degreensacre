@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       type: 'new_message',
       title: 'New Message',
       message: 'You have a new message',
-      data: { conversation_id: conversationId, sender_id: user.id },
+      data: { conversation_id: conversationId, sender_id: user.id, url: '/messages' },
     });
     if (notificationError) console.warn('Message saved but recipient notification failed:', notificationError.message);
 

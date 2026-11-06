@@ -91,7 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    // Use server-side API — creates auth user + profile atomically via service role
+    // The server route applies validation/rate limits; a database trigger
+    // creates the profile without exposing privileged credentials.
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -109,14 +110,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-    // Sign the user in after registration
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      // Account created but auto-login failed (email confirmation may be required)
-      return { user: data.user, session: null };
+    if (data.requires_email_confirmation) {
+      return { user: data.user, session: null, requiresEmailConfirmation: true, accountCreated: true };
     }
 
-    return data;
+    // When confirmation is disabled, complete the login immediately. If the
+    // second request fails, preserve the fact that registration succeeded so
+    // the UI can ask the user to sign in instead of creating a duplicate.
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      console.error('Account created, but automatic sign-in failed:', signInError.message);
+      return { user: data.user, session: null, requiresEmailConfirmation: false, accountCreated: true };
+    }
+
+    return { ...data, session: signInData.session, requiresEmailConfirmation: false, accountCreated: true };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -127,23 +134,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) throw error;
 
-    // Update last login timestamp
+    // Login must not fail merely because profile activity metadata is
+    // temporarily unavailable. The migration adds these columns.
     if (data.user) {
-      await supabase
+      const { error: activityError } = await supabase
         .from('profiles')
-        .update({ last_login_at: new Date().toISOString() })
+        .update({
+          last_login_at: new Date().toISOString(),
+          email_verified_at: data.user.email_confirmed_at || null,
+        })
         .eq('id', data.user.id);
+      if (activityError) console.warn('Could not update login activity:', activityError.message);
     }
 
     return data;
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setUser(null);
-    setProfile(null);
-    setSession(null);
+    try {
+      // Local sign-out clears this browser even if the global revocation
+      // endpoint is unavailable. Other devices keep their own sessions.
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) console.error('Sign-out cleanup failed:', error.message);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+    }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -162,11 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     });
-
-    if (error) throw error;
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to send reset instructions.');
     return data;
   };
 

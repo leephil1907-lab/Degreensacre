@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, CheckCircle, Shield, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,19 +16,62 @@ function ResetPasswordContent() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState('');
+  const [isPreparing, setIsPreparing] = useState(true);
+  const [recoveryReady, setRecoveryReady] = useState(false);
 
   useEffect(() => {
-    // Handle the token from the email link
-    const token = searchParams.get('token');
-    const type = searchParams.get('type');
-    if (token && type === 'recovery') {
-      supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' });
-    }
+    let active = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+        setRecoveryReady(true);
+        setIsPreparing(false);
+        setError('');
+      }
+    });
+
+    const prepareRecovery = async () => {
+      try {
+        // Supabase supports token-hash and PKCE recovery links. The browser
+        // client exchanges a `code`; token-hash links are verified explicitly.
+        const tokenHash = searchParams.get('token_hash') || searchParams.get('token');
+        const type = searchParams.get('type');
+        if (tokenHash && type === 'recovery') {
+          const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+          if (verifyError) throw verifyError;
+        }
+
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!active) return;
+        if (session) {
+          setRecoveryReady(true);
+          setError('');
+        } else {
+          setRecoveryReady(false);
+          setError('This reset link is invalid, expired or already used. Request a new password reset email to continue.');
+        }
+      } catch (recoveryError) {
+        if (!active) return;
+        console.error('Recovery link verification failed:', recoveryError);
+        setRecoveryReady(false);
+        setError('This reset link is invalid, expired or already used. Request a new password reset email to continue.');
+      } finally {
+        if (active) setIsPreparing(false);
+      }
+    };
+
+    void prepareRecovery();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
+    if (!recoveryReady) { setError('Your recovery session is not ready. Request a new reset link and try again.'); return; }
+    if (password.length < 8 || password.length > 128) { setError('Password must be between 8 and 128 characters'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
 
     setIsLoading(true);
@@ -37,6 +79,9 @@ function ResetPasswordContent() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      // Do not leave the recovery session signed in after the password change.
+      const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
+      if (signOutError) console.warn('Password changed; local recovery-session cleanup failed:', signOutError.message);
       setIsSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Failed to update password');
@@ -136,11 +181,11 @@ function ResetPasswordContent() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-7 md:p-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">New Password</label>
+                    <label htmlFor="reset-new-password" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">New Password</label>
                     <div className={wrapperClass('password')}>
                       <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${focusedField === 'password' ? 'text-forest' : 'text-gray-300'}`} />
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className={`${inputClass} pr-12`} placeholder="Min 8 characters" />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                      <input id="reset-new-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className={`${inputClass} pr-12`} placeholder="Min 8 characters" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
                         {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                       </button>
                     </div>
@@ -157,18 +202,18 @@ function ResetPasswordContent() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Confirm Password</label>
+                    <label htmlFor="reset-confirm-password" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Confirm Password</label>
                     <div className={wrapperClass('confirm')}>
                       <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${focusedField === 'confirm' ? 'text-forest' : 'text-gray-300'}`} />
-                      <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onFocus={() => setFocusedField('confirm')} onBlur={() => setFocusedField('')} className={inputClass} placeholder="Re-enter password" />
+                      <input id="reset-confirm-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onFocus={() => setFocusedField('confirm')} onBlur={() => setFocusedField('')} className={inputClass} placeholder="Re-enter password" />
                     </div>
                     {confirmPassword && password === confirmPassword && (
                       <p className="text-xs text-forest mt-2 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Passwords match</p>
                     )}
                   </div>
 
-                  <button type="submit" disabled={isLoading} className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
-                    {isLoading ? (
+                  <button type="submit" disabled={isLoading || isPreparing || !recoveryReady} className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}>
+                    {isPreparing ? 'Checking reset link…' : isLoading ? (
                       <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Updating...</>
                     ) : (
                       <>Update Password <ArrowRight className="w-4 h-4" /></>
@@ -181,6 +226,9 @@ function ResetPasswordContent() {
                 <Link href="/signin" className="text-sm text-forest font-semibold hover:text-forest-light inline-flex items-center gap-2 transition-colors">
                   <ArrowLeft className="w-4 h-4" /> Back to Sign In
                 </Link>
+                {!recoveryReady && !isPreparing && (
+                  <Link href="/forgot-password" className="mt-3 block text-sm font-semibold text-forest underline">Request a new reset link</Link>
+                )}
               </div>
             </>
           ) : (
@@ -198,7 +246,7 @@ function ResetPasswordContent() {
 
           <div className="mt-8 flex items-center justify-center gap-3">
             <Shield className="w-3.5 h-3.5 text-gray-300" />
-            <p className="text-[11px] text-gray-400">256-bit SSL Encrypted · CAC Registered RC: 1856064</p>
+            <p className="text-[11px] text-gray-400">Encrypted connection · CAC Registered RC: 1856064</p>
           </div>
         </div>
       </div>

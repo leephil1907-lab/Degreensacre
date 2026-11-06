@@ -17,7 +17,7 @@ Review the instance plan shown by Render before creating the service. The Bluepr
 ## 1. Prepare Supabase and Resend
 
 1. Create or open the Supabase project.
-2. Back up the target database. For a fresh database, run `supabase-schema.sql` first and then `supabase-production-cms-migration.sql`. For an existing database, review and apply the production migration during a controlled maintenance window; test the same sequence on staging first.
+2. Back up the target database. For a fresh database, run `supabase-schema.sql` first and then `supabase-production-cms-migration.sql`. For an existing database, review and apply the production migration during a controlled maintenance window; test the same sequence on staging first. The migration inserts no listings, reviews, profiles, agencies, agents, developments or articles, and it changes publication defaults without deleting existing records. Audit any records created by retired seed scripts separately before launch.
 3. The production migration creates the public `property-images` bucket and its owner/admin RLS policies. Verify that bucket and policies after the migration; do not substitute a service-role key or make private document buckets public.
 4. Copy the Supabase project URL and **anon/publishable key**. This application is designed for anon-key access with Row Level Security; do not add a service-role key to Render.
 5. Create a Resend API key and verify the sender domain used by `EMAIL_FROM`.
@@ -102,7 +102,7 @@ Then test these browser flows:
 - Map markers only for saved coordinates, plus single-result, multi-result and no-result address searches; confirm ambiguous results require manual selection
 - Registration, sign-in, sign-out, password recovery and the first-admin bootstrap above
 - Protected dashboard, participant-only property messaging and non-admin rejection from `/admin`
-- Create/edit/publish/moderate properties, developments, agencies, agents, insights and reviews; update global settings and verify the public contact/footer values change
+- Create/edit/publish/moderate properties, developments, agencies, agents, insights and reviews; confirm new records start unpublished/pending and update global settings and verify the public contact/footer values change
 - Property image upload/reordering/deletion and owner-versus-admin authorization
 - Property enquiry, inspection, contact and review forms, including their persisted admin inbox records
 - Individual transactional email delivery through Resend and its delivery-history record

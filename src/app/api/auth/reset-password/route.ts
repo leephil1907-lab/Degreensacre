@@ -2,13 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { isEmail } from '@/lib/validation';
 import { getSiteUrl } from '@/lib/site';
+import { requestRateLimit } from '@/lib/rate-limit';
 
 // POST /api/auth/reset-password - Request password reset
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'auth-recovery', 5, 15 * 60 * 1000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many reset requests. Please wait before trying again.', success: false },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
-    
-    if (!body.email || !isEmail(body.email)) {
+
+    if (typeof body?.email !== 'string' || !isEmail(body.email)) {
       return NextResponse.json(
         { error: 'Valid email is required', success: false },
         { status: 400 }

@@ -87,7 +87,7 @@ CREATE TABLE public.properties (
   features TEXT[] DEFAULT '{}',
   documentation TEXT,
   verification_status TEXT CHECK (verification_status IN ('verified', 'pending', 'unverified')) DEFAULT 'pending',
-  status TEXT CHECK (status IN ('available', 'sold', 'rented', 'withdrawn')) DEFAULT 'available',
+  status TEXT CHECK (status IN ('draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn')) DEFAULT 'pending_review',
   featured BOOLEAN DEFAULT FALSE,
   sample BOOLEAN DEFAULT FALSE,
   agent TEXT,
@@ -101,9 +101,9 @@ CREATE TABLE public.properties (
 
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Properties are viewable by everyone"
+CREATE POLICY "Public can view available properties"
   ON public.properties FOR SELECT
-  USING (true);
+  USING (status = 'available' AND COALESCE(sample, FALSE) = FALSE);
 
 CREATE POLICY "Authenticated users can insert properties"
   ON public.properties FOR INSERT

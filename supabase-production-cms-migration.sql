@@ -1,6 +1,6 @@
 -- De-Greenacres production CMS and administration migration
 -- Run after supabase-schema.sql in the Supabase SQL Editor.
--- Idempotent: safe to re-run. Article seeds never overwrite admin edits.
+-- Idempotent: safe to re-run. No listings, reviews, profiles or articles are seeded.
 -- Back up the database before applying any production migration.
 
 BEGIN;
@@ -43,6 +43,9 @@ ALTER TABLE public.properties ADD CONSTRAINT properties_status_check
 ALTER TABLE public.properties DROP CONSTRAINT IF EXISTS properties_verification_status_check;
 ALTER TABLE public.properties ADD CONSTRAINT properties_verification_status_check
   CHECK (verification_status IN ('verified', 'pending', 'unverified'));
+ALTER TABLE public.properties ALTER COLUMN status SET DEFAULT 'pending_review';
+ALTER TABLE public.properties ALTER COLUMN verification_status SET DEFAULT 'pending';
+ALTER TABLE public.properties ALTER COLUMN featured SET DEFAULT FALSE;
 
 DROP POLICY IF EXISTS "Properties are viewable by everyone" ON public.properties;
 DROP POLICY IF EXISTS "properties_select_all" ON public.properties;
@@ -50,7 +53,7 @@ DROP POLICY IF EXISTS "Public can view available properties" ON public.propertie
 DROP POLICY IF EXISTS "Owners can view own properties" ON public.properties;
 DROP POLICY IF EXISTS "Admins can view all properties" ON public.properties;
 CREATE POLICY "Public can view available properties" ON public.properties
-  FOR SELECT TO anon, authenticated USING (status = 'available');
+  FOR SELECT TO anon, authenticated USING (status = 'available' AND COALESCE(sample, FALSE) = FALSE);
 CREATE POLICY "Owners can view own properties" ON public.properties
   FOR SELECT TO authenticated USING ((SELECT auth.uid()) = owner_id);
 CREATE POLICY "Admins can view all properties" ON public.properties
@@ -101,8 +104,20 @@ BEGIN
       IF NEW.status = 'available' AND OLD.status IS DISTINCT FROM 'available' THEN
         RAISE EXCEPTION 'An administrator must approve a listing before publication.';
       END IF;
-      NEW.verification_status := OLD.verification_status;
-      NEW.featured := OLD.featured;
+
+      -- An owner cannot edit the substance of a live listing while retaining
+      -- its approval. View counters and timestamps alone do not trigger review.
+      IF OLD.status = 'available' AND NEW.status = 'available'
+        AND (to_jsonb(NEW) - 'views' - 'updated_at' - 'published_at')
+          IS DISTINCT FROM
+            (to_jsonb(OLD) - 'views' - 'updated_at' - 'published_at') THEN
+        NEW.status := 'pending_review';
+        NEW.verification_status := 'pending';
+        NEW.featured := FALSE;
+      ELSE
+        NEW.verification_status := OLD.verification_status;
+        NEW.featured := OLD.featured;
+      END IF;
     END IF;
   END IF;
   IF TG_OP = 'INSERT' THEN
@@ -233,7 +248,7 @@ CREATE TABLE IF NOT EXISTS public.agencies (
   city TEXT,
   state TEXT,
   website TEXT,
-  is_published BOOLEAN DEFAULT TRUE,
+  is_published BOOLEAN DEFAULT FALSE,
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -243,7 +258,8 @@ ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS city TEXT;
 ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS website TEXT;
-ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.agencies ALTER COLUMN is_published SET DEFAULT FALSE;
 ALTER TABLE public.agencies ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.agencies ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Agencies are viewable by everyone" ON public.agencies;
@@ -273,7 +289,7 @@ CREATE TABLE IF NOT EXISTS public.agents (
   bio TEXT,
   title TEXT,
   specialization TEXT,
-  is_published BOOLEAN DEFAULT TRUE,
+  is_published BOOLEAN DEFAULT FALSE,
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -281,7 +297,8 @@ CREATE TABLE IF NOT EXISTS public.agents (
 );
 ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS title TEXT;
 ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS specialization TEXT;
-ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.agents ALTER COLUMN is_published SET DEFAULT FALSE;
 ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.agents ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Agents are viewable by everyone" ON public.agents;
@@ -320,13 +337,14 @@ CREATE TABLE IF NOT EXISTS public.developments (
   features TEXT[] DEFAULT '{}',
   documentation TEXT,
   site_inspection BOOLEAN DEFAULT FALSE,
-  is_published BOOLEAN DEFAULT TRUE,
+  is_published BOOLEAN DEFAULT FALSE,
   featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.developments ADD COLUMN IF NOT EXISTS documentation TEXT;
-ALTER TABLE public.developments ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.developments ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.developments ALTER COLUMN is_published SET DEFAULT FALSE;
 ALTER TABLE public.developments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Developments are viewable by everyone" ON public.developments;
 DROP POLICY IF EXISTS "Public can view published developments" ON public.developments;
@@ -493,6 +511,12 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- Admin operations: users, enquiries, inspections, email and audit history.
 -- ---------------------------------------------------------------------------
+-- Profile fields used by account dashboards, admin user activity and login
+-- tracking. IF NOT EXISTS keeps this safe for databases that already added them.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
@@ -783,178 +807,8 @@ CREATE POLICY property_images_owner_delete ON storage.objects FOR DELETE TO auth
     )
   );
 
--- Complete editorial seeds are appended below. ON CONFLICT DO NOTHING preserves edits.
-INSERT INTO public.articles
-  (slug, title, excerpt, content, category, author, published_at, read_time, image, featured, tags, status)
-VALUES
-  ('understanding-land-titles-in-nigeria', 'Understanding Land Titles in Nigeria: A Practical Buyer’s Guide', 'Learn what common Nigerian land documents do, what they do not prove, and how to verify them before paying for property.', 'Property documents can look convincing while still leaving a buyer exposed to ownership disputes, government acquisition or defective transfers. A document should never be assessed by its title alone. The safer approach is to confirm who owns the land, whether that person can transfer it, and whether the property’s planning and survey details match what is being offered.
-
-## Certificate of Occupancy
-
-A Certificate of Occupancy, often called a C of O, is evidence of a right of occupancy granted under the Land Use Act. It is important, but it is not a guarantee that every later transaction involving the land is valid. Confirm the certificate with the relevant land registry, compare the holder’s identity with the seller, and check whether subsequent transfers were properly documented.
-
-## Governor’s Consent and deeds
-
-Governor’s Consent is commonly required when an existing right of occupancy is assigned to another party. A Deed of Assignment records the transfer between the parties, while consent and registration support its legal effectiveness. Ask a property lawyer to review the chain of ownership rather than relying on a photocopy supplied by the seller.
-
-## Excision, gazette and survey plans
-
-Excision concerns land released from government acquisition, and a gazette may provide evidence of that release. These terms are sometimes used as marketing shortcuts. Buyers should still confirm the affected area, coordinates and current status with the appropriate authorities. A registered survey plan helps identify the plot, but a survey by itself does not transfer ownership.
-
-## A sensible verification sequence
-
-- Confirm the seller’s identity and authority to sell.
-- Conduct an independent registry search and review the ownership chain.
-- Compare the survey coordinates with the physical plot and acquisition maps.
-- Check planning restrictions, access roads, disputes and outstanding charges.
-- Use your own lawyer and qualified surveyor, not only representatives chosen by the seller.
-
-## Before you pay
-
-Use written terms that describe the property, price, payment schedule, documents to be delivered and what happens if verification fails. Pay through traceable channels and keep receipts. De-Greenacres can help coordinate document review and inspection, but legal conclusions should come from an independent qualified property lawyer familiar with the state where the land is located.', 'Legal', 'De-Greenacres Team', '2026-09-10'::timestamptz, 8, 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200', TRUE, ARRAY['land titles', 'documentation', 'legal', 'buying guide']::text[], 'published'),
-  ('property-investment-strategies-2026', 'Property Investment Strategies for 2026: Choose the Right Approach', 'Compare rental income, land banking, development and co-ownership using cash flow, risk, time horizon and exit options.', 'A good property strategy begins with your financial position and time horizon, not with a trending location. Before choosing a listing, decide how much capital you can commit without borrowing for everyday expenses, when you may need the money back, and how much uncertainty you can realistically manage.
-
-## Rental income
-
-Residential and commercial rentals can produce recurring income, but the advertised rent is not your net return. Allow for void periods, maintenance, service charges, management, taxes, repairs and initial furnishing or fit-out costs. Compare the expected annual net income with the total acquisition cost, including legal and agency fees.
-
-## Land banking
-
-Land banking depends heavily on location, title quality, accessibility and future demand. It may offer no income while you wait, and selling can take longer than expected. Infrastructure announcements should be independently confirmed; a proposed road or project is not the same as a completed one. Budget for fencing, survey, documentation and periodic site monitoring where appropriate.
-
-## Development and value-add projects
-
-Building, renovating or converting property can create value when acquisition and construction costs are carefully controlled. The main risks include cost overruns, approvals, contractor performance and changes in buyer demand. Use a written bill of quantities, staged payments linked to measurable work and a contingency reserve.
-
-## Co-ownership
-
-Co-ownership can reduce the amount each participant contributes, but it adds governance risk. The agreement should cover ownership shares, payment obligations, decision-making, management, default, exit rights and dispute resolution. Every contributor should receive independent advice before funds are pooled.
-
-## Compare opportunities consistently
-
-- Calculate total cost, not only the asking price.
-- Separate conservative expected returns from best-case projections.
-- Estimate how long a sale could take under less favourable conditions.
-- Verify title, planning status and the counterparty before paying.
-- Keep an emergency reserve outside the investment.
-
-No strategy is automatically safe or profitable. Treat projected returns as estimates, diversify where practical and base each decision on verified documents and realistic numbers rather than urgency or promises of guaranteed gains.', 'Investment', 'De-Greenacres Team', '2026-09-08'::timestamptz, 9, 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200', TRUE, ARRAY['investment', 'rental income', 'land banking', 'co-ownership']::text[], 'published'),
-  ('lagos-real-estate-market-analysis', 'How to Analyse the Lagos Property Market Without Chasing Hype', 'A practical framework for comparing Lagos neighbourhoods, asking prices, rental demand, infrastructure and property risk.', 'Lagos is not one property market. Buyer budgets, tenant demand, title issues, flooding exposure, transport patterns and housing supply can differ substantially between neighbourhoods—and sometimes between nearby streets. A useful market analysis therefore starts with the exact property and its micro-location.
-
-## Compare like with like
-
-When reviewing comparable properties, match the property type, size, condition, title, service level and payment terms. An asking price is only an advertised figure, not proof of the final transaction price. Where possible, gather several comparable data points and ask local professionals about actual completed deals and time on market.
-
-## Understand the driver of demand
-
-A home close to employment centres may attract a different tenant profile from a short-let apartment near leisure destinations or a plot intended for a future estate. Speak to residents, facility managers and agents about occupancy, service charges, utilities, security and maintenance. Confirm whether the demand you are relying on exists now or depends on an uncertain future development.
-
-## Assess infrastructure and physical risk
-
-Road access, drainage, flood history, power, water and internet connectivity affect both usability and value. Visit during working hours and, where feasible, after heavy rain or at a different time of day. Review planning and building requirements with the appropriate professionals rather than assuming an existing structure can be altered or expanded.
-
-## Build a neighbourhood scorecard
-
-- Verified title and planning position.
-- Total purchase and recurring occupancy costs.
-- Road access and realistic commute times.
-- Drainage, flood history and environmental condition.
-- Comparable supply, tenant demand and likely exit audience.
-- Quality of estate or building management.
-
-## Make the numbers conservative
-
-For rental property, test lower occupancy and higher maintenance costs. For land, allow for a longer selling period and no interim income. For a home purchase, consider whether the property meets your household’s needs even if prices do not rise quickly.
-
-A neighbourhood ranking cannot replace property-specific due diligence. Use market trends to generate questions, then answer those questions with documents, inspections and conservative financial analysis before making an offer.', 'Market Analysis', 'De-Greenacres Team', '2026-09-05'::timestamptz, 8, 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1200', FALSE, ARRAY['Lagos', 'market analysis', 'neighbourhoods', 'due diligence']::text[], 'published'),
-  ('first-time-home-buyer-guide', 'First-Time Home Buyer’s Guide to Nigerian Real Estate', 'A step-by-step path from setting a realistic budget to verifying documents, inspecting the home and completing the purchase.', 'Buying your first home involves more than choosing a property you like. A structured process helps you control costs, compare options and avoid committing money before the ownership and condition of the property are clear.
-
-## Set your complete budget
-
-Start with the amount you can responsibly commit, then add legal fees, agency fees, survey or valuation costs, consent and registration charges, moving expenses, repairs, furnishing and recurring service charges. Keep a separate emergency fund. If you are using finance, obtain a clear written breakdown of interest, fees and repayment obligations.
-
-## Define your non-negotiables
-
-List the features you truly need: location, bedrooms, accessibility, parking, security, water, power, workspace or proximity to family and schools. Separate these from desirable finishes that can be changed later. This makes viewings more objective and reduces pressure to exceed your budget.
-
-## Inspect beyond the presentation
-
-Check walls, ceilings, roofing, plumbing, drainage, electrical fittings, windows, ventilation and signs of damp or structural movement. Ask about water supply, waste disposal, power arrangements, service charges and planned estate works. A qualified building professional can help assess issues that are not obvious during a short viewing.
-
-## Verify before paying a substantial deposit
-
-- Confirm the seller’s identity and legal authority to sell.
-- Have an independent lawyer review title and the transaction documents.
-- Check that the property described in the documents matches the physical property.
-- Clarify all outstanding charges and what is included in the sale.
-- Ensure any deposit terms and refund conditions are written and understood.
-
-## Read the contract before signing
-
-The agreement should identify the parties and property, state the price and payment milestones, list included fixtures, allocate fees, and explain completion, possession and default. Do not rely on verbal promises. Ask your lawyer to explain any clause you do not understand.
-
-## Complete and keep your records
-
-Use traceable payments, obtain receipts and keep signed documents securely. Complete any required consent, stamping or registration steps and confirm when possession, keys, access cards and final documents will be handed over. A careful first purchase is not about eliminating every risk; it is about understanding the material risks before you commit.', 'Buying Guide', 'De-Greenacres Team', '2026-09-01'::timestamptz, 10, 'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=1200', FALSE, ARRAY['first-time buyer', 'home buying', 'budgeting', 'inspection']::text[], 'published'),
-  ('diaspora-investment-guide', 'Diaspora Investment Guide: Buying Nigerian Property from Abroad', 'How to organise verification, inspections, payments, representation and handover when you cannot be physically present.', 'Buying property from abroad adds practical challenges: you may not know the current condition of the area, you cannot easily attend every appointment, and documents or payments may pass through several intermediaries. The solution is a documented process with independent checks and clear accountability.
-
-## Build the right team
-
-Use a lawyer who acts for you, a qualified surveyor or building professional where needed, and a reputable property company with identifiable office and contact details. Do not give one person unchecked control over property selection, verification, valuation and receipt of your funds. Ask for written scopes of work and fee estimates.
-
-## Verify the opportunity remotely
-
-Request original-document checks through the relevant registry, a detailed ownership review, survey coordinates, current photos and a live video inspection. Appoint an independent representative to attend the site where possible. A polished brochure or video supplied by the seller should support—not replace—verification.
-
-## Use a limited, specific authority
-
-If someone must sign or act for you, obtain legal advice on an appropriate power of attorney. Define the permitted actions, property, financial limits and duration. Avoid broad authority that allows your representative to buy a different property, borrow money or redirect proceeds without your approval.
-
-## Protect payments and foreign-exchange records
-
-- Pay only to accounts independently confirmed through trusted contact details.
-- Confirm any account-detail change with a second known channel.
-- Use written invoices and milestone-based payments where appropriate.
-- Keep bank records, receipts, contracts and foreign-exchange documentation.
-- Ask your bank and advisers about tax, reporting and currency requirements in both countries.
-
-## Plan inspection and handover
-
-Agree what must happen before each payment and who will confirm completion. For construction or renovation, request dated evidence and independent progress checks rather than relying on percentage claims. At handover, document the property condition, keys, access devices, documents and outstanding defects.
-
-## After the purchase
-
-Arrange insurance, property management, utilities, tax compliance and periodic inspections as relevant. A written management agreement should explain rent collection, maintenance approvals, statements and termination. Distance makes disciplined records especially valuable: keep a complete transaction file that your lawyer, accountant or family representative can understand later.', 'Investment', 'De-Greenacres Team', '2026-08-28'::timestamptz, 9, 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200', FALSE, ARRAY['diaspora', 'remote buying', 'payments', 'power of attorney']::text[], 'published'),
-  ('property-verification-checklist', 'Property Verification Checklist: Questions to Ask Before You Pay', 'Use this buyer checklist to organise identity, title, survey, planning, inspection, payment and contract checks.', 'Verification is not a single document search or a badge on a listing. It is a structured review of the seller, property, documents, physical condition and transaction terms. This checklist helps you record what has been checked, what remains outstanding and who confirmed each item.
-
-## Seller and representative
-
-Confirm the legal name and identification of the owner or selling company. If an agent, relative, attorney or company representative is involved, obtain evidence of their authority. Independently confirm contact details and be cautious when you are pressured to bypass a question or pay immediately.
-
-## Title and ownership
-
-- Review the root of title and subsequent transfers with your lawyer.
-- Conduct the appropriate registry and court or dispute checks advised for the transaction.
-- Match names, property descriptions and dates across the documents.
-- Identify consent, stamping, registration, probate or company approvals that may be required.
-- Investigate gaps or inconsistencies instead of accepting verbal explanations alone.
-
-## Survey, planning and physical property
-
-Have a qualified professional compare survey coordinates with the site and relevant acquisition or planning information. Inspect access, boundaries, encroachments, drainage, flood exposure and nearby uses. For buildings, assess condition and confirm that approvals and the existing structure are consistent with the intended use.
-
-## Money and contract
-
-Create a written schedule showing the purchase price, deposit, balance, professional fees, taxes, service charges and other costs. The contract should explain refund conditions, completion milestones, documents to be delivered, included items and the consequences of default. Confirm the receiving account through a trusted second channel before every material payment.
-
-## Keep a verification file
-
-Save document copies, search results, professional reports, photographs, correspondence, agreements and receipts in one organised record. Mark each checklist item as pending, satisfactory or requiring further action. Do not treat an unchecked item as complete because other parts of the transaction appear straightforward.
-
-## When to pause
-
-Pause if the seller resists independent verification, identities or documents conflict, the physical plot differs from the survey, payment is requested to an unexplained third party, or your lawyer identifies an unresolved defect. Walking away from a questionable transaction can cost less than trying to repair it after payment.', 'Legal', 'De-Greenacres Team', '2026-08-25'::timestamptz, 7, 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200', FALSE, ARRAY['verification', 'fraud prevention', 'checklist', 'due diligence']::text[], 'published')
-ON CONFLICT (slug) DO NOTHING;
+-- Public content is created and explicitly published through the admin CMS.
+-- This migration intentionally inserts no listings, reviews, profiles or articles.
 
 COMMIT;
 

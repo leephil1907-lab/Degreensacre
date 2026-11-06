@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       { data: usersByType },
     ] = await Promise.all([
       adminSupabase.from('properties').select('*', { count: 'exact', head: true }),
-      adminSupabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+      adminSupabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available'),
       adminSupabase.from('profiles').select('*', { count: 'exact', head: true }),
       adminSupabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
       adminSupabase.from('enquiries').select('*', { count: 'exact', head: true }),
@@ -65,19 +65,19 @@ export async function GET(request: NextRequest) {
       adminSupabase
         .from('properties')
         .select('id, title, views, price, type, state')
-        .eq('status', 'published')
+        .eq('status', 'available')
         .order('views', { ascending: false })
         .limit(10),
       // Properties by state
       adminSupabase
         .from('properties')
         .select('state')
-        .eq('status', 'published'),
+        .eq('status', 'available'),
       // Properties by type
       adminSupabase
         .from('properties')
         .select('type')
-        .eq('status', 'published'),
+        .eq('status', 'available'),
       // Enquiries by day
       adminSupabase
         .from('enquiries')

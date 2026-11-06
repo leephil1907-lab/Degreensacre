@@ -5,12 +5,12 @@ const assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]);
 
 const fixtures = [
-  { id: 'qa-1', slug: 'qa-detached-lekki', title: 'QA Detached Family Home', type: 'sale', property_type: 'Detached Duplex', price: 180000000, price_period: 'one-time', bedrooms: 5, bathrooms: 6, parking: 4, sqm: 450, address: '15 Test Close', area: 'Lekki Phase 1', city: 'Lagos', state: 'Lagos', description: 'A long test description designed to verify that buyers can understand the property layout, condition, documentation and inspection options without opening every result card.', features: ['All rooms ensuite'], amenities: ['Security'], images: ['/properties/property-1.jpg'], verification_status: 'verified', documentation: 'C of O', gated_estate: true, serviced: true, featured: true, coordinates: { lat: 6.4474, lng: 3.4550 }, date_added: '2026-10-01', views: 120 },
-  { id: 'qa-2', slug: 'qa-apartment-ikoyi', title: 'QA Serviced Apartment', type: 'rent', property_type: 'Apartment', price: 6000000, price_period: 'per-year', bedrooms: 3, bathrooms: 4, parking: 2, sqm: 180, address: '10 Test Avenue', area: 'Ikoyi', city: 'Lagos', state: 'Lagos', description: 'A representative rental listing used only to test description spacing, responsive facts, documentation labels and clear actions across desktop and mobile screens.', features: ['Fitted kitchen'], amenities: ['Gym'], images: ['/properties/property-2.jpg'], verification_status: 'verified', documentation: "Governor's Consent", furnished: true, serviced: true, featured: true, coordinates: { lat: 6.4519, lng: 3.4297 }, date_added: '2026-09-28', views: 95 },
-  { id: 'qa-3', slug: 'qa-land-uyo', title: 'QA Residential Land Parcel', type: 'land', property_type: 'Land', price: 25000000, price_period: 'one-time', bedrooms: 0, bathrooms: 0, parking: 0, sqm: 500, address: '', area: 'Shelter Afrique', city: 'Uyo', state: 'Akwa Ibom', description: 'A test land result without saved coordinates. The interface must label the location as pending instead of placing an invented marker in the state.', features: [], amenities: [], images: [], verification_status: 'pending', documentation: 'Registered Survey', gated_estate: false, featured: false, coordinates: null, date_added: '2026-09-20', views: 75 },
-  { id: 'qa-4', slug: 'qa-office-abuja', title: 'QA Office Building', type: 'commercial', property_type: 'Office Space', price: 350000000, price_period: 'one-time', bedrooms: 0, bathrooms: 6, parking: 20, sqm: 650, address: '25 Test District', area: 'Maitama', city: 'Abuja', state: 'FCT', description: 'A commercial test listing with enough descriptive content to check line wrapping, price presentation, map actions and accessible card layouts.', features: ['Lift'], amenities: ['Backup power'], images: ['/properties/property-3.jpg'], verification_status: 'verified', documentation: 'C of O', featured: true, coordinates: { lat: 9.0833, lng: 7.4913 }, date_added: '2026-09-18', views: 60 },
-  { id: 'qa-5', slug: 'qa-short-let-enugu', title: 'QA Furnished Short Let', type: 'short-let', property_type: 'Flat', price: 85000, price_period: 'per-night', bedrooms: 2, bathrooms: 2, parking: 1, sqm: 110, address: '8 Test Layout', area: 'Independence Layout', city: 'Enugu', state: 'Enugu', description: 'A short-let test listing used to verify that nightly pricing, smaller values, mobile card content and map markers remain clear and accurate.', features: ['Wi-Fi'], amenities: ['Air conditioning'], images: ['/properties/property-4.jpg'], verification_status: 'unverified', documentation: 'Deed of Assignment', furnished: true, featured: false, coordinates: { lat: 6.4461, lng: 7.5015 }, date_added: '2026-09-12', views: 45 },
-  { id: 'qa-6', slug: 'qa-terrace-lekki', title: 'QA Terrace Duplex', type: 'sale', property_type: 'Terrace Duplex', price: 120000000, price_period: 'one-time', bedrooms: 4, bathrooms: 5, parking: 2, sqm: 320, address: '5 Test Street', area: 'Chevron Drive', city: 'Lagos', state: 'Lagos', description: 'A second unmapped test property used to check mapped and awaiting-location counts, address search entry and honest empty-map messaging.', features: ['Family lounge'], amenities: ['Security'], images: ['/properties/property-5.jpg'], verification_status: 'pending', documentation: 'C of O', gated_estate: true, featured: false, coordinates: null, date_added: '2026-09-08', views: 30 },
+  { id: '00000000-0000-4000-8000-000000000001', slug: 'qa-detached-lekki', title: 'QA Detached Family Home', type: 'sale', property_type: 'Detached Duplex', price: 180000000, price_period: 'one-time', bedrooms: 5, bathrooms: 6, parking: 4, sqm: 450, address: '15 Test Close', area: 'Lekki Phase 1', city: 'Lagos', state: 'Lagos', description: 'A long test description designed to verify that buyers can understand the property layout, condition, documentation and inspection options without opening every result card.', features: ['All rooms ensuite'], amenities: ['Security'], images: ['/properties/property-1.jpg'], verification_status: 'verified', documentation: 'C of O', gated_estate: true, serviced: true, featured: true, coordinates: { lat: 6.4474, lng: 3.4550 }, date_added: '2026-10-01', views: 120 },
+  { id: '00000000-0000-4000-8000-000000000002', slug: 'qa-apartment-ikoyi', title: 'QA Serviced Apartment', type: 'rent', property_type: 'Apartment', price: 6000000, price_period: 'per-year', bedrooms: 3, bathrooms: 4, parking: 2, sqm: 180, address: '10 Test Avenue', area: 'Ikoyi', city: 'Lagos', state: 'Lagos', description: 'A representative rental listing used only to test description spacing, responsive facts, documentation labels and clear actions across desktop and mobile screens.', features: ['Fitted kitchen'], amenities: ['Gym'], images: ['/properties/property-2.jpg'], verification_status: 'verified', documentation: "Governor's Consent", furnished: true, serviced: true, featured: true, coordinates: { lat: 6.4519, lng: 3.4297 }, date_added: '2026-09-28', views: 95 },
+  { id: '00000000-0000-4000-8000-000000000003', slug: 'qa-land-uyo', title: 'QA Residential Land Parcel', type: 'sale', property_type: 'Land', price: 25000000, price_period: 'one-time', bedrooms: 0, bathrooms: 0, parking: 0, sqm: 500, address: '', area: 'Shelter Afrique', city: 'Uyo', state: 'Akwa Ibom', description: 'A test land result without saved coordinates. The interface must label the location as pending instead of placing an invented marker in the state.', features: [], amenities: [], images: [], verification_status: 'pending', documentation: 'Registered Survey', gated_estate: false, featured: false, coordinates: null, date_added: '2026-09-20', views: 75 },
+  { id: '00000000-0000-4000-8000-000000000004', slug: 'qa-office-abuja', title: 'QA Office Building', type: 'sale', property_type: 'Office Space', price: 350000000, price_period: 'one-time', bedrooms: 0, bathrooms: 6, parking: 20, sqm: 650, address: '25 Test District', area: 'Maitama', city: 'Abuja', state: 'FCT', description: 'A commercial test listing with enough descriptive content to check line wrapping, price presentation, map actions and accessible card layouts.', features: ['Lift'], amenities: ['Backup power'], images: ['/properties/property-3.jpg'], verification_status: 'verified', documentation: 'C of O', featured: true, coordinates: { lat: 9.0833, lng: 7.4913 }, date_added: '2026-09-18', views: 60 },
+  { id: '00000000-0000-4000-8000-000000000005', slug: 'qa-short-let-enugu', title: 'QA Furnished Short Let', type: 'short-let', property_type: 'Flat', price: 85000, price_period: 'per-night', bedrooms: 2, bathrooms: 2, parking: 1, sqm: 110, address: '8 Test Layout', area: 'Independence Layout', city: 'Enugu', state: 'Enugu', description: 'A short-let test listing used to verify that nightly pricing, smaller values, mobile card content and map markers remain clear and accurate.', features: ['Wi-Fi'], amenities: ['Air conditioning'], images: ['/properties/property-4.jpg'], verification_status: 'unverified', documentation: 'Deed of Assignment', furnished: true, featured: false, coordinates: { lat: 6.4461, lng: 7.5015 }, date_added: '2026-09-12', views: 45 },
+  { id: '00000000-0000-4000-8000-000000000006', slug: 'qa-terrace-lekki', title: 'QA Terrace Duplex', type: 'sale', property_type: 'Terrace Duplex', price: 120000000, price_period: 'one-time', bedrooms: 4, bathrooms: 5, parking: 2, sqm: 320, address: '5 Test Street', area: 'Chevron Drive', city: 'Lagos', state: 'Lagos', description: 'A second unmapped test property used to check mapped and awaiting-location counts, address search entry and honest empty-map messaging.', features: ['Family lounge'], amenities: ['Security'], images: ['/properties/property-5.jpg'], verification_status: 'pending', documentation: 'C of O', gated_estate: true, featured: false, coordinates: null, date_added: '2026-09-08', views: 30 },
 ];
 
 async function prepare(browser, width, height) {
@@ -20,6 +20,7 @@ async function prepare(browser, width, height) {
     const url = new URL(route.request().url());
     let items = [...fixtures];
     if (url.searchParams.get('type')) items = items.filter((item) => item.type === url.searchParams.get('type'));
+    if (url.searchParams.get('propertyType')) items = items.filter((item) => item.property_type.toLowerCase() === url.searchParams.get('propertyType').toLowerCase());
     if (url.searchParams.get('featured') === 'true') items = items.filter((item) => item.featured);
     const count = items.length;
     const offset = Number(url.searchParams.get('offset') || 0);
@@ -72,6 +73,18 @@ async function metrics(page) {
   await desktop.waitForTimeout(300);
   console.log('VERIFIED_COO_CARDS', await desktop.locator('article').count());
   await desktop.getByRole('button', { name: /Clear/i }).first().click();
+  const categoryGroup = desktop.getByRole('group', { name: 'Listing category' });
+  await categoryGroup.getByRole('button', { name: 'Land', exact: true }).click();
+  await desktop.waitForTimeout(300);
+  assert.equal(await desktop.locator('article').count(), 1);
+  assert.equal(await desktop.getByText('QA Residential Land Parcel', { exact: true }).count(), 1);
+  console.log('LAND_CATEGORY_USES_PROPERTY_TYPE', true);
+  await categoryGroup.getByRole('button', { name: 'Commercial', exact: true }).click();
+  await desktop.waitForTimeout(300);
+  assert.equal(await desktop.locator('article').count(), 1);
+  assert.equal(await desktop.getByText('QA Office Building', { exact: true }).count(), 1);
+  console.log('COMMERCIAL_CATEGORY_USES_PROPERTY_TYPE', true);
+  await categoryGroup.getByRole('button', { name: 'All', exact: true }).click();
   await desktop.getByRole('group', { name: 'Results layout' }).getByRole('button', { name: 'List', exact: true }).click();
   await desktop.waitForTimeout(300);
   await desktop.screenshot({ path: 'frontend-audit/after-properties-list-desktop.png', fullPage: true });
@@ -169,6 +182,11 @@ async function metrics(page) {
   await homeDesktop.keyboard.press('Escape');
   assert.equal(await homeDesktop.locator('#explore-menu').count(), 0);
   console.log('EXPLORE_MENU_AND_ESCAPE', true);
+  await homeDesktop.getByRole('button', { name: 'Land', exact: true }).click();
+  assert.equal(await homeDesktop.getByLabel('Property type').inputValue(), 'Land');
+  await homeDesktop.getByRole('button', { name: 'Buy', exact: true }).click();
+  assert.equal(await homeDesktop.getByLabel('Property type').inputValue(), '');
+  console.log('HERO_LAND_CATEGORY_SYNC', true);
   await homeDesktop.getByLabel('State / region').selectOption('Lagos');
   await homeDesktop.getByRole('button', { name: 'Search properties' }).click();
   await homeDesktop.waitForURL(/\/properties\?type=sale&state=Lagos/);
@@ -184,6 +202,24 @@ async function metrics(page) {
   await detail.locator('.leaflet-container').waitFor({ timeout: 15000 }).catch(() => undefined);
   await detail.screenshot({ path: 'frontend-audit/after-property-detail-desktop.png', fullPage: true });
   console.log('DETAIL', await metrics(detail));
+  let enquiryPayload;
+  await detail.route('**/api/enquiries', async (route) => {
+    enquiryPayload = route.request().postDataJSON();
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ enquiry: { id: 'qa-enquiry' }, success: true }) });
+  });
+  await detail.getByRole('button', { name: 'Send Enquiry', exact: true }).click();
+  await detail.getByLabel('Your name').fill('QA Buyer');
+  await detail.getByLabel('Your email address').fill('buyer@example.com');
+  await detail.getByLabel('Your phone number').fill('+2348012345678');
+  await detail.getByLabel('Your property enquiry').fill('Please confirm the documentation and available inspection dates.');
+  await detail.locator('#property-enquiry-form').getByRole('button', { name: 'Send Enquiry', exact: true }).click();
+  await detail.getByText('Enquiry sent successfully!', { exact: true }).waitFor();
+  assert.equal(enquiryPayload.buyer_name, 'QA Buyer');
+  assert.equal(enquiryPayload.buyer_email, 'buyer@example.com');
+  assert.equal(enquiryPayload.buyer_phone, '+2348012345678');
+  assert.equal(enquiryPayload.property_id, fixtures[0].id);
+  assert.equal(enquiryPayload.name, undefined);
+  console.log('PROPERTY_ENQUIRY_PAYLOAD_OK', true);
   await detail.close();
 
   const tablet = await prepare(browser, 1024, 768);

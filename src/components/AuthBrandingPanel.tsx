@@ -125,13 +125,13 @@ export default function AuthBrandingPanel({ eyebrow, title, description, extra }
         {/* Premium glass card with value props */}
         <div className="mt-10 bg-white/[0.04] backdrop-blur-md rounded-2xl p-6 border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
           <p className="text-white/70 text-sm leading-relaxed mb-5">
-            De-Greenacres Properties Limited helps you find, verify, and own property in Nigeria. Every listing is documentation-reviewed by our team.
+            Explore Nigerian property listings, request inspections and manage your enquiries in one account. Review each listing’s verification status and confirm details with its agent.
           </p>
           <div className="space-y-3">
             {[
-              'Verified listings with full documentation',
-              'Physical inspections before you commit',
-              'Flexible payment plans available',
+              'Property documentation and verification guidance',
+              'Inspection requests coordinated with agents',
+              'Buyer, owner and agent accounts',
             ].map((item, i) => (
               <div key={item} className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-sage/15 flex items-center justify-center flex-shrink-0">
@@ -167,12 +167,12 @@ export default function AuthBrandingPanel({ eyebrow, title, description, extra }
             </div>
             <div className="w-px h-8 bg-white/8" />
             <div>
-              <p className="text-xl font-display text-white/70">SSL</p>
-              <p className="text-[9px] text-white/25 uppercase tracking-wider">256-bit</p>
+              <p className="text-xl font-display text-white/70">TLS</p>
+              <p className="text-[9px] text-white/25 uppercase tracking-wider">Encrypted</p>
             </div>
           </div>
         </div>
-        <p className="text-[10px] text-white/15 text-center mt-6 tracking-wide">degreenacres.com</p>
+        <p className="text-[10px] text-white/15 text-center mt-6 tracking-wide">De-Greenacres Properties Limited</p>
       </div>
     </div>
   );

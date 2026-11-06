@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -9,14 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ArrowLeft, Building2, Home, Briefcase, CheckCircle, Shield, MapPin } from 'lucide-react';
 import AuthBrandingPanel from '@/components/AuthBrandingPanel';
 import Logo from '@/components/Logo';
-
-const NIGERIAN_STATES = [
-  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
-  'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Abuja (FCT)', 'Gombe',
-  'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos',
-  'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto',
-  'Taraba', 'Yobe', 'Zamfara'
-];
+import { NIGERIAN_STATES } from '@/lib/validation';
 
 const ACCOUNT_TYPES = [
   { value: 'buyer', label: 'Buyer / Investor', icon: Home, desc: 'Find and purchase properties' },
@@ -61,11 +53,13 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError('');
     try {
-      await signUp(formData.email, formData.password, {
+      const result = await signUp(formData.email, formData.password, {
         first_name: formData.firstName, last_name: formData.lastName,
         phone: formData.phone, state: formData.state, account_type: formData.accountType,
       });
-      router.push('/signin?verified=pending');
+      if (result?.session) router.replace('/dashboard');
+      else if (result?.requiresEmailConfirmation) router.replace('/signin?verified=pending');
+      else router.replace('/signin?verified=created');
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -109,12 +103,12 @@ export default function SignUpPage() {
         }
         description={
           step === 1 ? 'Join De-Greenacres and discover verified properties across Nigeria. Buyers, property owners, and independent agents all start here.' :
-          step === 2 ? 'Your data is protected with enterprise-grade encryption. We take your security seriously.' :
+          step === 2 ? 'Your password is handled through Supabase Auth. Choose a unique password you do not use elsewhere.' :
           'Choose your account type and you\'re ready to explore Nigeria\'s finest verified properties.'
         }
         extra={step === 2 ? (
           <div className="mt-6 space-y-3">
-            {['256-bit SSL encryption', 'Enterprise-grade data security', 'No data shared with third parties'].map((item) => (
+            {['Encrypted authentication', 'Role-based account access', 'You control your profile details'].map((item) => (
               <div key={item} className="flex items-center gap-3 text-white/50">
                 <Shield className="w-4 h-4 text-sage" />
                 <span className="text-sm">{item}</span>
@@ -187,42 +181,42 @@ export default function SignUpPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">First Name</label>
+                        <label htmlFor="signup-first-name" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">First Name</label>
                         <div className={wrapperClass('firstName')}>
                           <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('firstName')}`} />
-                          <input type="text" value={formData.firstName} onChange={(e) => updateField('firstName', e.target.value)} onFocus={() => setFocusedField('firstName')} onBlur={() => setFocusedField('')} className={inputClass('firstName')} placeholder="John" />
+                          <input id="signup-first-name" type="text" autoComplete="given-name" required maxLength={80} value={formData.firstName} onChange={(e) => updateField('firstName', e.target.value)} onFocus={() => setFocusedField('firstName')} onBlur={() => setFocusedField('')} className={inputClass('firstName')} placeholder="John" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Last Name</label>
+                        <label htmlFor="signup-last-name" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Last Name</label>
                         <div className={wrapperClass('lastName')}>
                           <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('lastName')}`} />
-                          <input type="text" value={formData.lastName} onChange={(e) => updateField('lastName', e.target.value)} onFocus={() => setFocusedField('lastName')} onBlur={() => setFocusedField('')} className={inputClass('lastName')} placeholder="Doe" />
+                          <input id="signup-last-name" type="text" autoComplete="family-name" required maxLength={80} value={formData.lastName} onChange={(e) => updateField('lastName', e.target.value)} onFocus={() => setFocusedField('lastName')} onBlur={() => setFocusedField('')} className={inputClass('lastName')} placeholder="Doe" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Email Address</label>
+                      <label htmlFor="signup-email" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Email Address</label>
                       <div className={wrapperClass('email')}>
                         <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('email')}`} />
-                        <input type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField('')} className={inputClass('email')} placeholder="you@example.com" />
+                        <input id="signup-email" type="email" autoComplete="email" required maxLength={254} value={formData.email} onChange={(e) => updateField('email', e.target.value)} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField('')} className={inputClass('email')} placeholder="you@example.com" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Phone <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
+                        <label htmlFor="signup-phone" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Phone <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
                         <div className={wrapperClass('phone')}>
                           <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('phone')}`} />
-                          <input type="tel" value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField('')} className={inputClass('phone')} placeholder="+234" />
+                          <input id="signup-phone" type="tel" autoComplete="tel" maxLength={30} value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField('')} className={inputClass('phone')} placeholder="+234" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">State <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
-                        <select value={formData.state} onChange={(e) => updateField('state', e.target.value)} className="w-full px-3 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all">
+                        <label htmlFor="signup-state" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">State <span className="text-gray-300 normal-case tracking-normal">(optional)</span></label>
+                        <select id="signup-state" value={formData.state} onChange={(e) => updateField('state', e.target.value)} className="w-full px-3 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest transition-all">
                           <option value="">Select</option>
-                          {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                          {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s === 'FCT' ? 'Abuja (FCT)' : s}</option>)}
                         </select>
                       </div>
                     </div>
@@ -243,11 +237,11 @@ export default function SignUpPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Password</label>
+                      <label htmlFor="signup-password" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Password</label>
                       <div className={wrapperClass('password')}>
                         <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('password')}`} />
-                        <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => updateField('password', e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className="w-full pl-11 pr-12 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none" placeholder="Min 8 characters" />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all duration-200" tabIndex={-1}>
+                        <input id="signup-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={128} value={formData.password} onChange={(e) => updateField('password', e.target.value)} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} className="w-full pl-11 pr-12 py-3.5 bg-transparent rounded-xl text-sm text-charcoal placeholder:text-gray-300 focus:outline-none" placeholder="Min 8 characters" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all duration-200">
                           {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                         </button>
                       </div>
@@ -267,10 +261,10 @@ export default function SignUpPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Confirm Password</label>
+                      <label htmlFor="signup-confirm-password" className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-[0.15em]">Confirm Password</label>
                       <div className={wrapperClass('confirmPassword')}>
                         <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] transition-colors ${iconColor('confirmPassword')}`} />
-                        <input type="password" value={formData.confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value)} onFocus={() => setFocusedField('confirmPassword')} onBlur={() => setFocusedField('')} className={inputClass('confirmPassword')} placeholder="Re-enter password" />
+                        <input id="signup-confirm-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={formData.confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value)} onFocus={() => setFocusedField('confirmPassword')} onBlur={() => setFocusedField('')} className={inputClass('confirmPassword')} placeholder="Re-enter password" />
                       </div>
                       {formData.confirmPassword && formData.password === formData.confirmPassword && (
                         <p className="text-xs text-forest mt-2 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Passwords match</p>
@@ -303,6 +297,7 @@ export default function SignUpPage() {
                       <button
                         key={type.value}
                         type="button"
+                        aria-pressed={formData.accountType === type.value}
                         onClick={() => updateField('accountType', type.value)}
                         className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4 ${
                           formData.accountType === type.value
@@ -372,7 +367,7 @@ export default function SignUpPage() {
           <div className="mt-6 flex items-center justify-center gap-2">
             <Shield className="w-3 h-3 text-gray-200" />
             <p className="text-[11px] text-gray-300">
-              256-bit SSL Encrypted · Secure registration
+              Encrypted authentication · Secure registration
             </p>
           </div>
         </div>

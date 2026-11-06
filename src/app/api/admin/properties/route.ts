@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
   try {
     const payload = propertyPayload(await bodyJson(request));
     payload.owner_id = auth.context.user.id;
-    payload.sample = false;
     const { data, error } = await auth.context.supabase.from('properties').insert(payload).select('*').single();
     if (error) return databaseError(error, 'The property could not be created.');
     return NextResponse.json({ property: data, success: true }, { status: 201 });

@@ -15,7 +15,7 @@ export default function LandPage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch('/api/properties?type=land&status=available&limit=50');
+        const res = await fetch('/api/properties?propertyType=Land&limit=50');
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Land listings could not be loaded.');
         const list = (data.properties || []).map((p: any) => ({
@@ -59,9 +59,9 @@ export default function LandPage() {
         <div className="container-custom relative z-10">
           <div className="max-w-3xl">
             <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-4">🌍 LAND INVESTMENT OPPORTUNITIES</p>
-            <h1 className="font-display text-5xl md:text-6xl mb-6">Verified Land.<br /><em className="text-sage">Secure Your Future.</em></h1>
+            <h1 className="font-display text-5xl md:text-6xl mb-6">Find Land.<br /><em className="text-sage">Verify the Opportunity.</em></h1>
             <p className="text-xl text-white/80 leading-relaxed mb-8">
-              Every plot reviewed by De-Greenacres. Clear documentation. Flexible payment plans available. Physical inspections before you commit.
+              Explore land listings with documentation details, map locations where confirmed, and physical inspections before you commit.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="#listings" className="bg-white text-forest px-8 py-4 rounded-xl font-bold text-lg hover:bg-sage hover:text-white transition-all inline-flex items-center justify-center gap-2">
@@ -74,7 +74,7 @@ export default function LandPage() {
             <div className="flex flex-wrap gap-6 text-sm text-white/60">
               <span className="flex items-center gap-2"><Layers className="w-4 h-4 text-sage" /> {landProperties.length} Locations</span>
               <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-sage" /> {totalAvailable} Plots Available</span>
-              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-sage" /> All Documentation Reviewed</span>
+              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-sage" /> Documentation Details Listed</span>
             </div>
           </div>
         </div>
@@ -139,8 +139,8 @@ export default function LandPage() {
                       <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20Uyo%20flyer%20(%E2%82%A62.5M%20spread)%20and%20want%20to%20secure%20my%20plot." target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-amber-500 text-charcoal px-5 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all">
                         <Phone className="w-4 h-4" /> Chat on WhatsApp
                       </a>
-                      <Link href="/properties/premium-plots-new-coastal-highway-uyo" className="inline-flex items-center justify-center gap-2 bg-white text-forest px-5 py-2.5 rounded-xl font-bold border border-white hover:bg-ivory transition-all">
-                        View Plot <ArrowRight className="w-4 h-4" />
+                      <Link href="/properties?type=land&area=Uyo" className="inline-flex items-center justify-center gap-2 bg-white text-forest px-5 py-2.5 rounded-xl font-bold border border-white hover:bg-ivory transition-all">
+                        Find Uyo Land <ArrowRight className="w-4 h-4" />
                       </Link>
                     </div>
                   </div>
@@ -173,12 +173,12 @@ export default function LandPage() {
               { city: 'Asaba', state: 'Delta', focus: 'Growing Market', region: 'South-South' },
               { city: 'Enugu', state: 'Enugu', focus: 'Southeast Hub', region: 'Southeast' },
             ].map((loc) => (
-              <div key={loc.city} className="bg-ivory border border-gray-100 rounded-xl p-4 text-center hover:shadow-lg hover:border-forest/30 transition-all cursor-pointer group">
+              <Link key={loc.city} href={`/properties?type=land&state=${encodeURIComponent(loc.state === 'Abuja FCT' ? 'FCT' : loc.state)}`} className="bg-ivory border border-gray-100 rounded-xl p-4 text-center hover:shadow-lg hover:border-forest/30 transition-all group" aria-label={`Find land in ${loc.city}`}>
                 <MapPin className="w-5 h-5 text-forest mx-auto mb-2 group-hover:scale-110 transition-transform" />
                 <h3 className="font-bold text-charcoal text-sm">{loc.city}</h3>
                 <p className="text-[10px] text-gray-500 mt-0.5">{loc.state}</p>
                 <p className="text-[10px] text-sage font-semibold mt-1">{loc.focus}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

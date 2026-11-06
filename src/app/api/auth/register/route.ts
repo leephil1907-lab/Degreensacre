@@ -1,70 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { isEmail, isPhone } from '@/lib/validation';
+import { requestRateLimit } from '@/lib/rate-limit';
 
-// POST /api/auth/register — Server-side signup with profile creation
-// Falls back to regular signUp if service role key is not available
+const ACCOUNT_TYPES = ['buyer', 'seller', 'agent'] as const;
+
+function text(value: unknown, maxLength: number) {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+}
+
+// Registration uses the public Supabase Auth API. The handle_new_user database
+// trigger creates the profile and strips privileged account metadata.
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'auth-register', 5, 60 * 60 * 1000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.', success: false },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
-    const { email, password, first_name, last_name, phone, state, account_type } = body;
+    const email = text(body?.email, 254).toLowerCase();
+    const password = typeof body?.password === 'string' ? body.password : '';
+    const firstName = text(body?.first_name, 80);
+    const lastName = text(body?.last_name, 80);
+    const phone = text(body?.phone, 30);
+    const state = text(body?.state, 80);
+    const requestedType = text(body?.account_type, 20) || 'buyer';
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required', success: false }, { status: 400 });
+    if (!isEmail(email)) {
+      return NextResponse.json({ error: 'Enter a valid email address.', success: false }, { status: 400 });
     }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters', success: false }, { status: 400 });
+    if (password.length < 8 || password.length > 128) {
+      return NextResponse.json({ error: 'Password must be between 8 and 128 characters.', success: false }, { status: 400 });
+    }
+    if (!firstName || !lastName) {
+      return NextResponse.json({ error: 'First name and last name are required.', success: false }, { status: 400 });
+    }
+    if (phone && !isPhone(phone)) {
+      return NextResponse.json({ error: 'Enter a valid phone number or leave it blank.', success: false }, { status: 400 });
+    }
+    if (!ACCOUNT_TYPES.includes(requestedType as typeof ACCOUNT_TYPES[number])) {
+      return NextResponse.json({ error: 'Choose a valid account type.', success: false }, { status: 400 });
     }
 
     const supabase = await createServerSupabaseClient();
-
-    // Use regular signUp (works with anon key)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { first_name, last_name, phone, state, account_type },
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone || null,
+          state: state || null,
+          account_type: requestedType,
+        },
       },
     });
 
     if (authError) {
-      if (authError.message.includes('already registered')) {
-        return NextResponse.json({ error: 'An account with this email already exists', success: false }, { status: 409 });
+      console.error('Supabase registration failed:', authError.message);
+      if (/already registered|already exists/i.test(authError.message)) {
+        return NextResponse.json({ error: 'An account with this email already exists.', success: false }, { status: 409 });
       }
-      throw authError;
+      if (authError.status && authError.status >= 400 && authError.status < 500) {
+        return NextResponse.json({ error: authError.message, success: false }, { status: authError.status });
+      }
+      return NextResponse.json({ error: 'We could not create your account right now. Please try again shortly.', success: false }, { status: 502 });
     }
 
     if (!authData.user) {
-      return NextResponse.json({ error: 'Failed to create user', success: false }, { status: 500 });
-    }
-
-    // Try to create profile (may fail if RLS blocks it — SQL trigger handles it as backup)
-    try {
-      await supabase.from('profiles').insert({
-        id: authData.user.id,
-        email,
-        first_name: first_name || '',
-        last_name: last_name || '',
-        phone: phone || null,
-        state: state || null,
-        country: 'Nigeria',
-        account_type: account_type || 'buyer',
-        is_admin: false,
-        is_verified: false,
-      });
-    } catch (profileError) {
-      console.error('Profile creation error (trigger will handle):', profileError);
+      return NextResponse.json({ error: 'We could not create your account right now. Please try again shortly.', success: false }, { status: 502 });
     }
 
     return NextResponse.json({
       success: true,
       user: { id: authData.user.id, email: authData.user.email },
-    });
-  } catch (error: any) {
+      requires_email_confirmation: !authData.session,
+    }, { status: 201 });
+  } catch (error) {
     console.error('POST /api/auth/register error:', error);
     return NextResponse.json(
-      { error: error.message || 'Registration failed', success: false },
-      { status: 500 }
+      { error: 'We could not create your account right now. Please try again shortly.', success: false },
+      { status: 500 },
     );
   }
 }

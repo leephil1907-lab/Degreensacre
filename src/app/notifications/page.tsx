@@ -79,7 +79,7 @@ export default function NotificationsPage() {
 
         <div className="space-y-3">
           {filtered.length === 0 ? <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center"><p className="text-gray-500">No {filter === 'all' ? '' : filter} notifications.</p><Link href="/properties" className="mt-3 inline-block text-sm font-semibold text-forest hover:underline">Browse properties →</Link></div> : filtered.map((notification) => {
-            const target = typeof notification.data?.url === 'string' && notification.data.url.startsWith('/') ? notification.data.url : null;
+            const target = typeof notification.data?.url === 'string' && notification.data.url.startsWith('/') && !notification.data.url.startsWith('//') ? notification.data.url : null;
             const propertyNotification = /property|viewing|price|listing|inspection/i.test(notification.type);
             return <article key={notification.id} className={`flex gap-4 rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md ${notification.is_read ? 'border-gray-100 opacity-80' : 'border-forest/20'}`}>
               <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${propertyNotification ? 'bg-forest text-white' : 'bg-sage/20 text-forest'}`}>{propertyNotification ? '⌂' : '◎'}</div>

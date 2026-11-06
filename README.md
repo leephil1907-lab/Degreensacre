@@ -40,10 +40,13 @@ cp .env.example .env.local
    - Create a [Supabase project](https://supabase.com) and get your URL and keys
    - Create a [Resend account](https://resend.com) and get your API key
 
-5. Run the database schema:
-   - Go to your Supabase SQL Editor
-   - Run the contents of `supabase-schema.sql`
-   - Create storage buckets: `property-images`, `property-documents`, `verification-documents`, `profile-avatars`
+5. Install the database schema and production policies:
+   - Back up the target database and rehearse on staging first.
+   - In the Supabase SQL Editor, run `supabase-schema.sql` on a fresh database.
+   - Then run `supabase-production-cms-migration.sql` on both fresh and existing databases.
+   - Verify the `property-images` bucket and owner/admin storage policies created by the migration.
+
+   The production migration does not insert listings, reviews, agents, agencies, developments or articles. New properties start at `pending_review`; public reviews start at `pending`; CMS publication switches start off.
 
 6. Start the development server
 ```bash
@@ -79,7 +82,7 @@ src/
 │   └── contact/      # Contact page
 ├── components/       # Reusable UI components
 ├── contexts/         # React contexts (Auth)
-├── data/             # Static data (for development)
+├── data/             # Static location content (no listing/article fixtures)
 ├── emails/           # Email templates
 └── lib/              # Utility libraries
     ├── supabase.ts         # Supabase client (browser)
@@ -105,21 +108,27 @@ src/
 - Multiple sorting options
 - Grid and list view modes
 - Property save/bookmark functionality
-- Property comparison (up to 4)
+- Available-only Supabase inventory with no static sample-listing fallback
+- Coordinate-aware maps and honest address-search results
 
 ### Property Submission
-- 9-step wizard with autosave
-- Image and document upload to Supabase Storage
-- Draft/submitted/published workflow
-- Nigerian property verification standards
+- Guided owner/agent submission with server-side account checks
+- Address search, explicit coordinate selection and image upload
+- Every owner/agent submission enters `pending_review`; owners cannot publish or verify their own listings
+- Edits to live owner listings return to moderation
 
 ### Admin Portal
 - Dashboard with real-time analytics
-- Property moderation (approve/reject/verify/suspend)
-- User management
-- CRM for enquiries
-- Viewing request management
-- Activity and audit logs
+- Explicit property publication, verification and moderation
+- CRUD for developments, agencies, agents, insights/articles and reviews
+- User management, enquiry/contact inboxes and global site settings
+- Viewing request management and audit records
+
+### Content Integrity
+- No demo property, testimonial, article, agency or development seed files
+- No hardcoded fallback listings or editorial articles when Supabase is empty
+- Test-only browser fixtures are isolated under `frontend-audit/` and never write to Supabase
+- Experimental AI, blockchain and academy components are not part of the production site
 
 ### Nigerian Real Estate Focus
 - C of O, Governor's Consent, Deed of Assignment support
@@ -134,7 +143,7 @@ See `.env.example` for all required and optional environment variables.
 
 ## Database Schema
 
-The complete database schema is in `supabase-schema.sql` with 20+ tables:
+The base schema is in `supabase-schema.sql`; `supabase-production-cms-migration.sql` completes the production CMS, moderation and RLS policies:
 - `profiles` - User profiles extending Supabase auth
 - `properties` - Property listings with full metadata
 - `property_images` - Property photo gallery

@@ -155,20 +155,24 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   }, [slug]);
 
   const toggleSave = async () => {
+    if (!property) return;
     if (!user) {
-      router.push('/auth/login');
+      router.push(`/signin?redirect=${encodeURIComponent(`/properties/${property.slug}`)}`);
       return;
     }
+    setShareFeedback('');
     try {
       const response = await fetch('/api/saved', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ property_id: property?.id }),
+        body: JSON.stringify({ property_id: property.id }),
       });
       const data = await response.json();
-      setIsSaved(data.saved);
-    } catch (error) {
-      console.error('Failed to toggle save:', error);
+      if (!response.ok) throw new Error(data.error || 'Saved properties could not be updated.');
+      setIsSaved(Boolean(data.saved));
+      setShareFeedback(data.saved ? 'Property saved to your account.' : 'Property removed from your saved list.');
+    } catch (saveError) {
+      setShareFeedback(saveError instanceof Error ? saveError.message : 'Saved properties could not be updated. Please try again.');
     }
   };
 
@@ -181,7 +185,10 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...enquiryForm,
+          buyer_name: enquiryForm.name,
+          buyer_email: enquiryForm.email,
+          buyer_phone: enquiryForm.phone,
+          message: enquiryForm.message,
           property_id: property?.id,
           source: 'property_detail',
         }),
@@ -224,7 +231,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const startAgentConversation = async () => {
     if (!property) return;
     if (!user) {
-      router.push(`/auth/login?redirect=/properties/${property.slug}`);
+      router.push(`/signin?redirect=${encodeURIComponent(`/properties/${property.slug}`)}`);
       return;
     }
     const recipientId = agentProfile?.user_id || property.agents?.user_id;
@@ -682,7 +689,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div className="flex-1">
                   <p className="font-medium text-charcoal-900 flex items-center gap-1">
                     {agentProfile?.name || property.agents?.name || 'De-Greenacres Properties'}
-                    {(agentProfile?.is_verified || !agentProfile) && <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><CheckCircle className="w-3 h-3" /> Verified</span>}
+                    {agentProfile?.is_verified && <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><CheckCircle className="w-3 h-3" /> Verified</span>}
                   </p>
                   <p className="text-sm text-charcoal-500">
                     {agencyProfile?.name ? (
@@ -690,7 +697,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     ) : agentProfile?.agencies?.name ? (
                       <Link href={`/agencies/${agentProfile.agencies.slug}`} className="text-forest hover:underline font-semibold">{agentProfile.agencies.name}</Link>
                     ) : (
-                      'Verified Agent'
+                      'Property enquiry team'
                     )}
                   </p>
                   {agentProfile && (

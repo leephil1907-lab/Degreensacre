@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { getProperties } from '@/lib/db-helpers';
-import { sanitize, sanitizeForDb, PROPERTY_TYPES, NIGERIAN_STATES } from '@/lib/validation';
+import { sanitizeForDb, PROPERTY_TYPES, NIGERIAN_STATES } from '@/lib/validation';
 import { parseCoordinates } from '@/lib/property';
 
 // GET /api/properties - List properties with filtering
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (searchParams.get('maxPrice')) filters.maxPrice = parseInt(searchParams.get('maxPrice')!);
     if (searchParams.get('bedrooms')) filters.bedrooms = parseInt(searchParams.get('bedrooms')!);
     if (searchParams.get('featured')) filters.featured = searchParams.get('featured') === 'true';
-    if (searchParams.get('status')) filters.status = searchParams.get('status');
+    if (searchParams.get('propertyType')) filters.propertyType = searchParams.get('propertyType')!.slice(0, 80);
     if (searchParams.get('limit')) filters.limit = parseInt(searchParams.get('limit')!);
     if (searchParams.get('offset')) filters.offset = parseInt(searchParams.get('offset')!);
     if (searchParams.get('orderBy')) filters.orderBy = searchParams.get('orderBy');
