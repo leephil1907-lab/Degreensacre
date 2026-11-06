@@ -1,142 +1,133 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Users,
-  Home,
-  Mail,
-  MessageSquare,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  Shield,
-  BarChart3,
-  Star,
+  LayoutDashboard, Building2, Users, MessageSquare, Settings, Inbox,
+  LogOut, Bell, Menu, X, ChevronRight, Mail, Star, Loader2,
+  BookOpenText, ExternalLink,
 } from 'lucide-react';
+import Logo from '@/components/Logo';
+import { useAuth } from '@/contexts/AuthContext';
 
-const navItems = [
-  { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Users', href: '/admin/users', icon: Users },
-  { label: 'Properties', href: '/admin/properties', icon: Home },
-  { label: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
-  { label: 'Compose Email', href: '/admin/compose', icon: Mail },
-  { label: 'Reviews', href: '/admin/reviews', icon: Star },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
+const navigation = [
+  { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Properties', href: '/admin/properties', icon: Building2 },
+  { name: 'Content Manager', href: '/admin/content', icon: BookOpenText },
+  { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
+  { name: 'Contact Inbox', href: '/admin/messages', icon: Inbox },
+  { name: 'Reviews', href: '/admin/content/reviews', icon: Star },
+  { name: 'Email Center', href: '/admin/compose', icon: Mail },
+  { name: 'Site Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, loading, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [authError, setAuthError] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) router.replace('/signin?redirect=/admin/dashboard');
+    else if (!loading && user && profile && !profile.is_admin) router.replace('/dashboard');
+  }, [user, profile, loading, router]);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    setAuthError('');
+    try {
+      await signOut();
+      router.replace('/signin');
+    } catch {
+      setAuthError('Sign out failed. Please try again.');
+      setSigningOut(false);
+    }
+  };
+
+  if (loading || !user || !profile) {
+    return <div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-forest" /></div>;
+  }
+
+  if (!profile.is_admin) {
+    return <div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-forest" /></div>;
+  }
+
+  const isActive = (href: string) => pathname === href || (href !== '/admin/dashboard' && pathname.startsWith(`${href}/`));
+  const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Administrator';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="flex min-h-screen bg-[#f6f7f4]">
+      {sidebarOpen && <button aria-label="Close navigation" className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-charcoal text-white transform transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-800">
-          <img src="/logo-icon.png" alt="Logo" className="w-8 h-8 mr-3" />
-          <div>
-            <div className="font-display text-sm">Admin Panel</div>
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">De-Greenacres</div>
-          </div>
-          <button
-            className="lg:hidden ml-auto text-gray-400 hover:text-white"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </button>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-charcoal text-white transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-5">
+          <Logo size="sm" href="/admin/dashboard" />
+          <button className="rounded-lg p-2 hover:bg-white/10 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Nav */}
-        <nav className="p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
+        <nav aria-label="Administration" className="flex-1 space-y-1 overflow-y-auto p-4">
+          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Manage website</p>
+          {navigation.map((item) => {
+            const active = item.href === '/admin/content'
+              ? pathname.startsWith('/admin/content') && pathname !== '/admin/content/reviews'
+              : isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                  isActive
-                    ? 'bg-forest text-white font-semibold'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                }`}
+                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${active ? 'bg-forest text-white shadow-lg' : 'text-white/65 hover:bg-white/5 hover:text-white'}`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm">{item.label}</span>
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span>{item.name}</span>
+                {active && <ChevronRight className="ml-auto h-4 w-4" />}
               </Link>
             );
           })}
         </nav>
 
-        {/* Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
-          <div className="flex items-center gap-3 px-4 py-3 text-gray-400">
-            <Shield className="w-5 h-5" />
-            <div>
-              <div className="text-xs font-semibold text-white">Super Admin</div>
-              <div className="text-[10px]">Full Access</div>
+        <div className="shrink-0 border-t border-white/10 p-4">
+          <Link href="/" target="_blank" className="mb-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white">
+            <ExternalLink className="h-4 w-4" /> View public website
+          </Link>
+          <div className="mb-2 flex items-center gap-3 rounded-xl bg-white/5 p-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-forest text-sm font-bold">{displayName.charAt(0).toUpperCase()}</div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{displayName}</p>
+              <p className="truncate text-xs text-white/45">{profile.email || user.email}</p>
             </div>
           </div>
-          <button className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white transition-colors w-full rounded-lg hover:bg-gray-800">
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm">Sign Out</span>
+          {authError && <p role="alert" className="mb-2 px-2 text-xs text-red-300">{authError}</p>}
+          <button onClick={() => void handleSignOut()} disabled={signingOut} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/60 transition hover:bg-white/5 hover:text-white disabled:opacity-50">
+            {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />} {signingOut ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30">
-          <button
-            className="lg:hidden text-gray-600 hover:text-charcoal"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <div className="hidden lg:block">
-            <h1 className="font-display text-lg text-charcoal">
-              {navItems.find((n) => n.href === pathname)?.label || 'Admin'}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button className="relative text-gray-500 hover:text-charcoal transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-magenta text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
-            </button>
-            <div className="w-8 h-8 bg-forest rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">SA</span>
+      <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-gray-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <button className="rounded-xl p-2 text-gray-600 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open admin navigation"><Menu className="h-6 w-6" /></button>
+            <div>
+              <h1 className="font-display text-xl text-charcoal sm:text-2xl">Administration</h1>
+              <p className="hidden text-xs text-gray-400 sm:block">Content and operations control centre</p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/messages" className="relative rounded-xl p-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-forest" title="Open contact inbox" aria-label="Open contact inbox">
+              <Bell className="h-5 w-5" />
+            </Link>
+            <Link href="/admin/settings" className={`rounded-xl p-2.5 transition ${pathname === '/admin/settings' ? 'bg-forest/10 text-forest' : 'text-gray-500 hover:bg-gray-100 hover:text-forest'}`} title="Site settings" aria-label="Site settings">
+              <Settings className="h-5 w-5" />
+            </Link>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

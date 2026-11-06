@@ -2,55 +2,46 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { properties as staticProperties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
+import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 
 export default function LandPage() {
-  const [dbLand, setDbLand] = useState<any[] | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
+  const [dbLand, setDbLand] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         const res = await fetch('/api/properties?type=land&status=available&limit=50');
-        if (res.ok) {
-          const j = await res.json();
-          const list = (j.properties || []).map((p: any) => ({
-            ...p,
-            // normalize DB shape to static Property shape for this page
-            images: p.images || p.property_images?.map((x: any) => x.url) || [],
-            sqm: p.sqm || p.land_size || 0,
-            landSize: p.land_size || p.sqm || 0,
-            verified: p.verification_status === 'verified',
-            verificationStatus: p.verification_status,
-            availablePlots: p.available_plots ?? p.availablePlots ?? null,
-            totalPlots: p.total_plots ?? p.totalPlots ?? null,
-            paymentPlan: p.payment_plan || p.paymentPlan || null,
-            developmentStatus: p.development_status || p.developmentStatus || null,
-            pricePerSqm: p.price ? Math.round(p.price / (p.sqm || p.land_size || 1)) : undefined,
-            region: p.region || null,
-          }));
-          if (!cancelled) {
-            if (list.length > 0) {
-              setDbLand(list);
-              setIsDemo(false);
-            } else {
-              setDbLand(null);
-              setIsDemo(true);
-            }
-          }
-        } else if (!cancelled) setIsDemo(true);
-      } catch { if (!cancelled) setIsDemo(true); }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Land listings could not be loaded.');
+        const list = (data.properties || []).map((p: any) => ({
+          ...p,
+          images: p.images || p.property_images?.map((x: any) => x.url) || [],
+          sqm: p.sqm || p.land_size || 0,
+          landSize: p.land_size || p.sqm || 0,
+          verified: p.verification_status === 'verified',
+          verificationStatus: p.verification_status,
+          availablePlots: p.available_plots ?? p.availablePlots ?? null,
+          totalPlots: p.total_plots ?? p.totalPlots ?? null,
+          paymentPlan: p.payment_plan || p.paymentPlan || null,
+          developmentStatus: p.development_status || p.developmentStatus || null,
+          pricePerSqm: p.price ? Math.round(p.price / (p.sqm || p.land_size || 1)) : undefined,
+          region: p.region || null,
+        }));
+        if (!cancelled) setDbLand(list);
+      } catch (error) {
+        if (!cancelled) setLoadError(error instanceof Error ? error.message : 'Land listings could not be loaded.');
+      }
     }
-    load();
+    void load();
     return () => { cancelled = true; };
   }, []);
 
-  const landProperties = dbLand && dbLand.length > 0 ? dbLand : staticProperties.filter(p => p.type === 'land');
-  const showDemoBanner = isDemo;
+  const landProperties = dbLand;
   const regions = [...new Set(landProperties.map((p: any) => p.region).filter(Boolean))];
   const [activeRegion, setActiveRegion] = useState('all');
   const [expandedMap, setExpandedMap] = useState<string | null>(null);
@@ -203,6 +194,7 @@ export default function LandPage() {
               <p className="text-gray-600">Each listing shows full details: documentation, plot size, landmarks, map location and available plots.</p>
             </div>
           </ScrollReveal>
+          {loadError && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{loadError}</div>}
           {/* Region filter tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
             <button
@@ -243,7 +235,7 @@ export default function LandPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                       {/* Image */}
                       <div className="relative h-64 lg:h-auto overflow-hidden">
-                        <img src={(property.images?.[0] || (property as any).property_images?.[0]?.url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200')} alt={property.title} className="w-full h-full object-cover" />
+                        <img src={getPropertyImage(property)} alt={property.title} className={`w-full h-full ${getPropertyImage(property) === '/property-placeholder.svg' ? 'object-contain bg-forest-50 p-10' : 'object-cover'}`} />
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-amber-600 text-white px-3 py-1 text-xs font-bold rounded-md">LAND</span>
                           {property.verified && (
@@ -275,7 +267,7 @@ export default function LandPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-display text-3xl text-forest">₦{(property.price / 1000000).toFixed(0)}M</p>
+                            <p className="font-display text-3xl text-forest">{formatPropertyPrice(property.price, property.price_period)}</p>
                             {property.pricePerSqm && (
                               <p className="text-xs text-gray-500">₦{property.pricePerSqm.toLocaleString()}/sqm</p>
                             )}
@@ -368,7 +360,7 @@ export default function LandPage() {
                         {/* CTAs */}
                         <div className="flex flex-col sm:flex-row gap-3">
                           <a
-                            href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in the land: ${property.title} at ${property.area}, ${property.state} (${property.sqm || property.landSize}sqm, ₦${(property.price / 1000000).toFixed(0)}M). ${property.availablePlots ? property.availablePlots + ' plots available.' : ''} Please send me more details.`)}`}
+                            href={`https://wa.me/2347041754800?text=${encodeURIComponent(`Hello De-Greenacres, I'm interested in the land: ${property.title} at ${property.area}, ${property.state} (${property.sqm || property.landSize}sqm, ${formatPropertyPrice(property.price, property.price_period)}). ${property.availablePlots ? property.availablePlots + ' plots available.' : ''} Please send me more details.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-green-500 transition-all"

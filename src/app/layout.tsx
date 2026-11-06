@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { DM_Serif_Display, Manrope } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -13,7 +13,18 @@ import { GoogleAdsenseScript } from "@/components/GoogleAdsense";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSiteUrl } from "@/lib/site";
 
-const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-dm-serif",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   themeColor: [
@@ -79,7 +90,7 @@ export const metadata: Metadata = {
     url: getSiteUrl(),
     siteName: "De-Greenacres Properties",
     title: "De-Greenacres Properties Limited | Nigeria's Premium Real Estate Platform",
-    description: "Discover premium properties across Nigeria with verified listings, AI-powered search, investment calculators, and expert guidance. Your trusted partner in real estate.",
+      description: "Explore property for sale and rent across Nigeria, arrange inspections and get practical guidance from De-Greenacres Properties Limited.",
     images: [
       {
         url: "/og-image.jpg",
@@ -92,7 +103,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "De-Greenacres Properties Limited | Nigeria's Premium Real Estate Platform",
-    description: "Discover premium properties across Nigeria with verified listings, AI-powered search, and investment tools.",
+      description: "Explore property for sale and rent across Nigeria, arrange inspections and get practical guidance from De-Greenacres Properties Limited.",
     images: ["/og-image.jpg"],
     creator: "@degreensacre",
   },
@@ -156,7 +167,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "RealEstateAgent",
               "name": "De-Greenacres Properties Limited",
-              "description": "Nigeria's trusted property intelligence platform for premium real estate",
+              "description": "Nigerian real estate services for property search, inspections and buyer guidance",
               "url": getSiteUrl(),
               "logo": `${getSiteUrl()}/logo-icon.png`,
               "image": `${getSiteUrl()}/og-image.jpg`,
@@ -166,11 +177,6 @@ export default function RootLayout({
                 "@type": "PostalAddress",
                 "addressCountry": "NG",
                 "addressRegion": "Lagos"
-              },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": "6.5244",
-                "longitude": "3.3792"
               },
               "areaServed": [
                 { "@type": "State", "name": "Lagos" },
@@ -185,7 +191,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${manrope.variable} ${dmSerif.variable} font-sans`}>
         <Providers>
           <Header />
           <main className="min-h-screen">

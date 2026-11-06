@@ -1,111 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { requestRateLimit } from '@/lib/rate-limit';
+import { isEmail, isUuid, sanitizeForDb } from '@/lib/validation';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-function getSupabase() {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-// GET /api/reviews — Get approved reviews (public)
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabase();
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-
-    const { data: reviews, error, count } = await supabase
+    const requestedLimit = Number.parseInt(new URL(request.url).searchParams.get('limit') || '20', 10);
+    const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 50) : 20;
+    const supabase = await createServerSupabaseClient();
+    const { data, error, count } = await supabase
       .from('reviews')
-      .select('*', { count: 'exact' })
+      .select('id, name, rating, title, message, location, created_at, is_verified_buyer', { count: 'exact' })
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) throw error;
-
-    return NextResponse.json({ reviews: reviews || [], count: count || 0, success: true });
-  } catch (error: any) {
+    return NextResponse.json({ reviews: data || [], count: count || 0, success: true });
+  } catch (error) {
     console.error('GET /api/reviews error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch reviews', success: false }, { status: 500 });
+    return NextResponse.json({ error: 'Reviews are temporarily unavailable.', success: false }, { status: 500 });
   }
 }
 
-// POST /api/reviews — Submit a new review (public, auto-approved)
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'review', 3);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many review submissions. Please try again later.', success: false },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
-    const { name, email, rating, title, message, location, property_id } = body;
+    const name = String(body.name || '').trim();
+    const email = String(body.email || '').trim().toLowerCase();
+    const message = String(body.message || '').trim();
+    const rating = Number(body.rating);
+    const title = String(body.title || '').trim();
+    const location = String(body.location || '').trim();
 
-    if (!name || !email || !rating || !message) {
-      return NextResponse.json({ error: 'Name, email, rating and message are required', success: false }, { status: 400 });
-    }
+    if (name.length < 2 || name.length > 120) return NextResponse.json({ error: 'Enter a valid name.', success: false }, { status: 400 });
+    if (!isEmail(email) || email.length > 320) return NextResponse.json({ error: 'Enter a valid email address.', success: false }, { status: 400 });
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return NextResponse.json({ error: 'Rating must be between 1 and 5.', success: false }, { status: 400 });
+    if (message.length < 20 || message.length > 5000) return NextResponse.json({ error: 'Review must contain 20–5,000 characters.', success: false }, { status: 400 });
+    if (title.length > 200 || location.length > 200) return NextResponse.json({ error: 'Review title or location is too long.', success: false }, { status: 400 });
+    if (body.property_id && !isUuid(String(body.property_id))) return NextResponse.json({ error: 'Invalid property reference.', success: false }, { status: 400 });
 
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json({ error: 'Rating must be between 1 and 5', success: false }, { status: 400 });
-    }
-
-    if (message.length < 20) {
-      return NextResponse.json({ error: 'Please write at least 20 characters in your review', success: false }, { status: 400 });
-    }
-
-    const supabase = getSupabase();
-
-    const { data: review, error } = await supabase
-      .from('reviews')
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        rating: parseInt(rating),
-        title: title?.trim() || null,
-        message: message.trim(),
-        location: location?.trim() || null,
-        property_id: property_id || null,
-        status: 'approved',
-      })
-      .select()
-      .single();
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase.from('reviews').insert({
+      name: sanitizeForDb(name),
+      email,
+      rating,
+      title: title ? sanitizeForDb(title) : null,
+      message: sanitizeForDb(message),
+      location: location ? sanitizeForDb(location) : null,
+      property_id: body.property_id || null,
+      status: 'pending',
+      is_verified_buyer: false,
+    });
 
     if (error) {
-      console.error('Review insert error:', error);
-      throw error;
+      console.error('Review persistence error:', error);
+      return NextResponse.json({ error: 'Your review could not be saved. Please try again later.', success: false }, { status: 500 });
     }
 
-    // Log notification in contact_messages
-    const stars = '⭐'.repeat(parseInt(rating));
-    try {
-      await supabase.from('contact_messages').insert({
-        buyer_name: 'Review Notification',
-        buyer_email: email.trim().toLowerCase(),
-        message: `NEW REVIEW: ${stars} ${title || ''} — From ${name.trim()} — "${message.trim().substring(0, 150)}..."`,
-        status: 'new',
-      });
-    } catch (notifError) {
-      console.error('Notification log error:', notifError);
-    }
-
-    // Build WhatsApp notification URL
-    const whatsappMessage = encodeURIComponent(
-      `🆕 New Review on De-Greenacres!\n\n` +
-      `${stars} (${rating}/5)\n` +
-      `From: ${name.trim()}\n` +
-      `Email: ${email.trim()}\n` +
-      `Location: ${location?.trim() || 'Not provided'}\n` +
-      `Title: ${title?.trim() || 'No title'}\n` +
-      `Review: ${message.trim().substring(0, 200)}${message.trim().length > 200 ? '...' : ''}\n\n` +
-      `View in Admin → Reviews`
-    );
-
-    return NextResponse.json({
-      review,
-      success: true,
-      message: 'Thank you! Your review is now live on the website.',
-      whatsapp_notify: `https://wa.me/2347041754800?text=${whatsappMessage}`,
-    });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, message: 'Thank you. Your review has been received and will appear after moderation.' }, { status: 201 });
+  } catch (error) {
     console.error('POST /api/reviews error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to submit review', success: false }, { status: 500 });
+    return NextResponse.json({ error: 'Invalid review submission.', success: false }, { status: 400 });
   }
 }

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@300;400;500;600;700;800&display=swap');
-
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
@@ -20,8 +18,9 @@
   --color-magenta: #283818;
   --color-magenta-light: #384828;
   
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  --font-serif: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  --font-sans: var(--font-manrope), 'Manrope', system-ui, sans-serif;
 }
 
 @layer base {
@@ -52,7 +51,11 @@
   body {
     background-color: var(--ivory);
     color: var(--charcoal);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-manrope), 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-x: clip;
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.3s, color 0.3s;
@@ -65,10 +68,41 @@
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 8rem;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p, li, address {
+    overflow-wrap: break-word;
+  }
+
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, select {
+    cursor: pointer;
+  }
+
+  button:disabled, select:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 3px solid #98a868;
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: #dce2d6;
+    color: #14200c;
   }
 }
 
@@ -190,8 +224,8 @@
   }
 
   .section-padding {
-    padding-top: 5rem;
-    padding-bottom: 5rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
 
   @media (min-width: 768px) {
@@ -238,15 +272,62 @@
 
 /* Premium Typography */
 .font-display {
-  font-family: 'DM Serif Display', serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
 }
 .font-body {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
 }
-
 
 /* Mobile polish: preserve the premium palette while reducing hero text density. */
 @media (max-width: 639px) {
   .heading-primary { line-height: 1.04; letter-spacing: -0.035em; }
   h1 { text-wrap: balance; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Leaflet controls inherit the site's typography without changing map attribution. */
+.leaflet-container {
+  font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+  background: #eef0e8;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(20, 32, 12, 0.16);
+}
+.leaflet-popup-content {
+  margin: 0.75rem;
+  line-height: 1.45;
+}
+.location-marker {
+  background: transparent;
+  border: 0;
+}
+.location-marker__pin {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid #fffff8;
+  border-radius: 9999px 9999px 9999px 0;
+  background: #283818;
+  color: #fffff8;
+  box-shadow: 0 5px 14px rgba(20, 32, 12, 0.28);
+  transform: rotate(-45deg);
+}
+.location-marker__pin > span {
+  transform: rotate(45deg);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.location-marker--search .location-marker__pin { background: #b45309; }
+.location-marker--selected .location-marker__pin { background: #607038; scale: 1.12; }

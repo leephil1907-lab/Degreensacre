@@ -306,7 +306,7 @@ export default function JointVentureMarketplace() {
           <div className="bg-gradient-to-br from-forest to-forest-600 rounded-2xl p-8 text-white text-center">
             <h3 className="text-2xl font-bold mb-4">Have a Joint Venture Opportunity?</h3>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              Whether you're a land owner, developer, or investor, post your opportunity and connect with qualified partners.
+              Whether you&apos;re a land owner, developer, or investor, post your opportunity and connect with qualified partners.
             </p>
             <a
               href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I%20have%20a%20joint%20venture%20opportunity%20I'd%20like%20to%20post%20on%20your%20marketplace."

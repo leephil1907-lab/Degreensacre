@@ -1,443 +1,195 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase-server';
-import { logAdminActivity, createNotification } from '@/lib/db-helpers';
-import { sanitizeForDb } from '@/lib/validation';
+import { databaseError, requireAdminApi } from '@/lib/admin-auth';
+import { isUuid, NIGERIAN_STATES, PROPERTY_TYPES } from '@/lib/validation';
 
-// GET /api/admin/properties - Get all properties for moderation
-export async function GET(request: NextRequest) {
+export const runtime = 'nodejs';
+
+const STATUSES = ['draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn'];
+const VERIFICATION_STATUSES = ['verified', 'pending', 'unverified'];
+const NUMERIC_FIELDS = ['price', 'bedrooms', 'bathrooms', 'toilets', 'parking', 'sqm'] as const;
+const OPTIONAL_NUMERIC_FIELDS = ['land_size'] as const;
+const BOOLEAN_FIELDS = ['furnished', 'serviced', 'gated_estate', 'featured', 'negotiable'] as const;
+const STRING_FIELDS = ['slug', 'title', 'description', 'property_type', 'type', 'price_period', 'address', 'area', 'lga', 'city', 'state', 'documentation', 'status', 'verification_status'] as const;
+const ARRAY_FIELDS = ['features', 'amenities', 'images'] as const;
+
+function slugify(value: unknown) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 180);
+}
+
+function validImage(value: string) {
+  if (value.startsWith('/')) return true;
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', success: false },
-        { status: 401 }
-      );
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
-      return NextResponse.json(
-        { error: 'Forbidden', success: false },
-        { status: 403 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const adminSupabase = await createAdminSupabaseClient();
-
-    let query = adminSupabase
-      .from('properties')
-      .select('*, property_images(url, display_order), profiles(first_name, last_name, email)', { count: 'exact' });
-
-    if (searchParams.get('status')) {
-      query = query.eq('status', searchParams.get('status')!);
-    }
-    if (searchParams.get('verification_status')) {
-      query = query.eq('verification_status', searchParams.get('verification_status')!);
-    }
-    if (searchParams.get('search')) {
-      query = query.ilike('title', `%${searchParams.get('search')}%`);
-    }
-
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
-
-    query = query
-      .order('date_added', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    const { data: properties, error, count } = await query;
-
-    if (error) throw error;
-
-    const propertyIds = (properties || []).map((property: any) => property.id);
-    let notesByProperty: Record<string, any[]> = {};
-    if (propertyIds.length > 0) {
-      const { data: notes, error: notesError } = await adminSupabase
-        .from('property_moderation_notes')
-        .select('id, property_id, admin_id, note, created_at')
-        .in('property_id', propertyIds)
-        .order('created_at', { ascending: false });
-      if (notesError) throw notesError;
-      for (const note of notes || []) {
-        if (!notesByProperty[note.property_id]) notesByProperty[note.property_id] = [];
-        notesByProperty[note.property_id].push(note);
-      }
-    }
-    const propertiesWithNotes = (properties || []).map((property: any) => ({
-      ...property,
-      moderation_notes: notesByProperty[property.id] || [],
-    }));
-
-    return NextResponse.json({
-      properties: propertiesWithNotes,
-      count,
-      page,
-      totalPages: Math.ceil((count || 0) / limit),
-      success: true,
-    });
-  } catch (error) {
-    console.error('GET /api/admin/properties error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch properties', success: false },
-      { status: 500 }
-    );
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
   }
 }
 
-// PATCH /api/admin/properties - Moderate property (approve, reject, publish, verify)
-export async function PATCH(request: NextRequest) {
+function propertyPayload(body: Record<string, unknown>) {
+  const payload: Record<string, unknown> = {};
+
+  for (const field of STRING_FIELDS) {
+    if (body[field] === undefined) continue;
+    payload[field] = typeof body[field] === 'string' ? String(body[field]).trim().replace(/\0/g, '') : '';
+  }
+  payload.slug = slugify(payload.slug || payload.title);
+
+  for (const field of NUMERIC_FIELDS) {
+    if (body[field] === undefined) continue;
+    const value = Number(body[field]);
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${field.replaceAll('_', ' ')} must be a non-negative whole number.`);
+    payload[field] = value;
+  }
+  for (const field of OPTIONAL_NUMERIC_FIELDS) {
+    if (body[field] === undefined) continue;
+    if (body[field] === '' || body[field] === null) {
+      payload[field] = null;
+      continue;
+    }
+    const value = Number(body[field]);
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${field.replaceAll('_', ' ')} must be a non-negative whole number.`);
+    payload[field] = value;
+  }
+  for (const field of BOOLEAN_FIELDS) {
+    if (body[field] === undefined) continue;
+    if (typeof body[field] !== 'boolean') throw new Error(`${field.replaceAll('_', ' ')} must be true or false.`);
+    payload[field] = body[field];
+  }
+  for (const field of ARRAY_FIELDS) {
+    if (body[field] === undefined) continue;
+    const source = Array.isArray(body[field]) ? body[field] : String(body[field] || '').split(/\r?\n/);
+    const values = source.map((value) => String(value).trim().replace(/\0/g, '')).filter(Boolean).slice(0, field === 'images' ? 20 : 50);
+    if (values.some((value) => value.length > 2048)) throw new Error(`${field} contains an entry that is too long.`);
+    if (field === 'images' && values.some((value) => !validImage(value))) throw new Error('Every property image must be an absolute http(s) URL or a local /path.');
+    payload[field] = values;
+  }
+
+  if (body.coordinates !== undefined) {
+    if (body.coordinates === null || body.coordinates === '') {
+      payload.coordinates = null;
+    } else {
+      if (typeof body.coordinates !== 'object' || Array.isArray(body.coordinates)) throw new Error('Coordinates must contain a valid latitude and longitude.');
+      const source = body.coordinates as Record<string, unknown>;
+      const lat = Number(source.lat);
+      const lng = Number(source.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) throw new Error('Enter a valid latitude (-90 to 90) and longitude (-180 to 180).');
+      payload.coordinates = { lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) };
+    }
+  }
+
+  const required = ['slug', 'title', 'description', 'property_type', 'type', 'area', 'state', 'status', 'verification_status'];
+  for (const field of required) {
+    if (!payload[field]) throw new Error(`${field.replaceAll('_', ' ')} is required.`);
+  }
+  if (String(payload.title).length < 5 || String(payload.title).length > 200) throw new Error('Title must be between 5 and 200 characters.');
+  if (String(payload.description).length < 50) throw new Error('Description must contain at least 50 characters.');
+  if (!PROPERTY_TYPES.includes(payload.type as typeof PROPERTY_TYPES[number])) throw new Error('Select a valid listing type.');
+  if (!NIGERIAN_STATES.includes(payload.state as string)) throw new Error('Select a valid Nigerian state.');
+  if (!STATUSES.includes(payload.status as string)) throw new Error('Select a valid publication status.');
+  if (!VERIFICATION_STATUSES.includes(payload.verification_status as string)) throw new Error('Select a valid verification status.');
+  if (!Number(payload.price) || Number(payload.price) <= 0) throw new Error('Price must be greater than zero.');
+
+  return payload;
+}
+
+async function bodyJson(request: NextRequest) {
+  const body = await request.json();
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('A JSON object is required.');
+  return body as Record<string, unknown>;
+}
+
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
+  const status = new URL(request.url).searchParams.get('status');
+  let query = auth.context.supabase.from('properties').select('*').order('date_added', { ascending: false }).limit(500);
+  if (status && STATUSES.includes(status)) query = query.eq('status', status);
+
+  const { data, error } = await query;
+  if (error) return databaseError(error, 'Properties could not be loaded.');
+  return NextResponse.json({ properties: data || [], success: true });
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const payload = propertyPayload(await bodyJson(request));
+    payload.owner_id = auth.context.user.id;
+    payload.sample = false;
+    const { data, error } = await auth.context.supabase.from('properties').insert(payload).select('*').single();
+    if (error) return databaseError(error, 'The property could not be created.');
+    return NextResponse.json({ property: data, success: true }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid property.', success: false }, { status: 400 });
+  }
+}
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', success: false },
-        { status: 401 }
-      );
+export async function PUT(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
+  try {
+    const body = await bodyJson(request);
+    const id = new URL(request.url).searchParams.get('id') || String(body.id || '');
+    if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const payload = propertyPayload(body);
+    payload.updated_at = new Date().toISOString();
+    const { data, error } = await auth.context.supabase.from('properties').update(payload).eq('id', id).select('*').single();
+    if (error) return databaseError(error, 'The property could not be updated.');
+    return NextResponse.json({ property: data, success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid property.', success: false }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
+  try {
+    const body = await bodyJson(request);
+    const id = String(body.property_id || body.id || '');
+    if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (body.status !== undefined) {
+      if (!STATUSES.includes(String(body.status))) throw new Error('Invalid publication status.');
+      updates.status = body.status;
     }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
-      return NextResponse.json(
-        { error: 'Forbidden', success: false },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    
-    if (!body.property_id) {
-      return NextResponse.json(
-        { error: 'Property ID is required', success: false },
-        { status: 400 }
-      );
-    }
-
-    const adminSupabase = await createAdminSupabaseClient();
-    const updates: any = {};
-    let moderationNote: string | null = null;
-
-    // Approval is only allowed once at least one property photo is present.
-    // This prevents an apparently published listing from appearing incomplete.
-    if (body.action === 'approve') {
-      const { count: imageCount, error: imageCountError } = await adminSupabase
-        .from('property_images')
-        .select('id', { count: 'exact', head: true })
-        .eq('property_id', body.property_id);
-
-      if (imageCountError) throw imageCountError;
-      if (!imageCount || imageCount < 1) {
-        return NextResponse.json({
-          error: 'Add at least one property image before approving this listing.',
-          success: false,
-        }, { status: 400 });
-      }
-    }
-
-    switch (body.action) {
-      case 'approve':
-        updates.status = 'available';
-        updates.published_at = new Date().toISOString();
-        break;
-      case 'reject':
-        updates.status = 'draft';
-        moderationNote = typeof body.note === 'string' && body.note.trim()
-          ? body.note.trim()
-          : 'Returned for corrections by an administrator.';
-        if (moderationNote.length > 5000) {
-          return NextResponse.json({ error: 'Note must be 5,000 characters or fewer', success: false }, { status: 400 });
-        }
-        break;
-      case 'withdraw':
-        updates.status = 'withdrawn';
-        break;
-      case 'verify':
-        updates.verification_status = 'verified';
-        break;
-      case 'unverify':
-        updates.verification_status = 'unverified';
-        break;
-      case 'feature':
-        updates.featured = !body.current_featured;
-        break;
-      case 'update_status':
-        if (['draft', 'pending_review', 'available', 'sold', 'rented', 'withdrawn'].includes(body.new_status)) {
-          updates.status = body.new_status;
-          if (body.new_status === 'available') updates.published_at = new Date().toISOString();
-        } else {
-          return NextResponse.json({ error: 'Invalid property status', success: false }, { status: 400 });
-        }
-        break;
-      case 'add_note':
-        if (typeof body.note !== 'string' || !body.note.trim()) {
-          return NextResponse.json({ error: 'A non-empty note is required', success: false }, { status: 400 });
-        }
-        if (body.note.length > 5000) {
-          return NextResponse.json({ error: 'Note must be 5,000 characters or fewer', success: false }, { status: 400 });
-        }
-        moderationNote = body.note.trim();
-        break;
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action', success: false },
-          { status: 400 }
-        );
-    }
-
-    if (body.verification_status) {
+    if (body.verification_status !== undefined) {
+      if (!VERIFICATION_STATUSES.includes(String(body.verification_status))) throw new Error('Invalid verification status.');
       updates.verification_status = body.verification_status;
     }
-
-    const { data: property, error } = await adminSupabase
-      .from('properties')
-      .update(updates)
-      .eq('id', body.property_id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    if (moderationNote) {
-      const { error: noteError } = await adminSupabase
-        .from('property_moderation_notes')
-        .insert({
-          property_id: body.property_id,
-          admin_id: user.id,
-          note: sanitizeForDb(moderationNote),
-        });
-      if (noteError) throw noteError;
+    if (body.featured !== undefined) {
+      if (typeof body.featured !== 'boolean') throw new Error('Featured must be true or false.');
+      updates.featured = body.featured;
     }
+    if (Object.keys(updates).length === 1) throw new Error('No supported moderation changes were supplied.');
 
-    // Notify the listing owner when moderation changes the listing's outcome.
-    // Notification delivery must not roll back an otherwise successful moderation.
-    if ((body.action === 'approve' || body.action === 'reject') && property?.owner_id) {
-      const approved = body.action === 'approve';
-      const title = approved ? 'Property listing approved' : 'Property listing needs changes';
-      const message = approved
-        ? `Your property listing "${property.title}" has been approved and is now visible on the marketplace.`
-        : `Your property listing "${property.title}" needs changes before it can be published. Reviewer note: ${moderationNote || 'Please review the listing details and resubmit.'}`;
-      try {
-        await createNotification({
-          user_id: property.owner_id,
-          type: approved ? 'property_approved' : 'property_changes_requested',
-          title,
-          message: sanitizeForDb(message),
-          data: { property_id: property.id, status: property.status },
-        });
-      } catch (notificationError) {
-        console.error('Property moderation notification failed:', notificationError);
-      }
-    }
-
-    // Log admin activity
-    await logAdminActivity({
-      admin_id: user.id,
-      action: body.action,
-      entity_type: 'property',
-      entity_id: body.property_id,
-      details: { new_status: property?.status, note: body.note },
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown',
-    });
-
-    return NextResponse.json({ property, success: true });
+    const { data, error } = await auth.context.supabase.from('properties').update(updates).eq('id', id).select('*').single();
+    if (error) return databaseError(error, 'The property could not be moderated.');
+    return NextResponse.json({ property: data, success: true });
   } catch (error) {
-    console.error('PATCH /api/admin/properties error:', error);
-    return NextResponse.json(
-      { error: 'Failed to moderate property', success: false },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid moderation request.', success: false }, { status: 400 });
   }
 }
 
-// POST /api/admin/properties - Create a new property
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
-
-    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
-    if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden', success: false }, { status: 403 });
-
-    const body = await request.json();
-    const adminSupabase = await createAdminSupabaseClient();
-
-    // Generate slug from title
-    const slug = body.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 80) + '-' + Date.now().toString(36);
-
-    const propertyData = {
-      slug,
-      title: sanitizeForDb(body.title),
-      description: sanitizeForDb(body.description || ''),
-      property_type: sanitizeForDb(body.property_type || 'House'),
-      type: body.type || 'sale',
-      price: body.price || 0,
-      price_period: body.price_period || null,
-      bedrooms: body.bedrooms || 0,
-      bathrooms: body.bathrooms || 0,
-      sqm: body.sqm || 0,
-      parking: body.parking || 0,
-      state: sanitizeForDb(body.state || ''),
-      area: sanitizeForDb(body.area || ''),
-      lga: sanitizeForDb(body.lga || ''),
-      address: sanitizeForDb(body.address || ''),
-      features: body.features || [],
-      documentation: sanitizeForDb(body.documentation || ''),
-      status: body.status || 'available',
-      verification_status: 'pending',
-      featured: body.featured || false,
-      owner_id: user.id,
-      date_added: new Date().toISOString(),
-    };
-
-    const { data: property, error } = await adminSupabase
-      .from('properties')
-      .insert(propertyData)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Add images if provided
-    if (body.image_urls && body.image_urls.length > 0 && property) {
-      const images = body.image_urls.map((url: string, index: number) => ({
-        property_id: property.id,
-        url: sanitizeForDb(url),
-        display_order: index,
-        is_primary: index === 0,
-      }));
-      await adminSupabase.from('property_images').insert(images);
-    }
-
-    await logAdminActivity({
-      admin_id: user.id,
-      action: 'create',
-      entity_type: 'property',
-      entity_id: property?.id || '',
-      details: { title: body.title },
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown',
-    });
-
-    return NextResponse.json({ property, success: true });
-  } catch (error: any) {
-    console.error('POST /api/admin/properties error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create property', success: false }, { status: 500 });
-  }
-}
-
-// PUT /api/admin/properties - Update a property
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
-
-    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
-    if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden', success: false }, { status: 403 });
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Property ID required', success: false }, { status: 400 });
-
-    const body = await request.json();
-    const adminSupabase = await createAdminSupabaseClient();
-
-    const updates: any = {
-      title: sanitizeForDb(body.title),
-      description: sanitizeForDb(body.description || ''),
-      property_type: sanitizeForDb(body.property_type || 'House'),
-      type: body.type || 'sale',
-      price: body.price || 0,
-      price_period: body.price_period || null,
-      bedrooms: body.bedrooms || 0,
-      bathrooms: body.bathrooms || 0,
-      sqm: body.sqm || 0,
-      parking: body.parking || 0,
-      state: sanitizeForDb(body.state || ''),
-      area: sanitizeForDb(body.area || ''),
-      lga: sanitizeForDb(body.lga || ''),
-      address: sanitizeForDb(body.address || ''),
-      features: body.features || [],
-      documentation: sanitizeForDb(body.documentation || ''),
-      status: body.status || 'available',
-      featured: body.featured || false,
-    };
-
-    const { data: property, error } = await adminSupabase
-      .from('properties')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Update images if provided
-    if (body.image_urls !== undefined) {
-      await adminSupabase.from('property_images').delete().eq('property_id', id);
-      if (body.image_urls && body.image_urls.length > 0) {
-        const images = body.image_urls.map((url: string, index: number) => ({
-          property_id: id,
-          url: sanitizeForDb(url),
-          display_order: index,
-          is_primary: index === 0,
-        }));
-        await adminSupabase.from('property_images').insert(images);
-      }
-    }
-
-    return NextResponse.json({ property, success: true });
-  } catch (error: any) {
-    console.error('PUT /api/admin/properties error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to update property', success: false }, { status: 500 });
-  }
-}
-
-// DELETE /api/admin/properties - Delete a property
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
-
-    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
-    if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden', success: false }, { status: 403 });
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Property ID required', success: false }, { status: 400 });
-
-    const adminSupabase = await createAdminSupabaseClient();
-
-    // Delete images first
-    await adminSupabase.from('property_images').delete().eq('property_id', id);
-    // Delete property
-    const { error } = await adminSupabase.from('properties').delete().eq('id', id);
-    if (error) throw error;
-
+    const body = await request.json().catch(() => ({}));
+    const id = new URL(request.url).searchParams.get('id') || String(body.id || '');
+    if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const { data, error } = await auth.context.supabase.from('properties').delete().eq('id', id).select('id');
+    if (error) return databaseError(error, 'The property could not be deleted.');
+    if (!data?.length) return NextResponse.json({ error: 'Property not found.', success: false }, { status: 404 });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('DELETE /api/admin/properties error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to delete property', success: false }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid delete request.', success: false }, { status: 400 });
   }
 }

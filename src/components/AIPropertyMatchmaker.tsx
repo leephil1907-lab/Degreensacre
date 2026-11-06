@@ -134,7 +134,7 @@ export default function AIPropertyMatchmaker() {
           {/* Step 1: Budget */}
           {step === 1 && (
             <div className="bg-white rounded-2xl shadow-soft p-8">
-              <h3 className="text-2xl font-bold text-charcoal mb-6">What's your budget range?</h3>
+              <h3 className="text-2xl font-bold text-charcoal mb-6">What&apos;s your budget range?</h3>
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-charcoal mb-2">

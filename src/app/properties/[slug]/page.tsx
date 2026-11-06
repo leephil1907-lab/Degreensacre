@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import PropertyDetailClient from './PropertyDetailClient';
+import { getSiteUrl } from '@/lib/site';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -9,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = getSiteUrl();
     const response = await fetch(`${baseUrl}/api/properties/${slug}`, {
       next: { revalidate: 300 },
     });

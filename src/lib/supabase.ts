@@ -1,31 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Browser-safe Supabase client (for client components)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
-
-// Server-side Supabase client (for API routes and server components)
-export const createServerClient = () => {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-    },
-  });
-};
-
-// Admin client — uses anon key (RLS handles security)
-export const createAdminClient = () => {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-};
+// The browser client shares the same cookie-backed session used by Server
+// Components, Route Handlers and the auth proxy. Using the plain supabase-js
+// local-storage client here would leave server-side admin/API requests signed
+// out even after a successful browser login.
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);

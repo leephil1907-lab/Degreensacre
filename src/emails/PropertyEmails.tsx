@@ -26,7 +26,7 @@ export function ListingSubmittedEmail({ name, propertyTitle, propertyLocation }:
       <div style={{ backgroundColor: '#f0f7eb', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#283818', lineHeight: '1.6' }}>
           <strong>What happens next?</strong><br />
-          Our team will review your listing within 24-48 hours. You'll receive an email once it's approved and live on the platform.
+          Our team will review your listing within 24-48 hours. You&apos;ll receive an email once it&apos;s approved and live on the platform.
         </div>
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
@@ -67,7 +67,7 @@ export function ListingApprovedEmail({ name, propertyTitle, propertyUrl }: Listi
         </td></tr>
       </table>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
-        You'll receive notifications when buyers show interest in your property.
+        You&apos;ll receive notifications when buyers show interest in your property.
       </p>
     </EmailLayout>
   );
@@ -85,7 +85,7 @@ export function ListingRejectedEmail({ name, propertyTitle, reason }: ListingRej
       </h1>
       <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.6', marginBottom: '24px' }}>Hi {name},</p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        Your listing <strong>{propertyTitle}</strong> could not be approved at this time. Here's why:
+        Your listing <strong>{propertyTitle}</strong> could not be approved at this time. Here&apos;s why:
       </p>
       <div style={{ backgroundColor: '#fff8e1', borderLeft: '4px solid #f59e0b', padding: '16px', borderRadius: '0 8px 8px 0', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#92400e', lineHeight: '1.6' }}>

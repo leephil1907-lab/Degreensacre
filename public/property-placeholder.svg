@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title description">
+  <title id="title">Property image not yet available</title>
+  <desc id="description">A neutral placeholder shown until the property owner uploads a listing photograph.</desc>
+  <rect width="800" height="600" fill="#f0f0e8"/>
+  <path d="M260 320 400 210l140 110v150H260Z" fill="none" stroke="#788848" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M365 470V365h70v105M230 490h340" fill="none" stroke="#788848" stroke-width="18" stroke-linecap="round"/>
+  <text x="400" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#4b5544">Property photo coming soon</text>
+</svg>

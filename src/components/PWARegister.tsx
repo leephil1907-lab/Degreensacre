@@ -46,8 +46,9 @@ export default function PWARegister() {
       setDeferredPrompt(null);
     });
 
-    // Register service worker with update handling
-    if ('serviceWorker' in navigator) {
+    // Register the offline worker only in production. Development requests must
+    // always reach Next.js directly so hot reload and API tests are reliable.
+    if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;

@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-gray-600 mb-8"><strong>Last updated:</strong> January 2026</p>
 
           <h2>1. Introduction</h2>
-          <p>De-Greenacres Properties Limited (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website degreensacre.vercel.app or use our services.</p>
+          <p>De-Greenacres Properties Limited (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
           <p>We are registered with the Corporate Affairs Commission (CAC) of Nigeria under RC: 1856064.</p>
 
           <h2>2. Information We Collect</h2>

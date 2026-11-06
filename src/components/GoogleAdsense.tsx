@@ -8,7 +8,7 @@ const ADSENSE_ID = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || process.env.NEXT
 /**
  * Loads the Google AdSense script once per page.
  * Place this once in layout.tsx.
- * Requires NEXT_PUBLIC_GOOGLE_ADSENSE_ID=ca-pub-XXXXXXXXXXXXXXXX set in Vercel env.
+ * Requires NEXT_PUBLIC_GOOGLE_ADSENSE_ID=ca-pub-XXXXXXXXXXXXXXXX in Render Environment.
  */
 export function GoogleAdsenseScript() {
   if (!ADSENSE_ID || ADSENSE_ID.includes('XXXX') || ADSENSE_ID.includes('placeholder')) {
@@ -41,43 +41,24 @@ interface AdUnitProps {
   label?: string;
 }
 
-export default function AdSense({ slot, format = 'auto', className = '', style, testMode, label }: AdUnitProps) {
+export default function AdSense({ slot, format = 'auto', className = '', style, testMode }: AdUnitProps) {
   const isPlaceholder = !ADSENSE_ID || ADSENSE_ID.includes('XXXX') || ADSENSE_ID.includes('placeholder');
   const adSlot = slot || undefined;
 
   useEffect(() => {
     if (isPlaceholder) return;
     try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      const adsWindow = window as Window & { adsbygoogle?: Record<string, unknown>[] };
+      (adsWindow.adsbygoogle ||= []).push({});
     } catch (e) {
       // AdSense may throw if already filled or if consent not given — safe to ignore in dev
       console.debug('[AdSense] push error (expected in dev without real slot):', e);
     }
   }, [isPlaceholder, slot]);
 
-  // Respect cookie consent — don't show personalized ads if declined
-  // (AdSense will fallback to non-personalized if consent signal missing)
-  // We keep placeholder visible so layout doesn't shift.
-
-  if (isPlaceholder && process.env.NODE_ENV === "production") return null;
-
-  if (isPlaceholder) {
-    // Development-only placeholder — never expose setup instructions to site visitors
-    return (
-      <div
-        className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-amber-200 bg-amber-50/50 py-8 px-4 text-center ${className}`}
-        style={style}
-      >
-        <p className="text-[11px] font-bold tracking-[0.16em] text-amber-600 uppercase">Advertisement</p>
-        <p className="text-sm font-semibold text-charcoal mt-1">{label || 'Google AdSense will appear here'}</p>
-        <p className="text-xs text-gray-500 mt-1 max-w-md">
-          Set <code className="bg-white px-1 py-0.5 rounded border text-[11px]">NEXT_PUBLIC_GOOGLE_ADSENSE_ID=ca-pub-XXXXXXXXXXXXXXXX</code> in Vercel env, then redeploy. Use your real publisher ID from adsense.google.com → Sites → Get code.
-        </p>
-        {adSlot && <p className="text-[11px] text-gray-400 mt-2">Slot: {adSlot} • Format: {format}</p>}
-      </div>
-    );
-  }
+  // An unconfigured ad unit must not expose setup instructions or leave a
+  // large placeholder in the public experience (including local previews).
+  if (isPlaceholder) return null;
 
   // Real AdSense unit
   // Note: For auto ads to work, you also enable Auto ads in AdSense dashboard; manual units below are additional.

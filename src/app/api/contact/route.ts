@@ -1,70 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { sanitizeForDb, isEmail, isPhone } from '@/lib/validation';
+import { requestRateLimit } from '@/lib/rate-limit';
+import { isEmail, isPhone, sanitizeForDb } from '@/lib/validation';
 
-// POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'contact', 5);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many messages from this connection. Please try again later.', success: false },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
-    
-    // Validate input
     const errors: string[] = [];
-    
-    if (!body.name || body.name.trim().length < 2) {
-      errors.push('Name is required');
-    }
-    if (!body.email || !isEmail(body.email)) {
-      errors.push('Valid email is required');
-    }
-    if (!body.subject || body.subject.trim().length < 3) {
-      errors.push('Subject is required');
-    }
-    if (!body.message || body.message.trim().length < 10) {
-      errors.push('Message is required (min 10 characters)');
-    }
-    if (body.phone && !isPhone(body.phone)) {
-      errors.push('Invalid phone number');
-    }
-
-    if (errors.length > 0) {
-      return NextResponse.json(
-        { error: errors.join('. '), success: false },
-        { status: 400 }
-      );
-    }
+    if (!body.name || String(body.name).trim().length < 2 || String(body.name).length > 120) errors.push('Enter a valid name');
+    if (!body.email || !isEmail(String(body.email))) errors.push('Enter a valid email address');
+    if (!body.subject || String(body.subject).trim().length < 3 || String(body.subject).length > 200) errors.push('Enter a valid subject');
+    if (!body.message || String(body.message).trim().length < 10 || String(body.message).length > 5000) errors.push('Message must contain 10–5,000 characters');
+    if (body.phone && !isPhone(String(body.phone))) errors.push('Enter a valid phone number');
+    if (errors.length) return NextResponse.json({ error: errors.join('. '), success: false }, { status: 400 });
 
     const supabase = await createServerSupabaseClient();
-
-    const { data, error } = await supabase
-      .from('contact_requests')
-      .insert({
-        name: sanitizeForDb(body.name),
-        email: body.email.toLowerCase().trim(),
-        phone: body.phone ? sanitizeForDb(body.phone) : null,
-        subject: sanitizeForDb(body.subject),
-        message: sanitizeForDb(body.message),
-        status: 'new',
-      })
-      .select()
-      .single();
+    const { error } = await supabase.from('contact_messages').insert({
+      name: sanitizeForDb(String(body.name)),
+      email: String(body.email).toLowerCase().trim(),
+      phone: body.phone ? sanitizeForDb(String(body.phone)) : null,
+      subject: sanitizeForDb(String(body.subject)),
+      message: sanitizeForDb(String(body.message)),
+      status: 'new',
+    });
 
     if (error) {
-      console.error('Contact form error:', error);
-      return NextResponse.json(
-        { error: 'Failed to submit contact form', success: false },
-        { status: 500 }
-      );
+      console.error('Contact form persistence error:', error);
+      return NextResponse.json({ error: 'Your message could not be saved. Please try again or contact us by phone.', success: false }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Your message has been sent. We will get back to you shortly.',
-    });
+    return NextResponse.json({ success: true, message: 'Your message has been received. Our team will respond using the contact details you provided.' }, { status: 201 });
   } catch (error) {
     console.error('POST /api/contact error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', success: false },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Invalid contact request.', success: false }, { status: 400 });
   }
 }

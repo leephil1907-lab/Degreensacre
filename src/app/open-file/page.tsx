@@ -3,24 +3,29 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+interface LaunchQueueLike {
+  setConsumer: (
+    consumer: (launchParams: { files: FileSystemFileHandle[] }) => void,
+  ) => void;
+}
+
 export default function OpenFilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [message, setMessage] = useState('No file opened yet. Use your OS to open a PDF or image with De-Greenacres.');
 
   useEffect(() => {
     // Modern file_handlers via launchQueue
-    // @ts-ignore
-    if ('launchQueue' in window && 'setConsumer' in (window as any).launchQueue) {
-      // @ts-ignore
-      (window as any).launchQueue.setConsumer((launchParams: any) => {
-        if (launchParams.files && launchParams.files.length) {
-          Promise.all(launchParams.files.map((f: FileSystemFileHandle) => f.getFile())).then((fileList: File[]) => {
-            setFiles(fileList);
-            setMessage(`Opened ${fileList.length} file(s) with De-Greenacres`);
-          });
-        }
-      });
-    }
+    const launchWindow = window as Window & { launchQueue?: LaunchQueueLike };
+    launchWindow.launchQueue?.setConsumer(({ files: handles }) => {
+      if (!handles.length) return;
+
+      void Promise.all(handles.map((handle) => handle.getFile()))
+        .then((fileList) => {
+          setFiles(fileList);
+          setMessage(`Opened ${fileList.length} file(s) with De-Greenacres`);
+        })
+        .catch(() => setMessage('The selected file could not be opened.'));
+    });
     // Fallback: check ?file param for share_target
     const params = new URLSearchParams(window.location.search);
     if (params.get('file')) setMessage('File parameter detected');

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   MessageSquare, Send, Loader2, User, ArrowLeft,
-  Search, MoreVertical, Paperclip, Smile
+  Search
 } from 'lucide-react';
 
 interface Message {
@@ -28,7 +28,7 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { user, profile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -37,66 +37,46 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    fetchConversations();
-    subscribeToMessages();
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation);
-      subscribeToConversation(selectedConversation);
-    }
-  }, [selectedConversation]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const fetchConversations = async () => {
+    setError('');
     try {
-      const response = await fetch('/api/messages');
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data.conversations || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch conversations:', error);
+      const response = await fetch('/api/messages', { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Conversations could not be loaded.');
+      setConversations(data.conversations || []);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Conversations could not be loaded.');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchMessages = async (conversationId: string) => {
+    setError('');
     try {
-      const { data, error } = await supabase
+      const { data, error: loadError } = await supabase
         .from('messages')
         .select('*, sender:sender_id(first_name, last_name, avatar_url)')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
-
-      if (error) throw error;
+      if (loadError) throw loadError;
       setMessages(data || []);
 
-      // Mark messages as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('conversation_id', conversationId)
-        .eq('recipient_id', user?.id)
-        .eq('is_read', false);
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
+      const response = await fetch('/api/messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversationId }),
+      });
+      if (response.ok) setConversations((current) => current.map((conversation) => conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Messages could not be loaded.');
     }
   };
 
@@ -114,7 +94,7 @@ export default function MessagesPage() {
         (payload) => {
           fetchConversations();
           if (selectedConversation && payload.new.conversation_id === selectedConversation) {
-            setMessages((prev) => [...prev, payload.new as Message]);
+            setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
           }
         }
       )
@@ -137,7 +117,7 @@ export default function MessagesPage() {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
         }
       )
       .subscribe();
@@ -147,14 +127,37 @@ export default function MessagesPage() {
     };
   };
 
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    void fetchConversations();
+    return subscribeToMessages();
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    void fetchMessages(selectedConversation);
+    return subscribeToConversation(selectedConversation);
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!newMessage.trim() || !selectedConversation || sending) return;
 
     setSending(true);
     try {
       const conversation = conversations.find(c => c.id === selectedConversation);
-      if (!conversation) return;
+      if (!conversation) throw new Error('Select a conversation before sending.');
 
       const response = await fetch('/api/messages', {
         method: 'POST',
@@ -166,13 +169,13 @@ export default function MessagesPage() {
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setMessages((prev) => [...prev, data.message]);
-        setNewMessage('');
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Message could not be sent.');
+      setMessages((prev) => prev.some((message) => message.id === data.message.id) ? prev : [...prev, data.message]);
+      setNewMessage('');
+      void fetchConversations();
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'Message could not be sent.');
     } finally {
       setSending(false);
     }
@@ -195,6 +198,8 @@ export default function MessagesPage() {
     }
   };
 
+  const visibleConversations = conversations.filter((conversation) => `${conversation.otherUser.first_name} ${conversation.otherUser.last_name} ${conversation.lastMessage.content}`.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -206,7 +211,8 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-ivory-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
+        {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}<button onClick={() => void fetchConversations()} className="ml-3 font-bold underline">Retry</button></div>}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
           <div className="flex h-full">
             {/* Conversations List */}
             <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-96 flex-col border-r border-charcoal-200`}>
@@ -227,14 +233,14 @@ export default function MessagesPage() {
 
               {/* Conversations */}
               <div className="flex-1 overflow-y-auto">
-                {conversations.length === 0 ? (
+                {visibleConversations.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-8">
                     <MessageSquare className="w-16 h-16 text-charcoal-300 mb-4" />
                     <p className="text-charcoal-600 font-medium mb-2">No conversations yet</p>
                     <p className="text-sm text-charcoal-400">Start a conversation by sending a message</p>
                   </div>
                 ) : (
-                  conversations.map((conversation) => (
+                  visibleConversations.map((conversation) => (
                     <button
                       key={conversation.id}
                       onClick={() => setSelectedConversation(conversation.id)}
@@ -298,11 +304,8 @@ export default function MessagesPage() {
                         {conversations.find(c => c.id === selectedConversation)?.otherUser.first_name}{' '}
                         {conversations.find(c => c.id === selectedConversation)?.otherUser.last_name}
                       </p>
-                      <p className="text-sm text-charcoal-500">Online</p>
+                      <p className="text-sm text-charcoal-500">Private conversation</p>
                     </div>
-                    <button className="p-2 hover:bg-charcoal-50 rounded-lg">
-                      <MoreVertical className="w-5 h-5 text-charcoal-600" />
-                    </button>
                   </div>
 
                   {/* Messages */}
@@ -336,12 +339,6 @@ export default function MessagesPage() {
                   {/* Message Input */}
                   <form onSubmit={sendMessage} className="p-4 border-t border-charcoal-200">
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="p-2 hover:bg-charcoal-50 rounded-lg text-charcoal-600"
-                      >
-                        <Paperclip className="w-5 h-5" />
-                      </button>
                       <input
                         type="text"
                         value={newMessage}
@@ -349,12 +346,6 @@ export default function MessagesPage() {
                         placeholder="Type a message..."
                         className="flex-1 px-4 py-2 border border-charcoal-200 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
-                      <button
-                        type="button"
-                        className="p-2 hover:bg-charcoal-50 rounded-lg text-charcoal-600"
-                      >
-                        <Smile className="w-5 h-5" />
-                      </button>
                       <button
                         type="submit"
                         disabled={!newMessage.trim() || sending}

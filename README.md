@@ -14,7 +14,7 @@ A production-grade real estate marketplace for Nigerian properties, built with N
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22 (see `.nvmrc`)
 - A Supabase project
 - A Resend account (for transactional emails)
 
@@ -28,7 +28,7 @@ cd Degreensacre
 
 2. Install dependencies
 ```bash
-npm install
+npm ci
 ```
 
 3. Copy environment variables
@@ -42,7 +42,7 @@ cp .env.example .env.local
 
 5. Run the database schema:
    - Go to your Supabase SQL Editor
-   - Run the contents of `supabase-schema-v2.sql`
+   - Run the contents of `supabase-schema.sql`
    - Create storage buckets: `property-images`, `property-documents`, `verification-documents`, `profile-avatars`
 
 6. Start the development server
@@ -51,6 +51,18 @@ npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
+
+## Production Deployment (Render)
+
+The production target is a **Render Node.js web service**, configured by the included `render.yaml` Blueprint.
+
+```bash
+# Render runs these commands automatically
+npm ci && npm run build
+npm run start
+```
+
+The service includes an HTTP health check at `/api/health`. Follow **[RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** for Blueprint setup, environment variables, Supabase authentication URLs, smoke tests, and custom-domain cutover.
 
 ## Project Structure
 
@@ -122,7 +134,7 @@ See `.env.example` for all required and optional environment variables.
 
 ## Database Schema
 
-The complete database schema is in `supabase-schema-v2.sql` with 20+ tables:
+The complete database schema is in `supabase-schema.sql` with 20+ tables:
 - `profiles` - User profiles extending Supabase auth
 - `properties` - Property listings with full metadata
 - `property_images` - Property photo gallery

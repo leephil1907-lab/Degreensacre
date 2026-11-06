@@ -16,7 +16,7 @@ export default function WelcomeVerificationEmail({ name, verificationUrl }: Prop
         Hi {name},
       </p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        Thank you for joining Nigeria's trusted property intelligence platform. To get started, please verify your email address by clicking the button below:
+        Thank you for joining Nigeria&apos;s trusted property intelligence platform. To get started, please verify your email address by clicking the button below:
       </p>
 
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '24px' }}>
@@ -36,7 +36,7 @@ export default function WelcomeVerificationEmail({ name, verificationUrl }: Prop
 
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
         <div style={{ fontSize: '14px', fontWeight: 600, color: '#2D5016', marginBottom: '8px' }}>
-          What's next?
+          What&apos;s next?
         </div>
         <div style={{ fontSize: '13px', color: '#555555', lineHeight: '1.8' }}>
           ✓ Browse verified properties across Nigeria<br />
@@ -47,7 +47,7 @@ export default function WelcomeVerificationEmail({ name, verificationUrl }: Prop
       </div>
 
       <p style={{ fontSize: '13px', color: '#999999', lineHeight: '1.6' }}>
-        This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.
+        This link expires in 24 hours. If you didn&apos;t create this account, you can safely ignore this email.
       </p>
     </EmailLayout>
   );

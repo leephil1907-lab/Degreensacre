@@ -1,0 +1,44 @@
+# Render Blueprint for the full-stack Next.js application.
+# Secret and environment-specific values are entered in the Render dashboard.
+services:
+  - type: web
+    name: degreensacre
+    runtime: node
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+        generateValue: true
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "De-Greenacres <noreply@degreenacresproperties.com>"
+      - key: EMAIL_REPLY_TO
+        value: info@degreenacresproperties.com
+      - key: NEXT_PUBLIC_WHATSAPP_NUMBER
+        value: "2348065019971"
+      - key: NEXT_PUBLIC_WHATSAPP_MESSAGE
+        value: "Hello, I'm interested in your properties on De-Greenacres."
+      - key: NEXT_PUBLIC_COMPANY_NAME
+        value: De-Greenacres Properties Limited
+      - key: NEXT_PUBLIC_RC_NUMBER
+        value: "1856064"
+      - key: NEXT_PUBLIC_PHONE
+        value: "+2348065019971"
+      - key: NEXT_PUBLIC_EMAIL
+        value: info@degreenacresproperties.com
+      - key: NEXT_PUBLIC_ALT_EMAIL
+        value: de_greenacrespropertiesltd@yahoo.com

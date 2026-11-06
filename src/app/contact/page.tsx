@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import ScrollReveal from '@/components/ScrollReveal';
 import { MapPin, CheckCircle } from 'lucide-react';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { whatsappLink } from '@/lib/site-settings';
 
 export default function ContactPage() {
+  const { settings } = useSiteSettings();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,19 +17,28 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setSubmitted(true);
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-    
-    setTimeout(() => setSubmitted(false), 5000);
+    setSubmitted(false);
+    setSubmitError('');
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Your message could not be sent.');
+      setSubmitted(true);
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Your message could not be sent. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -61,13 +73,9 @@ export default function ContactPage() {
                     <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
                       <MapPin className="w-6 h-6 text-magenta" />
                     </div>
-                    <h3 className="text-xl font-bold text-charcoal">Lagos Office</h3>
+                    <h3 className="text-xl font-bold text-charcoal">Primary Office</h3>
                   </div>
-                  <p className="text-gray-600 mb-2">
-                    5 Borogade Crescent,<br />
-                    Off Okengbero Street,<br />
-                    New Oko-Oba, Lagos State
-                  </p>
+                  <p className="text-gray-600 mb-2">{settings.address}</p>
                 </div>
               </ScrollReveal>
 
@@ -140,7 +148,7 @@ export default function ContactPage() {
                     <p className="text-sm">Name: <b>De-Greenacres Properties Limited</b></p>
                     <p className="text-sm font-mono">Account Number: <b className="text-forest">0126877218</b></p>
                   </div>
-                  <a href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20saw%20the%20Coastal%20Highway%20flyer%20(%E2%82%A62.5M%20spread)%20and%20want%20payment%20confirmation." target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 bg-amber-500 text-charcoal px-4 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all text-sm">
+                  <a href={whatsappLink(settings, "Hello De-Greenacres, I saw the Coastal Highway flyer (₦2.5M spread) and want payment confirmation.")} target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 bg-amber-500 text-charcoal px-4 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all text-sm">
                     Confirm Payment on WhatsApp
                   </a>
                   <p className="text-[11px] text-white/60 mt-3 text-center">Premium Plots · New Coastal Highway To Calabar — Uyo · RC: 1856064</p>
@@ -155,7 +163,7 @@ export default function ContactPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* WhatsApp — icon only, no number exposed */}
                   <a
-                    href="https://wa.me/2347041754800?text=Hello%20De-Greenacres%2C%20I%20would%20like%20to%20enquire%20about%20your%20properties."
+                    href={whatsappLink(settings, "Hello De-Greenacres, I would like to enquire about your properties.")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center gap-2 p-6 bg-green-50 hover:bg-green-100 border-2 border-green-200 hover:border-green-400 rounded-xl transition-all group"
@@ -169,7 +177,7 @@ export default function ContactPage() {
 
                   {/* Email — icon only, no address exposed */}
                   <a
-                    href="mailto:de_greenacrespropertiesltd@yahoo.com?subject=Enquiry%20from%20De-Greenacres%20Website"
+                    href={`mailto:${settings.contact_email}?subject=Enquiry%20from%20De-Greenacres%20Website`}
                     className="flex flex-col items-center gap-2 p-6 bg-magenta/5 hover:bg-magenta/10 border-2 border-magenta/20 hover:border-magenta/40 rounded-xl transition-all group"
                   >
                     <svg className="w-10 h-10 text-magenta group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +196,7 @@ export default function ContactPage() {
               {/* WhatsApp CTA */}
               <ScrollReveal direction="left" delay={0.5}>
               <a
-                href="https://wa.me/2347041754800"
+                href={whatsappLink(settings, "Hello De-Greenacres, I would like to chat about a property.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block bg-magenta hover:bg-magenta-dark text-white rounded-xl shadow-medium p-6 transition-all hover-lift"
@@ -213,11 +221,12 @@ export default function ContactPage() {
                 <h2 className="font-display text-2xl text-charcoal mb-6">Send Us a Message</h2>
                 
                 {submitted && (
-                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
+                  <div role="status" className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
                     <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                    <p className="text-green-800 font-medium">Thank you! Your message has been sent successfully.</p>
+                    <p className="text-green-800 font-medium">Thank you! Your message has been saved and sent to our team.</p>
                   </div>
                 )}
+                {submitError && <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{submitError}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

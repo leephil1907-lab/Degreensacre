@@ -1,5 +1,5 @@
 /* De-Greenacres Service Worker — production PWA v2.1 */
-const CACHE_VERSION = 'de-greenacres-v2.1';
+const CACHE_VERSION = 'de-greenacres-v2.2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_URL = '/offline.html';
@@ -22,9 +22,7 @@ const CACHE_FIRST_PATTERNS = [
 ];
 
 // Network-first patterns (HTML navigations + API)
-const NETWORK_FIRST_PATTERNS = [
-  /\/api\//,
-];
+const PRIVATE_NAVIGATION_PATTERN = /^\/(?:admin|dashboard|messages|notifications|submit-property|account|profile|signin|signup)(?:\/|$)/;
 
 // Install — precache shell
 self.addEventListener('install', (event) => {
@@ -62,18 +60,16 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET
   if (request.method !== 'GET') return;
 
-  // Bypass non-http, chrome-extension, etc
+  // Bypass non-http, chrome-extension, cross-origin and all API requests. API
+  // responses can contain private account data and must never be cached here.
   if (!url.protocol.startsWith('http')) return;
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
+  if (PRIVATE_NAVIGATION_PATTERN.test(url.pathname)) return;
 
-  // Navigation requests — network-first, fallback to cache, then offline.html
+  // Public navigation requests — network-first, fallback to cache, then offline.html
   if (request.mode === 'navigate') {
     event.respondWith(navigationHandler(event));
-    return;
-  }
-
-  // API requests — network-first with cache fallback (short TTL)
-  if (NETWORK_FIRST_PATTERNS.some((p) => p.test(url.pathname))) {
-    event.respondWith(networkFirst(request, RUNTIME_CACHE));
     return;
   }
 

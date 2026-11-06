@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 // POST /api/auth/register — Server-side signup with profile creation
 // Falls back to regular signUp if service role key is not available
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters', success: false }, { status: 400 });
     }
 
-    const supabase = createServerClient();
+    const supabase = await createServerSupabaseClient();
 
     // Use regular signUp (works with anon key)
     const { data: authData, error: authError } = await supabase.auth.signUp({

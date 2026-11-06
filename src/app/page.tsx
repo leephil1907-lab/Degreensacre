@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { properties as staticProperties } from '@/data/properties';
 import ScrollReveal from '@/components/ScrollReveal';
 import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
@@ -10,58 +9,43 @@ import CACIcon from '@/components/CACIcon';
 import ReviewsSection from '@/components/ReviewsSection';
 import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
 import AdSense from '@/components/GoogleAdsense';
+import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 
 export default function HomePage() {
-  const [dbFeatured, setDbFeatured] = useState<any[] | null>(null);
-  const [dbLand, setDbLand] = useState<any[] | null>(null);
-  const [featuredFallback, setFeaturedFallback] = useState(false);
-  const [landFallback, setLandFallback] = useState(false);
+  const [dbFeatured, setDbFeatured] = useState<any[]>([]);
+  const [dbLand, setDbLand] = useState<any[]>([]);
+  const [listingsError, setListingsError] = useState('');
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const r1 = await fetch('/api/properties?featured=true&status=available&limit=6');
-        if (r1.ok) {
-          const j1 = await r1.json();
-          const list1 = j1.properties || [];
-          if (!cancelled) {
-            if (list1.length > 0) {
-              setDbFeatured(list1);
-              setFeaturedFallback(false);
-            } else {
-              setDbFeatured(null);
-              setFeaturedFallback(true);
-            }
-          }
-        } else if (!cancelled) setFeaturedFallback(true);
-      } catch { if (!cancelled) setFeaturedFallback(true); }
-      try {
-        const r2 = await fetch('/api/properties?type=land&status=available&limit=2');
-        if (r2.ok) {
-          const j2 = await r2.json();
-          const list2 = j2.properties || [];
-          if (!cancelled) {
-            if (list2.length > 0) {
-              setDbLand(list2);
-              setLandFallback(false);
-            } else {
-              // also try property_type=Land fallback — if API supports type only, keep empty and fallback
-              setDbLand(null);
-              setLandFallback(true);
-            }
-          }
-        } else if (!cancelled) setLandFallback(true);
-      } catch { if (!cancelled) setLandFallback(true); }
+        const [featuredResponse, landResponse] = await Promise.all([
+          fetch('/api/properties?featured=true&status=available&limit=6'),
+          fetch('/api/properties?type=land&status=available&limit=2'),
+        ]);
+        const [featuredData, landData] = await Promise.all([featuredResponse.json(), landResponse.json()]);
+        if (!featuredResponse.ok || !landResponse.ok) throw new Error('Live listings could not be loaded.');
+        if (!cancelled) {
+          setDbFeatured(featuredData.properties || []);
+          setDbLand(landData.properties || []);
+          setListingsError('');
+        }
+      } catch {
+        if (!cancelled) setListingsError('Live listings are temporarily unavailable. Please use the property search or try again later.');
+      } finally {
+        if (!cancelled) setListingsLoading(false);
+      }
     }
-    load();
+    void load();
     return () => { cancelled = true; };
   }, []);
 
-  const sampleProperties = (dbFeatured && dbFeatured.length > 0 ? dbFeatured : staticProperties.filter(p => p.sample && p.featured)).slice(0, 6);
-  const landProperties = (dbLand && dbLand.length > 0 ? dbLand : staticProperties.filter(p => p.type === 'land')).slice(0, 2);
-  const isFeaturedDemo = featuredFallback || !dbFeatured;
-  const isLandDemo = landFallback || !dbLand;
+  const sampleProperties = dbFeatured.slice(0, 6);
+  const landProperties = dbLand.slice(0, 2);
 
   return (
     <>
@@ -76,7 +60,7 @@ export default function HomePage() {
             </div>
             <h1 className="font-display text-4xl md:text-6xl lg:text-7xl mb-6 animate-fade-in leading-tight tracking-tight text-white">
               Find Property. Verify the Opportunity.<br />
-              <span className="italic text-sage">Own With Confidence.</span>
+              <span className="italic text-sage-300">Own With Confidence.</span>
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-10 max-w-3xl mx-auto animate-fade-in font-light leading-relaxed">
               Residential · Land · Commercial · Investment
@@ -111,19 +95,22 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {listingsError && <div role="alert" className="col-span-full rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{listingsError}</div>}
+            {listingsLoading && <div className="col-span-full flex min-h-48 items-center justify-center rounded-2xl border border-gray-100 bg-white text-sm text-gray-500">Loading featured properties…</div>}
+            {!listingsLoading && !listingsError && sampleProperties.length === 0 && <div className="col-span-full rounded-2xl border border-gray-100 bg-white py-12 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-gray-300" /><p className="font-display text-xl text-charcoal">No featured listings published yet</p><Link href="/properties" className="mt-3 inline-block text-sm font-bold text-forest">Search all available properties →</Link></div>}
             {sampleProperties.map((property: any, i) => (
               <ScrollReveal key={property.id} delay={i * 0.1}>
                 <Link href={`/properties/${property.slug}`} className="group block">
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1">
                     <div className="relative h-64 overflow-hidden">
-                      <img src={(property.images?.[0] || (property as any).property_images?.[0]?.url || '/properties/property-1.jpg')} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <img src={getPropertyImage(property)} alt={property.title} className={`w-full h-full group-hover:scale-105 transition-transform duration-700 ${getPropertyImage(property) === '/property-placeholder.svg' ? 'object-contain bg-forest-50 p-10' : 'object-cover'}`} />
                       <div className="absolute top-4 left-4">
                         <span className={`px-3 py-1 text-xs font-bold rounded-md text-white ${property.type === 'sale' ? 'bg-forest' : property.type === 'land' ? 'bg-amber-600' : 'bg-blue-600'}`}>
                           {property.type === 'sale' ? 'FOR SALE' : property.type === 'land' ? 'LAND' : property.type?.toUpperCase()}
                         </span>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-5">
-                        <p className="text-2xl font-bold text-white">₦{(property.price / 1000000).toFixed(0)}M</p>
+                        <p className="text-2xl font-bold text-white">{formatPropertyPrice(property.price, property.price_period)}</p>
                       </div>
                     </div>
                     <div className="p-5">
@@ -142,6 +129,7 @@ export default function HomePage() {
               </ScrollReveal>
             ))}
           </div>
+          <Link href="/properties" className="btn-outline mt-8 flex items-center justify-center gap-2 md:hidden">View all properties <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
 
@@ -271,11 +259,11 @@ export default function HomePage() {
               {landProperties.slice(0, 2).map((p: any) => (
                 <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all group">
                   <div className="flex items-start gap-4">
-                    <img src={(p.images?.[0] || (p as any).property_images?.[0]?.url || '/properties/property-1.jpg')} alt={p.title} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
+                    <img src={getPropertyImage(p)} alt={p.title} className="w-24 h-24 rounded-xl object-cover flex-shrink-0 bg-forest-50" />
                     <div>
                       <h3 className="font-bold text-lg mb-1 group-hover:text-sage transition-colors">{p.title}</h3>
                       <p className="text-sm text-white/70 flex items-center gap-1 mb-2"><MapPin className="w-3 h-3" />{p.area}, {p.state}</p>
-                      <p className="font-display text-2xl text-sage">₦{(p.price / 1000000).toFixed(0)}M</p>
+                      <p className="font-display text-2xl text-sage">{formatPropertyPrice(p.price, p.price_period)}</p>
                       <p className="text-xs text-white/60 mt-1">{p.sqm} sqm · {p.documentation || 'Documentation available'}</p>
                     </div>
                   </div>
@@ -493,7 +481,7 @@ export default function HomePage() {
               </a>
             </div>
             <p className="text-sm text-white/60 max-w-lg mx-auto">
-              Inspection fee of <span className="text-sage font-semibold">₦20,000</span> applies after your request is confirmed. You&apos;ll receive payment details once we schedule your visit.
+              Inspection fee of <span className="text-sage font-semibold">₦{settings.inspection_fee.toLocaleString()}</span> applies after your request is confirmed. You&apos;ll receive payment details once we schedule your visit.
             </p>
           </ScrollReveal>
         </div>

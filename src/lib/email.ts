@@ -16,9 +16,13 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY) 
   : null;
 
-// Default sender (uses Resend's dev domain until you verify your own)
-const FROM_EMAIL = process.env.EMAIL_FROM || 'De-Greenacres <onboarding@resend.dev>';
-const FROM_EMAIL_PRODUCTION = process.env.EMAIL_FROM_PRODUCTION || 'De-Greenacres <hello@degreenacres.com>';
+// Use a verified sender in production and Resend's test sender for local development.
+const FROM_EMAIL = process.env.EMAIL_FROM || (
+  process.env.NODE_ENV === 'production'
+    ? 'De-Greenacres <hello@degreenacres.com>'
+    : 'De-Greenacres <onboarding@resend.dev>'
+);
+const REPLY_TO = process.env.EMAIL_REPLY_TO || 'support@degreenacres.com';
 
 /**
  * Send an email using a React template
@@ -51,10 +55,7 @@ export async function sendEmail({
     // Render React component to HTML
     const html = await render(template);
 
-    // Determine sender based on environment
-    const from = process.env.NODE_ENV === 'production' 
-      ? FROM_EMAIL_PRODUCTION 
-      : FROM_EMAIL;
+    const from = FROM_EMAIL;
 
     // Send email
     const { data, error } = await resend.emails.send({
@@ -62,7 +63,7 @@ export async function sendEmail({
       to,
       subject,
       html,
-      replyTo: replyTo || 'support@degreenacres.com',
+      replyTo: replyTo || REPLY_TO,
     });
 
     if (error) {
@@ -97,9 +98,7 @@ export async function sendBulkEmail({
 
   try {
     const html = await render(template);
-    const from = process.env.NODE_ENV === 'production' 
-      ? FROM_EMAIL_PRODUCTION 
-      : FROM_EMAIL;
+    const from = FROM_EMAIL;
 
     // Resend allows up to 100 recipients per request
     const { data, error } = await resend.emails.send({
@@ -143,9 +142,7 @@ export async function scheduleEmail({
 
   try {
     const html = await render(template);
-    const from = process.env.NODE_ENV === 'production' 
-      ? FROM_EMAIL_PRODUCTION 
-      : FROM_EMAIL;
+    const from = FROM_EMAIL;
 
     const { data, error } = await resend.emails.send({
       from,

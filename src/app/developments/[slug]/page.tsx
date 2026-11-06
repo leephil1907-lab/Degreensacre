@@ -1,4 +1,3 @@
-import { developments as staticDevelopments } from '@/data/developments';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
@@ -12,7 +11,6 @@ export default async function DevelopmentDetailPage({ params }: Props) {
 
   // Try Supabase first
   let development: any = null;
-  let isDemo = false;
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('developments').select('*').eq('slug', slug).single();
@@ -29,19 +27,9 @@ export default async function DevelopmentDetailPage({ params }: Props) {
         siteInspection: data.site_inspection ?? data.siteInspection ?? false,
         featured: data.featured ?? false,
       };
-      isDemo = false;
     }
-  } catch (e) {
-    // ignore, will fallback
-  }
-
-  // Fallback to static
-  if (!development) {
-    const found = staticDevelopments.find(d => d.slug === slug);
-    if (found) {
-      development = found;
-      isDemo = true;
-    }
+  } catch (error) {
+    console.error('Development could not be loaded:', error);
   }
 
   if (!development) {

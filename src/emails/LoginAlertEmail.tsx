@@ -21,7 +21,7 @@ export default function LoginAlertEmail({ name, newDevice = 'Unknown device', lo
       </div>
       <div style={{ backgroundColor: '#fff0f0', borderLeft: '4px solid #ef4444', padding: '16px', borderRadius: '0 8px 8px 0', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#991b1b', lineHeight: '1.6' }}>
-          <strong>Wasn't you?</strong> Please change your password immediately and contact us at +234 806 501 9971.
+          <strong>Wasn&apos;t you?</strong> Please change your password immediately and contact us at +234 806 501 9971.
         </div>
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>

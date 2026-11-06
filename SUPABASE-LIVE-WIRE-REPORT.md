@@ -4,7 +4,7 @@
 **Project:** `rvwirpfclysapqtnrlvx.supabase.co`  
 **Status:** **WIRED · VERIFIED · DEV SERVER LIVE WITH REAL DATA**
 
-Found credentials in `VERCEL_DEPLOYMENT.md` (the connected project) and wired them into `.env.local`. Dev server restarted with live env — **all APIs now return real Supabase rows, not dummy**.
+This is a historical local-integration report. Environment values belong in `.env.local` or Render's dashboard, never in committed documentation. The old deployment document referenced here has been removed.
 
 ---
 
@@ -14,8 +14,8 @@ Found credentials in `VERCEL_DEPLOYMENT.md` (the connected project) and wired th
 # /home/user/Degreensacre/.env.local (and /home/user/.env.local)
 NEXT_PUBLIC_SUPABASE_URL=https://rvwirpfclysapqtnrlvx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci... (anon, public — safe for frontend)
-NEXT_PUBLIC_SITE_URL=http://localhost:3000  # → set to https://degreenacres.com on Vercel
-RESEND_API_KEY=re_placeholder  # ← add real Resend key on Vercel for emails
+NEXT_PUBLIC_SITE_URL=http://localhost:3000  # → set to the public HTTPS URL on Render
+RESEND_API_KEY=re_placeholder  # ← add a real Resend key only through Render Environment
 ```
 
 > `SUPABASE_SERVICE_ROLE_KEY` **not** in `.env.local` — app is RLS-only (anon). Service role was used only once to create buckets, then discarded.
@@ -93,10 +93,8 @@ DELETE /storage/v1/object/property-images/test-connection.txt → 200 deleted
 profiles: [{id:29a52273..., email:"degreenacrespropertieslimited@gmail.com", is_admin:true}]
 ```
 
-Admin user already promoted. Test login (credentials from `VERCEL_DEPLOYMENT.md`):
+An admin user was promoted during the historical test. Use a secure admin test account and rotate the previously documented account password. Credentials must never be committed.
 
-- Email: `degreenacrespropertieslimited@gmail.com`
-- Password: `Noble1994@`
 - Expected: `POST /auth/login` → redirect `/admin/dashboard` → `/api/admin/dashboard` 200
 
 Middleware (`src/proxy.ts`) now guards `/dashboard`, `/submit-property`, `/admin/*` and redirects unauthenticated to `/signin` (was `/auth/login` before fix).
@@ -129,16 +127,17 @@ Manifest, SW, offline unchanged. Live data doesn't affect PWA audit.
 
 ---
 
-## 8) What Remains (for Vercel Prod)
+## 8) Current Render Deployment
 
-| Item | Status | Action |
-|------|--------|--------|
-| **Supabase env on Vercel** | ☐ TODO | Vercel Dashboard → Settings → Environment Variables → add `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same as .env.local) for **Production/Preview/Development** then Redeploy |
-| **RESEND_API_KEY on Vercel** | ☐ TODO | Get key at resend.com → add to Vercel env → transactional emails (contact, viewing, inspection) will auto-send |
-| **NEXT_PUBLIC_SITE_URL on Vercel** | ☐ TODO | Set to `https://degreenacres.com` (prod) — currently `http://localhost:3000` is correct for dev |
-| **Custom domain** | ☐ TODO | Vercel → Domains → add `degreenacres.com` + `www` → update DNS at registrar |
-| **Sample properties toggle** | Optional | To hide 6 sample cards in prod: set `sample:false` filter already done for homepage? For `/properties` page, remove the `sampleProperties` merge or filter `sample!==true` when DB count ≥ threshold |
-| **Push fix branch to GitHub** | ☐ Optional | New fixes (proxy, PWA, demo badges) are local. Run `git add . && git commit -m "..." && git push origin main` to auto-deploy via Vercel Git integration |
+The production target is now Render. Follow `RENDER_DEPLOYMENT.md` for the current Blueprint, environment, authentication, and domain instructions.
+
+| Item | Action |
+|------|--------|
+| **Supabase environment** | Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` through Render Environment. |
+| **Resend** | Create a fresh API key and add `RESEND_API_KEY` through Render Environment. |
+| **Public site URL** | Set `NEXT_PUBLIC_SITE_URL` to the assigned Render URL or verified custom domain, then redeploy. |
+| **Custom domain** | Add it under Render → Custom Domains and use the DNS targets displayed by Render. |
+| **Credential hygiene** | Rotate credentials and passwords that appeared in old committed deployment reports. |
 
 ---
 

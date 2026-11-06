@@ -1,80 +1,32 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 import { Phone, Mail, BadgeCheck, Building2, MapPin, ArrowRight } from 'lucide-react';
 
 interface Props { params: Promise<{ slug: string }> }
-
-const demoAgents: any = {
-  'de-greenacres-team': {
-    id: 'demo-1',
-    name: 'De-Greenacres Team',
-    slug: 'de-greenacres-team',
-    email: 'info@degreenacresproperties.com',
-    phone: '+2348065019971',
-    whatsapp: '2347041754800',
-    bio: 'Core De-Greenacres team handling verification, inspections and closings across all states.',
-    photo_url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400',
-    is_verified: true,
-    agencies: { name: 'De-Greenacres Properties Limited', slug: 'de-greenacres-properties-limited' },
-  },
-  'uyo-land-desk': {
-    id: 'demo-2',
-    name: 'Uyo Land Desk — Coastal Highway',
-    slug: 'uyo-land-desk',
-    email: 'uyo@degreenacresproperties.com',
-    phone: '+2347041754800',
-    whatsapp: '2347041754800',
-    bio: 'Dedicated desk for New Coastal Highway to Calabar — Uyo.',
-    photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
-    is_verified: true,
-    agencies: { name: 'De-Greenacres Properties Limited', slug: 'de-greenacres-properties-limited' },
-  },
-  'lagos-homes-specialist': {
-    id: 'demo-3',
-    name: 'Lagos Homes Specialist',
-    slug: 'lagos-homes-specialist',
-    email: 'lagos@degreenacresproperties.com',
-    phone: '+2348065019971',
-    whatsapp: '2347041754800',
-    bio: 'Lekki, Ikoyi, Victoria Island — residential and commercial.',
-    photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-    is_verified: true,
-    agencies: { name: 'De-Greenacres Properties Limited', slug: 'de-greenacres-properties-limited' },
-  },
-};
 
 export default async function AgentDetailPage({ params }: Props) {
   const { slug } = await params;
 
   let agent: any = null;
   let properties: any[] = [];
-  let isDemo = false;
 
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('agents').select('*, agencies(name, slug, logo_url, is_verified)').eq('slug', slug).single();
     if (data) {
       agent = data;
-      isDemo = false;
       if (agent.user_id) {
-        const { data: props } = await supabase.from('properties').select('id, slug, title, price, area, state, images, type, verification_status').eq('owner_id', agent.user_id).eq('status', 'available').limit(12);
+        const { data: props } = await supabase.from('properties').select('id, slug, title, price, price_period, area, state, images, type, verification_status').eq('owner_id', agent.user_id).eq('status', 'available').limit(12);
         properties = props || [];
       }
     }
-  } catch {}
-
-  if (!agent) {
-    if (demoAgents[slug]) {
-      agent = demoAgents[slug];
-      isDemo = true;
-      // demo properties: fallback to a couple of static-like
-      properties = [];
-      isDemo = true;
-    } else {
-      notFound();
-    }
+  } catch (error) {
+    console.error('Agent profile could not be loaded:', error);
   }
+
+  if (!agent) notFound();
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -122,12 +74,12 @@ export default async function AgentDetailPage({ params }: Props) {
               {properties.map((p: any) => (
                 <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group">
                   <div className="h-48 overflow-hidden">
-                    <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600'} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={getPropertyImage(p)} alt={p.title} className="w-full h-full object-cover bg-forest-50 group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-charcoal line-clamp-2">{p.title}</h3>
                     <p className="text-sm text-gray-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {p.area}, {p.state}</p>
-                    <p className="font-display text-xl text-forest mt-2">₦{(p.price / 1000000).toFixed(0)}M</p>
+                    <p className="font-display text-xl text-forest mt-2">{formatPropertyPrice(p.price, p.price_period)}</p>
                   </div>
                 </Link>
               ))}

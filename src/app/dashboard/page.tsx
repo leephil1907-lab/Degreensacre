@@ -350,7 +350,7 @@ export default function DashboardPage() {
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <Calendar className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-charcoal mb-2">No viewings scheduled</h3>
-                        <p className="text-gray-500">Schedule a viewing for properties you're interested in</p>
+                        <p className="text-gray-500">Schedule a viewing for properties you&apos;re interested in</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                       <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <Bell className="w-12 h-12 text-charcoal-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-charcoal mb-2">No notifications</h3>
-                        <p className="text-gray-500">You're all caught up</p>
+                        <p className="text-gray-500">You&apos;re all caught up</p>
                       </div>
                     ) : (
                       <div className="space-y-2">

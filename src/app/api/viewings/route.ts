@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createViewingRequest } from '@/lib/db-helpers';
 import { createNotification } from '@/lib/db-helpers';
-import { isEmail, isPhone, sanitizeForDb } from '@/lib/validation';
+import { isUuid, sanitizeForDb } from '@/lib/validation';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/viewings - Schedule a viewing
 export async function POST(request: NextRequest) {
@@ -16,21 +17,24 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    const limit = checkRateLimit(`viewing:${user.id}`, 20, 24 * 60 * 60 * 1000);
+    if (!limit.allowed) return NextResponse.json({ error: 'Daily viewing request limit reached. Please try again tomorrow.', success: false }, { status: 429 });
 
     const body = await request.json();
     
     // Validate input
     const errors: string[] = [];
     
-    if (!body.property_id) {
-      errors.push('Property ID is required');
+    if (!isUuid(String(body.property_id || ''))) {
+      errors.push('A valid property ID is required');
     }
-    if (!body.preferred_date) {
-      errors.push('Preferred date is required');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(body.preferred_date || ''))) {
+      errors.push('A valid preferred date is required');
     }
-    if (!body.preferred_time) {
-      errors.push('Preferred time is required');
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(body.preferred_time || ''))) {
+      errors.push('A valid preferred time is required');
     }
+    if (body.notes && String(body.notes).length > 2000) errors.push('Notes must be 2,000 characters or fewer');
 
     // Validate date is in the future
     if (body.preferred_date) {
@@ -75,14 +79,19 @@ export async function POST(request: NextRequest) {
       notes: body.notes ? sanitizeForDb(body.notes) : undefined,
     });
 
-    // Create notification for the user
-    await createNotification({
-      user_id: user.id,
-      type: 'viewing_requested',
-      title: 'Viewing Request Submitted',
-      message: `Your viewing request for ${new Date(body.preferred_date).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${body.preferred_time} has been submitted.`,
-      data: { viewing_id: viewing.id, property_id: body.property_id },
-    });
+    // The viewing is already persisted; a secondary notification must not turn
+    // that successful request into a false failure response.
+    try {
+      await createNotification({
+        user_id: user.id,
+        type: 'viewing_requested',
+        title: 'Viewing Request Submitted',
+        message: `Your viewing request for ${new Date(body.preferred_date).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${body.preferred_time} has been submitted.`,
+        data: { viewing_id: viewing.id, property_id: body.property_id },
+      });
+    } catch (notificationError) {
+      console.warn('Viewing saved but notification failed:', notificationError);
+    }
 
     return NextResponse.json({ viewing, success: true });
   } catch (error) {

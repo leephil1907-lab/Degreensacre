@@ -14,7 +14,7 @@ export default function PasswordResetSuccessEmail({ name }: Props) {
       </p>
       <div style={{ backgroundColor: '#fff0f0', borderLeft: '4px solid #ef4444', padding: '16px', borderRadius: '0 8px 8px 0', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#991b1b', lineHeight: '1.6' }}>
-          <strong>🔒 Didn't make this change?</strong><br />
+          <strong>🔒 Didn&apos;t make this change?</strong><br />
           If you did not change your password, please contact us immediately at +234 806 501 9971 or reply to this email.
         </div>
       </div>

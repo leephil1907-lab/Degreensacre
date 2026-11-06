@@ -30,7 +30,7 @@
 - [x] Protected routes redirect to login
 - [x] Admin-only routes protected
 - [x] Session persistence working
-- [x] Admin credentials: degreenacrespropertieslimited@gmail.com / Noble1994@
+- [x] Admin credentials: degreenacrespropertieslimited@gmail.com / [REDACTED — ROTATE THE ACCOUNT PASSWORD]
 
 ### 4. ✅ Core Features - FUNCTIONAL
 - [x] Property listings with filters (type, state, price, bedrooms)
@@ -238,8 +238,7 @@ npm run build
 # 4. Start production server
 npm start
 
-# Or deploy to Vercel
-vercel --prod
+# For the current Render deployment, follow RENDER_DEPLOYMENT.md
 ```
 
 ---

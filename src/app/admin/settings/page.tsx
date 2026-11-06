@@ -1,229 +1,232 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { Globe, Bell, Shield, Save, Loader2, CheckCircle, Mail, Phone, MapPin, CreditCard } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  Building2, CheckCircle, Eye, EyeOff, Globe2, KeyRound, Loader2,
+  Lock, Save, ShieldCheck,
+} from 'lucide-react';
+import { DEFAULT_SITE_SETTINGS, type SiteSettings } from '@/lib/site-settings';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 
-interface Settings {
-  company_name: string;
-  rc_number: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
-  address: string;
-  inspection_fee: number;
-  notify_new_user: boolean;
-  notify_new_property: boolean;
-  notify_new_enquiry: boolean;
-  notify_payment: boolean;
-}
+type Tab = 'company' | 'social' | 'security';
 
-export default function SettingsPage() {
-  const { user, profile } = useAuth();
-  const router = useRouter();
+const inputClass = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10';
+
+export default function AdminSettingsPage() {
+  const { refresh: refreshPublicSettings } = useSiteSettings();
+  const [activeTab, setActiveTab] = useState<Tab>('company');
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+  const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [settings, setSettings] = useState<Settings>({
-    company_name: 'De-Greenacres Properties Limited',
-    rc_number: 'RC: 1856064',
-    email: 'degreenacrespropertieslimited@gmail.com',
-    phone: '08065019971',
-    whatsapp: '07041754800',
-    address: 'Lagos, Nigeria',
-    inspection_fee: 20000,
-    notify_new_user: true,
-    notify_new_property: true,
-    notify_new_enquiry: true,
-    notify_payment: true,
-  });
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
-  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  useEffect(() => {
-    if (!user) { router.push('/signin'); return; }
-    if (profile && !profile.is_admin) { router.push('/'); return; }
-  }, [user, profile, router]);
-
-  const fetchSettings = useCallback(async () => {
+  const loadSettings = useCallback(async () => {
+    setLoading(true);
+    setError('');
     try {
-      const res = await fetch('/api/admin/settings');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.settings) {
-          setSettings(prev => ({ ...prev, ...data.settings }));
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch settings:', err);
+      const response = await fetch('/api/admin/settings', { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Settings could not be loaded.');
+      setSettings({ ...DEFAULT_SITE_SETTINGS, ...(data.settings || {}) });
+      setUpdatedAt(data.updated_at || null);
+      setLoaded(true);
+    } catch (loadError) {
+      setLoaded(false);
+      setError(loadError instanceof Error ? loadError.message : 'Settings could not be loaded.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchSettings(); }, [fetchSettings]);
+  useEffect(() => {
+    void loadSettings();
+  }, [loadSettings]);
 
-  const handleSave = async () => {
+  const update = (field: keyof SiteSettings, value: string | number) => {
+    setSettings((current) => ({ ...current, [field]: value }));
+    setNotice('');
+  };
+
+  const saveSettings = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaving(true);
-    setSaved(false);
+    setError('');
+    setNotice('');
     try {
-      const res = await fetch('/api/admin/settings', {
+      const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ settings }),
       });
-      if (res.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      }
-    } catch (err) {
-      console.error('Failed to save settings:', err);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Settings were not saved.');
+      setSettings({ ...DEFAULT_SITE_SETTINGS, ...(data.settings || {}) });
+      setUpdatedAt(data.updated_at || new Date().toISOString());
+      await refreshPublicSettings();
+      setNotice('Settings saved. Public contact details now use the updated website settings.');
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Settings were not saved.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handlePasswordChange = async () => {
-    setPasswordError('');
-    setPasswordSuccess(false);
-    if (!passwords.new || passwords.new.length < 8) {
-      setPasswordError('New password must be at least 8 characters');
+  const changePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setNotice('');
+    if (password !== confirmPassword) {
+      setError('New passwords do not match.');
       return;
     }
-    if (passwords.new !== passwords.confirm) {
-      setPasswordError('Passwords do not match');
-      return;
+    setPasswordLoading(true);
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_password: password, confirm_password: confirmPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Password could not be changed.');
+      setPassword('');
+      setConfirmPassword('');
+      setNotice('Your administrator password has been changed.');
+    } catch (passwordError) {
+      setError(passwordError instanceof Error ? passwordError.message : 'Password could not be changed.');
+    } finally {
+      setPasswordLoading(false);
     }
-    // TODO: Implement password change via Supabase auth API
-    setPasswordSuccess(true);
-    setPasswords({ current: '', new: '', confirm: '' });
-    setTimeout(() => setPasswordSuccess(false), 3000);
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-forest" /></div>;
-  }
+  const field = (name: keyof SiteSettings, label: string, options?: { type?: string; help?: string; placeholder?: string; full?: boolean }) => (
+    <div className={options?.full ? 'md:col-span-2' : ''}>
+      <label htmlFor={`setting-${name}`} className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-500">{label}</label>
+      <input
+        id={`setting-${name}`}
+        type={options?.type || 'text'}
+        value={String(settings[name])}
+        placeholder={options?.placeholder}
+        min={name === 'inspection_fee' ? 0 : undefined}
+        onChange={(event) => update(name, name === 'inspection_fee' ? Number(event.target.value) : event.target.value)}
+        className={inputClass}
+        required={!['tagline', 'facebook_url', 'instagram_url', 'twitter_url', 'linkedin_url'].includes(name)}
+      />
+      {options?.help && <p className="mt-2 text-xs text-gray-400">{options.help}</p>}
+    </div>
+  );
+
+  const tabs = [
+    { id: 'company' as const, label: 'Company & contact', icon: Building2 },
+    { id: 'social' as const, label: 'Social links', icon: Globe2 },
+    { id: 'security' as const, label: 'Admin security', icon: ShieldCheck },
+  ];
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-2xl text-charcoal">Settings</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage platform configuration</p>
-        </div>
-        {saved && (
-          <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 px-4 py-2 rounded-xl text-sm font-semibold">
-            <CheckCircle className="w-4 h-4" /> Settings saved!
-          </div>
-        )}
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Global website configuration</p>
+        <h2 className="font-display text-3xl text-charcoal">Site Settings</h2>
+        <p className="mt-2 text-sm text-gray-500">Manage the company details used by public contact actions and inspection requests.</p>
       </div>
 
-      {/* Company Info */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="font-display text-lg text-charcoal mb-4 flex items-center gap-2">
-          <Globe className="w-5 h-5 text-forest" /> Company Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Company Name</label>
-            <input type="text" value={settings.company_name} onChange={(e) => setSettings({ ...settings, company_name: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">RC Number</label>
-            <input type="text" value={settings.rc_number} onChange={(e) => setSettings({ ...settings, rc_number: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Email</label>
-            <input type="email" value={settings.email} onChange={(e) => setSettings({ ...settings, email: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Phone (Customer Support)</label>
-            <input type="tel" value={settings.phone} onChange={(e) => setSettings({ ...settings, phone: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">WhatsApp Number</label>
-            <input type="tel" value={settings.whatsapp} onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Inspection Fee (₦)</label>
-            <input type="number" value={settings.inspection_fee} onChange={(e) => setSettings({ ...settings, inspection_fee: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Address</label>
-            <input type="text" value={settings.address} onChange={(e) => setSettings({ ...settings, address: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-        </div>
+      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-sm">
+        {tabs.map((tab) => (
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setError(''); setNotice(''); }} className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-forest text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal'}`}>
+            <tab.icon className="h-4 w-4" /> {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Notifications */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="font-display text-lg text-charcoal mb-4 flex items-center gap-2">
-          <Bell className="w-5 h-5 text-forest" /> Notification Preferences
-        </h3>
-        <div className="space-y-4">
-          {[
-            { key: 'notify_new_user', label: 'New user registration', desc: 'Get notified when a new user signs up' },
-            { key: 'notify_new_property', label: 'New property submission', desc: 'When a seller submits a property for review' },
-            { key: 'notify_new_enquiry', label: 'New enquiry', desc: 'When a buyer sends a property enquiry' },
-            { key: 'notify_payment', label: 'Payment received', desc: 'When an inspection payment is processed' },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-              <div>
-                <div className="font-semibold text-sm text-charcoal">{item.label}</div>
-                <div className="text-xs text-gray-500">{item.desc}</div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={(settings as any)[item.key]}
-                  onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest" />
-              </label>
+      {notice && <div role="status" className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />{notice}</div>}
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}{!loaded && activeTab !== 'security' && <button onClick={() => void loadSettings()} className="ml-3 font-bold underline">Retry</button>}</div>}
+
+      {activeTab !== 'security' ? (
+        <form onSubmit={saveSettings} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-6 py-5">
+            <h3 className="font-display text-xl text-charcoal">{activeTab === 'company' ? 'Public company information' : 'Official social profiles'}</h3>
+            <p className="mt-1 text-xs text-gray-500">{updatedAt ? `Last saved ${new Date(updatedAt).toLocaleString('en-NG')}` : 'No saved settings row yet. Saving will create one.'}</p>
+          </div>
+
+          {loading ? (
+            <div className="flex min-h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-forest" /></div>
+          ) : (
+            <div className="grid gap-5 p-6 md:grid-cols-2">
+              {activeTab === 'company' ? (
+                <>
+                  {field('company_name', 'Registered / public company name', { full: true })}
+                  {field('tagline', 'Short company description', { full: true, help: 'Shown in the public footer.' })}
+                  {field('contact_email', 'Public contact email', { type: 'email' })}
+                  {field('contact_phone', 'Public phone number', { type: 'tel' })}
+                  {field('whatsapp_number', 'WhatsApp number', { help: 'International digits only, for example 2347041754800.' })}
+                  {field('inspection_fee', 'Inspection fee (₦)', { type: 'number', help: 'Set to 0 only if inspections are free.' })}
+                  <div className="md:col-span-2">
+                    <label htmlFor="setting-address" className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-500">Primary office address</label>
+                    <textarea id="setting-address" value={settings.address} onChange={(event) => update('address', event.target.value)} rows={3} required className={`${inputClass} resize-y`} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {field('facebook_url', 'Facebook page URL', { type: 'url', placeholder: 'https://facebook.com/…', full: true })}
+                  {field('instagram_url', 'Instagram profile URL', { type: 'url', placeholder: 'https://instagram.com/…', full: true })}
+                  {field('twitter_url', 'X / Twitter profile URL', { type: 'url', placeholder: 'https://x.com/…', full: true })}
+                  {field('linkedin_url', 'LinkedIn page URL', { type: 'url', placeholder: 'https://linkedin.com/company/…', full: true })}
+                  <p className="text-xs leading-relaxed text-gray-400 md:col-span-2">Leave unused profiles blank. Only valid HTTPS links are accepted; configured links appear in the public footer.</p>
+                </>
+              )}
             </div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      {/* Security */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="font-display text-lg text-charcoal mb-4 flex items-center gap-2">
-          <Shield className="w-5 h-5 text-forest" /> Change Password
-        </h3>
-        {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{passwordError}</div>}
-        {passwordSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">Password updated successfully!</div>}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Current Password</label>
-            <input type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
+          <div className="flex flex-col items-stretch justify-between gap-3 border-t border-gray-100 bg-gray-50/60 px-6 py-4 sm:flex-row sm:items-center">
+            <p className="text-xs text-gray-400">Changes are written to the site_settings database record.</p>
+            <button type="submit" disabled={saving || loading || !loaded} className="inline-flex items-center justify-center gap-2 rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white transition hover:bg-forest-light disabled:cursor-not-allowed disabled:opacity-50">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{saving ? 'Saving…' : 'Save settings'}
+            </button>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">New Password</label>
-            <input type="password" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Confirm New</label>
-            <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-forest/20 focus:border-forest" />
+        </form>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+          <form onSubmit={changePassword} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-xl bg-forest/10 text-forest"><KeyRound className="h-5 w-5" /></div>
+              <div><h3 className="font-display text-xl text-charcoal">Change your password</h3><p className="text-xs text-gray-500">Updates the currently signed-in Supabase account.</p></div>
+            </div>
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="new-password" className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-500">New password</label>
+                <div className="relative">
+                  <input id="new-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" required className={`${inputClass} pr-12`} />
+                  <button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="confirm-new-password" className="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-500">Confirm new password</label>
+                <input id="confirm-new-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" required className={inputClass} />
+              </div>
+              <p className="text-xs leading-relaxed text-gray-400">At least 8 characters with uppercase, lowercase and a number. Supabase may require a recent sign-in for sensitive account changes.</p>
+              <button type="submit" disabled={passwordLoading || !password || !confirmPassword} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
+                {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}{passwordLoading ? 'Updating…' : 'Update password'}
+              </button>
+            </div>
+          </form>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-6">
+            <ShieldCheck className="mb-4 h-7 w-7 text-amber-700" />
+            <h3 className="font-display text-xl text-charcoal">Launch security</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-relaxed text-gray-600">
+              <li>• Use a unique password not used on another service.</li>
+              <li>• Rotate any credential that ever appeared in Git history.</li>
+              <li>• Grant <code>is_admin</code> only through a trusted database administrator.</li>
+              <li>• Never place the Supabase service-role key in a NEXT_PUBLIC variable.</li>
+            </ul>
           </div>
         </div>
-        <button onClick={handlePasswordChange} className="mt-4 px-6 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-          Update Password
-        </button>
-      </div>
-
-      {/* Save */}
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm text-white transition-all disabled:opacity-50"
-        style={{ background: 'linear-gradient(135deg, #283818, #2D5016)' }}
-      >
-        {saving ? <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</> : <><Save className="w-5 h-5" /> Save All Changes</>}
-      </button>
+      )}
     </div>
   );
 }

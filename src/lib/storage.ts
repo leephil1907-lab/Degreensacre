@@ -113,6 +113,7 @@ export async function uploadPropertyImage(
       url,
       storage_path: path,
       display_order: order,
+      alt_text: originalName.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
       is_primary: order === 0,
     })
     .select()

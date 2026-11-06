@@ -191,7 +191,7 @@ export default function SubmitPropertyPage() {
           </div>
           <h1 className="text-3xl font-serif text-charcoal-900 mb-4">Property Submitted!</h1>
           <p className="text-charcoal-600 mb-6">
-            Your property has been submitted for review. We'll notify you once it's approved.
+            Your property has been submitted for review. We&apos;ll notify you once it&apos;s approved.
           </p>
           <button
             onClick={() => router.push('/dashboard')}

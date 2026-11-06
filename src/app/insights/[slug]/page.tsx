@@ -1,154 +1,87 @@
-import { articles } from '@/data/articles';
-import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, ArrowRight, Calendar, Clock, User } from 'lucide-react';
+import ShareArticle from '@/components/ShareArticle';
+import { getPublishedArticles } from '@/lib/articles';
 
-interface Props {
-  params: { slug: string };
+type Props = { params: Promise<{ slug: string }> };
+
+function ArticleBody({ content }: { content: string }) {
+  const blocks = content.split(/\r?\n\r?\n/).filter(Boolean);
+  return (
+    <div className="space-y-6 text-gray-700">
+      {blocks.map((block, index) => {
+        const trimmed = block.trim();
+        if (trimmed.startsWith('## ')) return <h2 key={index} className="pt-4 font-display text-3xl leading-tight text-charcoal">{trimmed.slice(3)}</h2>;
+        if (trimmed.startsWith('### ')) return <h3 key={index} className="pt-3 font-display text-2xl text-charcoal">{trimmed.slice(4)}</h3>;
+        const lines = trimmed.split(/\r?\n/);
+        if (lines.every((line) => line.startsWith('- '))) {
+          return <ul key={index} className="space-y-3 rounded-xl bg-ivory p-6">{lines.map((line) => <li key={line} className="flex gap-3 leading-relaxed"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-forest" />{line.slice(2)}</li>)}</ul>;
+        }
+        return <p key={index} className="text-[1.05rem] leading-8">{trimmed}</p>;
+      })}
+    </div>
+  );
 }
 
-export default function ArticleDetailPage({ params }: Props) {
-  const article = articles.find(a => a.slug === params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const article = (await getPublishedArticles()).find((item) => item.slug === slug);
+  if (!article) return { title: 'Article not found' };
+  return {
+    title: article.title,
+    description: article.excerpt,
+    openGraph: { title: article.title, description: article.excerpt, images: [article.image], type: 'article' },
+  };
+}
 
-  if (!article) {
-    notFound();
-  }
+export default async function ArticleDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const articles = await getPublishedArticles();
+  const article = articles.find((item) => item.slug === slug);
+  if (!article) notFound();
 
-  const relatedArticles = articles
-    .filter(a => a.id !== article.id && (a.category === article.category || a.tags.some(t => article.tags.includes(t))))
+  const related = articles
+    .filter((item) => item.id !== article.id)
+    .sort((a, b) => {
+      const score = (candidate: typeof article) => (candidate.category === article.category ? 2 : 0) + candidate.tags.filter((tag) => article.tags.includes(tag)).length;
+      return score(b) - score(a);
+    })
     .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-ivory">
-      {/* Hero */}
-      <section className="relative h-[400px] md:h-[500px] overflow-hidden">
-        <img
-          src={article.image}
-          alt={article.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+      <section className="relative h-[440px] overflow-hidden md:h-[540px]">
+        <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-charcoal/20" />
+        <div className="absolute inset-x-0 bottom-0 p-6 md:p-12">
           <div className="container-custom max-w-4xl">
-            <span className="inline-block bg-magenta text-white text-xs font-bold px-3 py-1 rounded-full uppercase mb-4">
-              {article.category}
-            </span>
-            <h1 className="text-display-md md:font-display text-5xl font-bold text-white mb-4">
-              {article.title}
-            </h1>
-            <div className="flex items-center space-x-4 text-white/90">
-              <span>{article.author}</span>
-              <span>•</span>
-              <span>{new Date(article.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-              <span>•</span>
-              <span>{article.readTime} min read</span>
+            <span className="mb-4 inline-block rounded-full bg-sage px-3 py-1 text-xs font-bold uppercase text-charcoal">{article.category}</span>
+            <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">{article.title}</h1>
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/80">
+              <span className="inline-flex items-center gap-2"><User className="h-4 w-4" />{article.author}</span>
+              <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(article.publishDate).toLocaleDateString('en-NG', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              <span className="inline-flex items-center gap-2"><Clock className="h-4 w-4" />{article.readTime} min read</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Article Content */}
       <section className="py-12">
         <div className="container-custom max-w-4xl">
-          <div className="bg-white rounded-2xl shadow-soft p-8 md:p-12">
-            {/* Excerpt */}
-            <div className="text-xl text-gray-700 leading-relaxed mb-8 pb-8 border-b border-gray-200">
-              {article.excerpt}
-            </div>
+          <Link href="/insights" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-forest hover:underline"><ArrowLeft className="h-4 w-4" /> All insights</Link>
+          <article className="rounded-2xl bg-white p-6 shadow-sm md:p-12">
+            <p className="mb-10 border-b border-gray-200 pb-8 text-xl leading-relaxed text-gray-600">{article.excerpt}</p>
+            <ArticleBody content={article.content} />
+            <div className="mt-12 border-t border-gray-200 pt-8"><h3 className="mb-3 text-sm font-semibold text-gray-500">Topics</h3><div className="flex flex-wrap gap-2">{article.tags.map((tag) => <span key={tag} className="rounded-full bg-ivory px-3 py-1 text-sm text-gray-600">#{tag}</span>)}</div></div>
+            <div className="mt-8 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">This article provides general information only and is not legal, tax or financial advice. Property requirements vary by transaction and state; obtain advice from qualified independent professionals before committing funds.</div>
+            <ShareArticle title={article.title} />
+          </article>
 
-            {/* Content */}
-            <div className="prose prose-lg max-w-none">
-              <div className="text-gray-700 leading-relaxed space-y-6">
-                {article.content.split('\n\n').map((paragraph, idx) => (
-                  <p key={idx}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-ivory text-gray-700 text-sm rounded-full"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Share */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">Share this article</h3>
-              <div className="flex space-x-3">
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`${article.title} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  <span>WhatsApp</span>
-                </a>
-                <button
-                  onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      navigator.clipboard.writeText(window.location.href);
-                      alert('Link copied to clipboard!');
-                    }
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span>Copy Link</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Related Articles */}
-          {relatedArticles.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-charcoal mb-6">Related Articles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {relatedArticles.map((related) => (
-                  <Link
-                    key={related.id}
-                    href={`/insights/${related.slug}`}
-                    className="bg-white rounded-xl overflow-hidden hover-lift group"
-                  >
-                    <div className="relative h-40 overflow-hidden">
-                      <img
-                        src={related.image}
-                        alt={related.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <span className="text-xs text-magenta font-semibold">{related.category}</span>
-                      <h3 className="text-sm font-bold text-charcoal mt-1 line-clamp-2 group-hover:text-magenta transition-colors">
-                        {related.title}
-                      </h3>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+          {related.length > 0 && (
+            <div className="mt-12"><h2 className="mb-6 font-display text-3xl text-charcoal">Related guides</h2><div className="grid gap-6 md:grid-cols-3">{related.map((item) => <Link key={item.id} href={`/insights/${item.slug}`} className="group overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-lg"><img src={item.image} alt={item.title} className="h-40 w-full object-cover transition group-hover:scale-[1.02]" /><div className="p-4"><span className="text-xs font-bold text-forest">{item.category}</span><h3 className="mt-2 line-clamp-2 font-bold leading-snug text-charcoal group-hover:text-forest">{item.title}</h3><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-forest">Read guide <ArrowRight className="h-3.5 w-3.5" /></span></div></Link>)}</div></div>
           )}
-
-          {/* Back to Insights */}
-          <div className="mt-12 text-center">
-            <Link href="/insights" className="btn-outline">
-              ← Back to All Articles
-            </Link>
-          </div>
         </div>
       </section>
     </div>

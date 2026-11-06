@@ -13,7 +13,7 @@ export function PaymentReceiptEmail({ name, amount, reference, description, date
       </h1>
       <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.6', marginBottom: '24px' }}>Hi {name},</p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        Your payment has been processed successfully. Here's your receipt:
+        Your payment has been processed successfully. Here&apos;s your receipt:
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '24px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '4px' }}>Amount Paid</div>
@@ -126,7 +126,7 @@ export function WeeklyDigestEmail({ name, newCount, topProperties, marketUpdate 
       </h1>
       <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.6', marginBottom: '24px' }}>Hi {name},</p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        Here's what happened this week at De-Greenacres:
+        Here&apos;s what happened this week at De-Greenacres:
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '36px', fontWeight: 700, color: '#283818' }}>{newCount}</div>
@@ -165,11 +165,11 @@ export function ReEngagementEmail({ name, daysSinceLastVisit, newCount }: ReEnga
   return (
     <EmailLayout previewText={`We miss you! ${newCount} new properties waiting for you`}>
       <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1A1A1A', marginBottom: '8px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-        We've Missed You! 👋
+        We&apos;ve Missed You! 👋
       </h1>
       <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.6', marginBottom: '24px' }}>Hi {name},</p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        It's been <strong>{daysSinceLastVisit} days</strong> since your last visit. A lot has changed!
+        It&apos;s been <strong>{daysSinceLastVisit} days</strong> since your last visit. A lot has changed!
       </p>
       <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px', textAlign: 'center' as const }}>
         <div style={{ fontSize: '36px', fontWeight: 700, color: '#283818' }}>{newCount}</div>
@@ -178,12 +178,12 @@ export function ReEngagementEmail({ name, daysSinceLastVisit, newCount }: ReEnga
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '24px' }}>
         <tr><td align="center">
           <a href="https://degreenacres.com/properties" style={{ display: 'inline-block', backgroundColor: '#C41E7A', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
-            See What's New
+            See What&apos;s New
           </a>
         </td></tr>
       </table>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
-        Don't miss out on great investment opportunities. Update your alert preferences to get notified about properties that match your criteria.
+        Don&apos;t miss out on great investment opportunities. Update your alert preferences to get notified about properties that match your criteria.
       </p>
     </EmailLayout>
   );
@@ -294,7 +294,7 @@ export function SupportResolvedEmail({ name, ticketId, subject, resolution }: Su
         <div style={{ fontSize: '14px', color: '#1A1A1A', lineHeight: '1.6' }}>{resolution}</div>
       </div>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
-        If you're not satisfied with the resolution, you can reopen the ticket from your dashboard.
+        If you&apos;re not satisfied with the resolution, you can reopen the ticket from your dashboard.
       </p>
     </EmailLayout>
   );
@@ -312,7 +312,7 @@ export function PerformanceReportEmail({ name, totalViews, totalEnquiries, topLi
       </h1>
       <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.6', marginBottom: '24px' }}>Hi {name},</p>
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
-        Here's how your listings performed this {period}:
+        Here&apos;s how your listings performed this {period}:
       </p>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <div style={{ flex: 1, backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', textAlign: 'center' as const }}>

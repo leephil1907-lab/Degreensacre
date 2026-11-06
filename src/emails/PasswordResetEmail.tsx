@@ -26,11 +26,11 @@ export default function PasswordResetEmail({ name, resetUrl }: Props) {
       </table>
       <div style={{ backgroundColor: '#fff8e1', borderLeft: '4px solid #f59e0b', padding: '16px', borderRadius: '0 8px 8px 0', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#92400e', lineHeight: '1.6' }}>
-          <strong>⚠️ Security Notice:</strong> This link expires in <strong>1 hour</strong>. If you didn't request this reset, please secure your account immediately.
+          <strong>⚠️ Security Notice:</strong> This link expires in <strong>1 hour</strong>. If you didn&apos;t request this reset, please secure your account immediately.
         </div>
       </div>
       <p style={{ fontSize: '13px', color: '#999999', lineHeight: '1.6' }}>
-        If you didn't request a password reset, someone may have entered your email by mistake. You can safely ignore this email and your password will remain unchanged.
+        If you didn&apos;t request a password reset, someone may have entered your email by mistake. You can safely ignore this email and your password will remain unchanged.
       </p>
     </EmailLayout>
   );

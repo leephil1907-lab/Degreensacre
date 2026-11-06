@@ -193,7 +193,8 @@ When you get your domain (e.g., `degreenacres.com`):
 3. Wait for verification (usually instant)
 4. Add to `.env.local`:
    ```bash
-   EMAIL_FROM_PRODUCTION="De-Greenacres <hello@degreenacres.com>"
+   EMAIL_FROM="De-Greenacres <hello@degreenacres.com>"
+   EMAIL_REPLY_TO="info@degreenacresproperties.com"
    ```
 
 ---
@@ -228,9 +229,9 @@ src/
 # Required
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
 
-# Optional (defaults provided)
-EMAIL_FROM="De-Greenacres <onboarding@resend.dev>"
-EMAIL_FROM_PRODUCTION="De-Greenacres <hello@degreenacres.com>"
+# Sender and reply-to (use a verified sender domain in production)
+EMAIL_FROM="De-Greenacres <noreply@degreenacresproperties.com>"
+EMAIL_REPLY_TO="info@degreenacresproperties.com"
 ```
 
 ---

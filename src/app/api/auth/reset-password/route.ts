@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { isEmail } from '@/lib/validation';
+import { getSiteUrl } from '@/lib/site';
 
 // POST /api/auth/reset-password - Request password reset
 export async function POST(request: NextRequest) {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.auth.resetPasswordForEmail(
       body.email.toLowerCase().trim(),
       {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/new-password`,
+        redirectTo: `${getSiteUrl()}/auth/reset-password`,
       }
     );
 

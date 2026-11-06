@@ -20,7 +20,7 @@ A **production-grade Nigerian real estate marketplace** with:
 
 1. Go to https://supabase.com and create a new project
 2. Go to SQL Editor
-3. Copy and paste the entire contents of `supabase-schema-v2.sql`
+3. Copy and paste the entire contents of `supabase-schema.sql`
 4. Click "Run" to create all tables
 5. Go to Storage and create these buckets:
    - `property-images` (public)
@@ -39,7 +39,6 @@ Edit `.env.local` and add:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 RESEND_API_KEY=re_your_key (get from resend.com)
 NEXT_PUBLIC_WHATSAPP_NUMBER=2348065019971
@@ -64,25 +63,19 @@ UPDATE profiles SET is_admin = true WHERE email = 'your-email@example.com';
 
 ## Deploy to Production
 
-### Option A: Vercel (Recommended)
+### Render (configured production target)
+
+1. Push the repository to GitHub.
+2. In Render, choose **New → Blueprint** and select this repository.
+3. Enter the environment values requested from `render.yaml`.
+4. Wait for the build and `/api/health` check to pass.
+
+See [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md) for the complete setup, authentication URLs, verification, and custom-domain cutover.
+
+### Local production rehearsal
 
 ```bash
-npm i -g vercel
-vercel --prod
-```
-
-Then add environment variables in Vercel dashboard.
-
-### Option B: Railway
-
-```bash
-railway init
-railway up
-```
-
-### Option C: Self-hosted
-
-```bash
+npm ci
 npm run build
 npm start
 ```

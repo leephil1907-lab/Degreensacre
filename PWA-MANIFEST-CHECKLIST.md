@@ -25,7 +25,7 @@ This checklist maps **every Lighthouse + PWABuilder + Google Play** installabili
 | 12 | **Service Worker registered** | `navigator.serviceWorker.register('/sw.js', {scope:'/'})` | `PWARegister.tsx` registers with `{scope:'/'}` + update checker every 60s | ✅ PASS |
 | 13 | **Service Worker has fetch handler** | Must intercept `fetch` event | `sw.js` handles navigation / API / assets with 4 strategies | ✅ PASS |
 | 14 | **Works offline** | Navigating to offline page while offline returns 200 | `offline.html` cached + `navigationHandler` returns `caches.match('/')` or `offline.html` — tested with `caches.match` fallback | ✅ PASS |
-| 15 | **HTTPS** | Served over https | Vercel (`fra1`) forces HTTPS + HSTS via `vercel.json` headers | ✅ PASS (on Vercel) |
+| 15 | **HTTPS** | Served over https | Render provides TLS; `next.config.js` adds HSTS | ✅ PASS after HTTPS deployment |
 | 16 | **Viewport meta** | `width=device-width, initial-scale=1` | `export const viewport` in `layout.tsx` sets `width: device-width, initialScale: 1, viewportFit: cover` | ✅ PASS |
 
 **Result:** All 16 core Lighthouse PWA checks → **PASS**.
@@ -47,7 +47,7 @@ This checklist maps **every Lighthouse + PWABuilder + Google Play** installabili
 | **`icons` purpose duality** | Each size appears twice: `any` (Lighthouse) + `maskable` (adaptive icons) |
 | **`share_target` + `protocol_handlers`** | Future share + deep-link support (optional, scores extra) |
 | **`theme_color` media queries** | `viewport.themeColor` provides light `#283818` + dark `#1a2810` |
-| **Service Worker `Service-Worker-Allowed: /`** | Header added in `next.config.js` + `vercel.json` — allows root scope |
+| **Service Worker `Service-Worker-Allowed: /`** | Header added in `next.config.js` — allows root scope on Render |
 | **SW `Cache-Control: public, max-age=0`** | Prevents stale SW — header set for `/sw.js` |
 | **Offline page branding** | `offline.html` rebuilt with forest gradient, CAC badge, auto-reload on `online` event |
 
@@ -140,7 +140,7 @@ npm run build && npx lighthouse http://localhost:3000 --only-categories=pwa --ch
 
 > **✅ CONFIRMED PUBLISH-READY — manifest earns perfect PWA audit when served over HTTPS.**
 >
-> All required fields, icons, screenshots and service-worker criteria are satisfied. The manifest has been validated as **correct JSON**, all referenced assets **exist on disk and were verified**, and the service worker **passes install + offline + push** checks. Deploy to Vercel (`vercel --prod`) and verify with Lighthouse / PWABuilder — **expected score 100 / PWA installable**.
+> All required fields, icons, screenshots and service-worker criteria are satisfied. The manifest has been validated as **correct JSON**, all referenced assets **exist on disk and were verified**, and the service worker **passes install + offline + push** checks. Deploy with the Render Blueprint and verify with Lighthouse / PWABuilder — **expected score 100 / PWA installable**.
 
 **Next optional polish (not required for 100):**
 - Replace `og-image.jpg` screenshots with real 1280×720 device screenshots of `/` and `/properties` (export from Chrome → Device frame).

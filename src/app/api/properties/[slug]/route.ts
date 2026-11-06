@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase-server';
 import { getPropertyBySlug, incrementPropertyView } from '@/lib/db-helpers';
 import { logAudit } from '@/lib/db-helpers';
+import { parseCoordinates } from '@/lib/property';
 
 // GET /api/properties/[slug] - Get property by slug
 export async function GET(
@@ -20,8 +21,12 @@ export async function GET(
       );
     }
 
-    // Track view
-    await incrementPropertyView(property.id);
+    // Analytics must never make a valid public property unavailable.
+    try {
+      await incrementPropertyView(property.id);
+    } catch (viewError) {
+      console.warn('Property view could not be recorded:', viewError);
+    }
 
     return NextResponse.json({ property, success: true });
   } catch (error) {
@@ -94,6 +99,12 @@ export async function PATCH(
       if (body[field] !== undefined) {
         updates[field] = body[field];
       }
+    }
+
+    if (updates.coordinates !== undefined && updates.coordinates !== null) {
+      const coordinates = parseCoordinates(updates.coordinates);
+      if (!coordinates) return NextResponse.json({ error: 'Valid latitude and longitude coordinates are required.', success: false }, { status: 400 });
+      updates.coordinates = coordinates;
     }
 
     // If submitting for review

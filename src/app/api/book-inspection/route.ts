@@ -1,45 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { requestRateLimit } from '@/lib/rate-limit';
+import { isEmail, isPhone, sanitizeForDb } from '@/lib/validation';
 
-// POST /api/book-inspection - Anonymous inspection booking
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'inspection', 5);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many inspection requests. Please try again later or contact us by phone.', success: false },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
-    const supabase = createServerClient();
+    const fullName = String(body.full_name || '').trim();
+    const email = String(body.email || '').trim().toLowerCase();
+    const phone = String(body.phone || '').trim();
+    const preferredDate = String(body.preferred_date || '');
+    const state = String(body.state || '').trim();
+    const location = String(body.location || '').trim();
 
-    // Insert into contact_messages (no auth required)
+    if (fullName.length < 2 || fullName.length > 120) return NextResponse.json({ error: 'Enter your full name.', success: false }, { status: 400 });
+    if (!isEmail(email)) return NextResponse.json({ error: 'Enter a valid email address.', success: false }, { status: 400 });
+    if (!isPhone(phone)) return NextResponse.json({ error: 'Enter a valid phone number.', success: false }, { status: 400 });
+    if (!state || !preferredDate || Number.isNaN(Date.parse(preferredDate))) return NextResponse.json({ error: 'Select a state and valid preferred date.', success: false }, { status: 400 });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(`${preferredDate}T00:00:00`) < today) return NextResponse.json({ error: 'Preferred inspection date cannot be in the past.', success: false }, { status: 400 });
+
+    const propertyInterest = String(body.property_interest || 'General property viewing').trim();
     const message = [
-      `📋 INSPECTION BOOKING REQUEST`,
-      `Name: ${body.full_name || 'N/A'}`,
-      `Phone: ${body.phone || 'N/A'}`,
-      `Email: ${body.email || 'N/A'}`,
-      `Property: ${body.property_interest || 'Not specified'}`,
-      `Location: ${body.location || ''}, ${body.state || 'N/A'}`,
-      `Preferred Date: ${body.preferred_date || 'N/A'}`,
-      `Preferred Time: ${body.preferred_time || 'Any'}`,
-      `Attendees: ${body.attendees || '1'}`,
-      `Source: ${body.hear_about || 'Not specified'}`,
-      `Notes: ${body.notes || 'None'}`,
-      `Inspection Fee: ₦20,000`,
+      'INSPECTION BOOKING REQUEST',
+      `Name: ${fullName}`,
+      `Phone: ${phone}`,
+      `Email: ${email}`,
+      `Property: ${propertyInterest}`,
+      `Location: ${location}, ${state}`,
+      `Preferred Date: ${preferredDate}`,
+      `Preferred Time: ${String(body.preferred_time || 'Any')}`,
+      `Attendees: ${String(body.attendees || '1')}`,
+      `Source: ${String(body.hear_about || 'Not specified')}`,
+      `Notes: ${String(body.notes || 'None')}`,
     ].join('\n');
+    if (message.length > 7000) return NextResponse.json({ error: 'Inspection notes are too long.', success: false }, { status: 400 });
 
+    const supabase = await createServerSupabaseClient();
     const { error } = await supabase.from('contact_messages').insert({
-      name: body.full_name || 'Inspection Booking',
-      email: body.email || 'unknown',
-      phone: body.phone || '',
-      subject: `Inspection Booking: ${body.property_interest || body.location || body.state || 'General'}`,
-      message,
+      name: sanitizeForDb(fullName),
+      email,
+      phone: sanitizeForDb(phone),
+      subject: sanitizeForDb(`Inspection Booking: ${propertyInterest || location || state}`),
+      message: sanitizeForDb(message),
       status: 'new',
     });
 
     if (error) {
-      console.error('Book inspection error:', error);
-      return NextResponse.json({ error: 'Failed to save booking', success: false }, { status: 500 });
+      console.error('Inspection persistence error:', error);
+      return NextResponse.json({ error: 'Your inspection request could not be saved. Please try again or use WhatsApp.', success: false }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'Inspection booking received' });
+    return NextResponse.json({ success: true, message: 'Inspection request received. Our team will contact you to confirm availability.' }, { status: 201 });
   } catch (error) {
-    console.error('Book inspection error:', error);
-    return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
+    console.error('POST /api/book-inspection error:', error);
+    return NextResponse.json({ error: 'Invalid inspection request.', success: false }, { status: 400 });
   }
 }

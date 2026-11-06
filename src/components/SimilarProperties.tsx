@@ -2,67 +2,53 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Property, properties as staticProperties } from '@/data/properties';
+import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 interface SimilarPropertiesProps {
   currentProperty: any; // allow DB shape or static shape
 }
 
 export default function SimilarProperties({ currentProperty }: SimilarPropertiesProps) {
   const [dbList, setDbList] = useState<any[]>([]);
-  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const fetchSimilar = async () => {
       try {
         const params = new URLSearchParams();
-        // Prefer same state and type to get relevant DB pool
         if (currentProperty.state) params.set('state', currentProperty.state);
         if (currentProperty.type) params.set('type', currentProperty.type);
         params.set('status', 'available');
         params.set('limit', '12');
         const res = await fetch(`/api/properties?${params.toString()}`);
-        if (res.ok) {
-          const j = await res.json();
-          const list = j.properties || [];
-          if (!cancelled) {
-            if (list.length > 0) {
-              // normalize DB shapes to static-like for scoring
-              const normalized = list.map((p: any) => ({
-                id: p.id,
-                slug: p.slug,
-                title: p.title,
-                price: p.price,
-                state: p.state,
-                area: p.area,
-                propertyType: p.property_type || p.propertyType,
-                type: p.type,
-                bedrooms: p.bedrooms,
-                bathrooms: p.bathrooms,
-                sqm: p.sqm,
-                images: p.images || (p.property_images?.map((x: any) => x.url) || ['/placeholder.jpg']),
-                verificationStatus: p.verification_status || p.verificationStatus,
-                featured: p.featured,
-              }));
-              setDbList(normalized);
-              setIsDemo(false);
-            } else {
-              setIsDemo(true);
-            }
-          }
-        } else {
-          if (!cancelled) setIsDemo(true);
-        }
-      } catch {
-        if (!cancelled) setIsDemo(true);
+        if (!res.ok) return;
+        const data = await res.json();
+        const normalized = (data.properties || []).map((p: any) => ({
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          price: p.price,
+          price_period: p.price_period,
+          state: p.state,
+          area: p.area,
+          propertyType: p.property_type || p.propertyType,
+          type: p.type,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          sqm: p.sqm,
+          images: p.images || (p.property_images?.map((x: any) => x.url) || []),
+          verificationStatus: p.verification_status || p.verificationStatus,
+          featured: p.featured,
+        }));
+        if (!cancelled) setDbList(normalized);
+      } catch (error) {
+        console.error('Similar properties could not be loaded:', error);
       }
     };
-    fetchSimilar();
+    void fetchSimilar();
     return () => { cancelled = true; };
   }, [currentProperty.id, currentProperty.state, currentProperty.type]);
 
-  // Choose pool: DB if available, otherwise static fallback (editorial/demo)
-  const pool: any[] = dbList.length > 0 ? dbList : staticProperties as any[];
+  const pool: any[] = dbList;
 
   const getSimilarityScore = (property: any): number => {
     if (property.id === currentProperty.id) return -1;
@@ -137,7 +123,7 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
             <Link key={property.id || property.slug} href={`/properties/${property.slug}`} className="card hover-lift group">
               <div className="relative h-56 overflow-hidden">
                 <img
-                  src={property.images?.[0] || '/placeholder.jpg'}
+                  src={getPropertyImage(property)}
                   alt={property.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
@@ -155,7 +141,7 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
                 </div>
 
                 <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
-                  <p className="text-lg font-bold text-forest">₦{(property.price / 1000000).toFixed(0)}M</p>
+                  <p className="text-lg font-bold text-forest">{formatPropertyPrice(property.price, property.price_period)}</p>
                 </div>
               </div>
 

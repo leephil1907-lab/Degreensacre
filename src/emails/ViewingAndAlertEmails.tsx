@@ -69,7 +69,7 @@ export function ViewingReminderEmail({ name, propertyTitle, date, time, address,
         </td></tr>
       </table>
       <p style={{ fontSize: '13px', color: '#999', lineHeight: '1.6' }}>
-        Can't make it? Please let us know at least 4 hours in advance so we can reschedule.
+        Can&apos;t make it? Please let us know at least 4 hours in advance so we can reschedule.
       </p>
     </EmailLayout>
   );

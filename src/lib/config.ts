@@ -1,5 +1,7 @@
 // Centralized configuration for De-Greenacres Properties
 
+import { getSiteUrl } from './site';
+
 export const config = {
   // Company Information
   company: {
@@ -14,7 +16,6 @@ export const config = {
   // Admin Configuration
   admin: {
     email: process.env.ADMIN_EMAIL || 'degreenacrespropertieslimited@gmail.com',
-    defaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'changeme',
   },
 
   // WhatsApp Configuration
@@ -26,7 +27,7 @@ export const config = {
   // Application Settings
   app: {
     name: 'De-Greenacres Properties',
-    url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    url: getSiteUrl(),
     defaultLocale: 'en-NG',
     currency: 'NGN',
     currencySymbol: '₦',

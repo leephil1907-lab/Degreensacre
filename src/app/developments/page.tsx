@@ -1,155 +1,75 @@
-'use client';
-
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { developments as staticDevelopments } from '@/data/developments';
+import { Building2, MapPin } from 'lucide-react';
 import ScrollReveal from '@/components/ScrollReveal';
-import { MapPin, Building2 } from 'lucide-react';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-export default function DevelopmentsPage() {
-  const [dbList, setDbList] = useState<any[] | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const res = await fetch('/api/developments');
-        if (res.ok) {
-          const j = await res.json();
-          const list = j.developments || [];
-          if (!cancelled) {
-            if (list.length > 0) {
-              setDbList(list);
-              setIsDemo(false);
-            } else {
-              setDbList(null);
-              setIsDemo(true);
-            }
-          }
-        } else if (!cancelled) setIsDemo(true);
-      } catch { if (!cancelled) setIsDemo(true); }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, []);
-  const developments = dbList && dbList.length > 0 ? dbList : staticDevelopments;
-  const showDemo = isDemo || !dbList;
+export const metadata = {
+  title: 'Property Developments',
+  description: 'Explore published estate and development projects from De-Greenacres.',
+};
+export const dynamic = 'force-dynamic';
+
+function formatStartingPrice(units: any[]) {
+  const prices = units.map((unit) => Number(unit?.price || 0)).filter((price) => price > 0);
+  if (!prices.length) return 'Contact for pricing';
+  const price = Math.min(...prices);
+  if (price >= 1_000_000_000) return `₦${(price / 1_000_000_000).toFixed(1)}B`;
+  if (price >= 1_000_000) return `₦${(price / 1_000_000).toFixed(price % 1_000_000 === 0 ? 0 : 1)}M`;
+  return `₦${price.toLocaleString()}`;
+}
+
+export default async function DevelopmentsPage() {
+  let developments: any[] = [];
+  let loadError = false;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase.from('developments').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    developments = (data || []).map((development) => ({
+      ...development,
+      gallery: Array.isArray(development.gallery) ? development.gallery : [],
+      unitTypes: Array.isArray(development.unit_types) ? development.unit_types : [],
+      totalUnits: Number(development.total_units || 0),
+      availableUnits: Number(development.available_units || 0),
+    }));
+  } catch (error) {
+    console.error('Developments could not be loaded:', error);
+    loadError = true;
+  }
+
   return (
     <div className="min-h-screen bg-ivory">
-      {/* Hero Section */}
       <section className="relative h-[400px] overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90"
-          alt="Property Developments"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-charcoal/80" />
-        
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="container-custom text-center text-white">
-            <h1 className="font-display text-5xl md:text-display-xl font-bold mb-4">
-              Property Developments
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-              Discover premium estates and development projects across Nigeria
-            </p>
-          </div>
-        </div>
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90" alt="Property developments" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-charcoal/85" />
+        <div className="absolute inset-0 flex items-center justify-center"><div className="container-custom text-center text-white"><p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-sage">Projects & estates</p><h1 className="font-display text-5xl font-bold md:text-display-xl">Property Developments</h1><p className="mx-auto mt-4 max-w-3xl text-xl text-white/85">Explore published estates and development projects, unit options and inspection opportunities.</p></div></div>
       </section>
 
-      {/* Developments Grid */}
       <section className="section-padding">
         <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {developments.map((development, i) => (
-              <ScrollReveal key={development.id} delay={i * 0.1}>
-                <Link
-                  href={`/developments/${development.slug}`}
-                  className="card hover-lift group block"
-                >
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={development.gallery[0]}
-                      alt={development.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-forest text-white text-xs font-bold px-3 py-1 rounded-full">
-                        {development.status}
-                      </span>
+          {loadError && <div role="alert" className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">Developments are temporarily unavailable. Please refresh the page or contact our team.</div>}
+          {!loadError && developments.length === 0 ? (
+            <div className="rounded-3xl border border-gray-100 bg-white py-20 text-center"><Building2 className="mx-auto mb-4 h-14 w-14 text-gray-300" /><h2 className="font-display text-3xl text-charcoal">No developments published yet</h2><p className="mx-auto mt-3 max-w-lg text-gray-600">New projects will appear here after they are published by our team. You can also browse current properties or contact us about upcoming opportunities.</p><Link href="/properties" className="mt-6 inline-flex rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white">Browse properties</Link></div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {developments.map((development, index) => (
+                <ScrollReveal key={development.id} delay={index * 0.08}>
+                  <Link href={`/developments/${development.slug}`} className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                    <div className="relative h-64 overflow-hidden">
+                      <img src={development.gallery[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200'} alt={development.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-xs font-bold capitalize text-white">{String(development.status || 'planning').replaceAll('-', ' ')}</span>
+                      <div className="absolute inset-x-4 bottom-4 rounded-xl bg-white/95 p-3 backdrop-blur"><p className="text-xs text-gray-500">Starting from</p><p className="text-xl font-bold text-forest">{formatStartingPrice(development.unitTypes)}</p></div>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3">
-                        <p className="text-sm text-gray-600">Starting from</p>
-                        <p className="text-xl font-bold text-forest">
-                          ₦{(development.unitTypes[0].price / 1000000).toFixed(0)}M
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-charcoal mb-2 group-hover:text-forest transition-colors">
-                      {development.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3 flex items-center">
-                      <MapPin className="w-4 h-4 mr-1 text-forest" />
-                      {development.location}, {development.state}
-                    </p>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {development.description}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <div className="text-sm text-gray-600">
-                        <span className="font-semibold text-charcoal">{development.totalUnits}</span> units
-                      </div>
-                      <div className="text-sm text-forest font-semibold">
-                        View Details →
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
-
-          {developments.length === 0 && (
-            <div className="text-center py-16">
-              <Building2 className="w-24 h-24 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-charcoal mb-2">No Developments Yet</h3>
-              <p className="text-gray-600">Check back soon for exciting new development projects.</p>
+                    <div className="p-6"><h2 className="text-xl font-bold text-charcoal group-hover:text-forest">{development.name}</h2><p className="mt-3 flex items-center text-sm text-gray-600"><MapPin className="mr-1 h-4 w-4 text-forest" />{development.location}, {development.state}</p><p className="mt-3 line-clamp-2 text-sm leading-relaxed text-gray-600">{development.description}</p><div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4 text-sm"><span className="text-gray-500"><strong className="text-charcoal">{development.availableUnits}</strong> of {development.totalUnits} units available</span><span className="font-bold text-forest">View details →</span></div></div>
+                  </Link>
+                </ScrollReveal>
+              ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="section-padding bg-gradient-to-br from-forest to-forest-600 text-white">
-        <div className="container-custom text-center">
-          <ScrollReveal>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Interested in Property Development?
-            </h2>
-            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Partner with De-Greenacres for your next development project or invest in our premium estates.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/contact" className="btn-primary bg-white text-forest hover:bg-ivory">
-                Contact Our Team
-              </Link>
-              <a
-                href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20interested%20in%20property%20developments.%20Please%20send%20me%20more%20information."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline border-white text-white hover:bg-white hover:text-forest"
-              >
-                Chat on WhatsApp
-              </a>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      <section className="section-padding bg-forest text-white"><div className="container-custom text-center"><h2 className="font-display text-3xl md:text-4xl">Interested in a development project?</h2><p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">Contact our team for current availability, documentation and site inspection arrangements.</p><Link href="/contact" className="mt-7 inline-flex rounded-xl bg-white px-7 py-3.5 font-bold text-forest">Contact our team</Link></div></section>
     </div>
   );
 }

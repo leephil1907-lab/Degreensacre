@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -7,29 +7,30 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-    global: {
-      headers: {
-        Cookie: cookieStore.toString(),
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Server Components cannot write cookies. The proxy refreshes auth
+          // cookies for protected routes; Route Handlers can still write them.
+        }
       },
     },
   });
 }
 
-// Admin client — now uses anon key with RLS policies for security
-// No service role key needed. RLS policies handle all access control.
+// Kept as a compatibility name for existing admin/data helpers. This is the
+// current administrator's RLS-scoped client, never a service-role client.
+// It MUST retain the request cookies or every admin policy sees an anonymous user.
 export async function createAdminSupabaseClient() {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return createServerSupabaseClient();
 }
 
 export async function getUser() {

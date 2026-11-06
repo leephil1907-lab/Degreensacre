@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { CheckCircle, Calendar, MapPin, Users, Phone, Mail, ArrowRight, ArrowLeft, Shield, FileCheck, Eye } from 'lucide-react';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { whatsappLink } from '@/lib/site-settings';
 
 const NIGERIAN_STATES = [
   'Lagos', 'Abuja (FCT)', 'Akwa Ibom', 'Enugu', 'Rivers', 'Delta', 'Oyo', 'Anambra', 'Imo', 'Abia',
@@ -16,6 +18,7 @@ const HEAR_OPTIONS = [
 ];
 
 export default function BookInspectionPage() {
+  const { settings } = useSiteSettings();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -64,28 +67,19 @@ export default function BookInspectionPage() {
       const response = await fetch('/api/book-inspection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          source: 'book-inspection-page',
-          inspection_fee: 20000,
-        }),
+        body: JSON.stringify({ ...formData, source: 'book-inspection-page' }),
       });
-
-      if (response.ok) {
-        setIsSubmitted(true);
-      } else {
-        // If API fails, still show success (we'll capture via WhatsApp fallback)
-        setIsSubmitted(true);
-      }
-    } catch {
-      // Network error - still show success with WhatsApp fallback
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Your inspection request could not be saved.');
       setIsSubmitted(true);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : 'Your inspection request could not be saved. Please try again or use WhatsApp.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const whatsappMessage = encodeURIComponent(
+  const whatsappMessage = (
     `Hello De-Greenacres, I'd like to book a property inspection.\n\n` +
     `Name: ${formData.full_name}\n` +
     `Phone: ${formData.phone}\n` +
@@ -93,7 +87,7 @@ export default function BookInspectionPage() {
     `Location: ${formData.location}, ${formData.state}\n` +
     `Preferred date: ${formData.preferred_date}\n` +
     `Attendees: ${formData.attendees}\n\n` +
-    `I understand the inspection fee is ₦20,000 (payable after confirmation). Please confirm availability.`
+    `I understand the inspection fee is ₦${settings.inspection_fee.toLocaleString()} (payable after confirmation). Please confirm availability.`
   );
 
   if (isSubmitted) {
@@ -123,14 +117,14 @@ export default function BookInspectionPage() {
                 <span><strong>Attendees:</strong> {formData.attendees}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <span className="text-forest font-bold">₦20,000</span>
+                <span className="text-forest font-bold">₦{settings.inspection_fee.toLocaleString()}</span>
                 <span className="text-gray-500">inspection fee — payment details sent after confirmation</span>
               </div>
             </div>
 
             <div className="space-y-3">
               <a
-                href={`https://wa.me/2347041754800?text=${whatsappMessage}`}
+                href={whatsappLink(settings, whatsappMessage)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-green-600 text-white w-full py-3.5 rounded-xl font-bold hover:bg-green-500 transition-all"
@@ -167,7 +161,7 @@ export default function BookInspectionPage() {
           </p>
           <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3">
             <span className="text-sm text-ivory/70">Fee applies after confirmation:</span>
-            <span className="font-display text-3xl text-sage">₦20,000</span>
+            <span className="font-display text-3xl text-sage">₦{settings.inspection_fee.toLocaleString()}</span>
           </div>
         </div>
         <div className="relative z-10 space-y-4">
@@ -333,7 +327,7 @@ export default function BookInspectionPage() {
                 <div className="mt-6 bg-ivory rounded-xl p-4 border border-gray-200">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Inspection Fee (after confirmation)</span>
-                    <span className="font-display text-2xl text-forest">₦20,000</span>
+                    <span className="font-display text-2xl text-forest">₦{settings.inspection_fee.toLocaleString()}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Our team will send payment details once your inspection is scheduled</p>
                 </div>

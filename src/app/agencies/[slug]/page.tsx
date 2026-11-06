@@ -1,38 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 import { Building2, BadgeCheck, Phone, Mail, Globe, MapPin, Users, ArrowRight } from 'lucide-react';
 
 interface Props { params: Promise<{ slug: string }> }
-
-const demoAgencies: any = {
-  'de-greenacres-properties-limited': {
-    id: 'demo-ag-1',
-    name: 'De-Greenacres Properties Limited',
-    slug: 'de-greenacres-properties-limited',
-    email: 'info@degreenacresproperties.com',
-    phone: '+2348065019971',
-    logo_url: '/logo-256.png',
-    description: 'CAC RC: 1856064 — Full-service property company: sales, land, verification, inspection, management. Every listing verified.',
-    address: '5 Borogade Crescent, Off Okengbero Street, New Oko-Oba, Lagos',
-    state: 'Lagos',
-    website: 'https://degreenacresproperties.com',
-    is_verified: true,
-  },
-  'de-greenacres-uyo-hub': {
-    id: 'demo-ag-2',
-    name: 'De-Greenacres — Uyo Hub',
-    slug: 'de-greenacres-uyo-hub',
-    email: 'uyo@degreenacresproperties.com',
-    phone: '+2347041754800',
-    logo_url: '/logo-256.png',
-    description: 'Southeast hub: Uyo, Enugu, Asaba, Port Harcourt — land banking & residential.',
-    address: 'Uyo, Akwa Ibom State — New Coastal Highway corridor',
-    state: 'Akwa Ibom',
-    website: 'https://degreenacresproperties.com',
-    is_verified: true,
-  },
-};
 
 export default async function AgencyDetailPage({ params }: Props) {
   const { slug } = await params;
@@ -40,39 +12,27 @@ export default async function AgencyDetailPage({ params }: Props) {
   let agency: any = null;
   let agents: any[] = [];
   let properties: any[] = [];
-  let isDemo = false;
 
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('agencies').select('*').eq('slug', slug).single();
     if (data) {
       agency = data;
-      isDemo = false;
       const { data: ags } = await supabase.from('agents').select('*').eq('agency_id', agency.id);
       agents = ags || [];
       if (agents.length) {
         const uids = agents.map((a: any) => a.user_id).filter(Boolean);
         if (uids.length) {
-          const { data: props } = await supabase.from('properties').select('id, slug, title, price, area, state, images, type').in('owner_id', uids).eq('status', 'available').limit(12);
+          const { data: props } = await supabase.from('properties').select('id, slug, title, price, price_period, area, state, images, type').in('owner_id', uids).eq('status', 'available').limit(12);
           properties = props || [];
         }
       }
     }
-  } catch {}
-
-  if (!agency) {
-    if (demoAgencies[slug]) {
-      agency = demoAgencies[slug];
-      isDemo = true;
-      agents = [
-        { id: 'demo-1', name: 'De-Greenacres Team', slug: 'de-greenacres-team', photo_url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400', is_verified: true },
-        { id: 'demo-2', name: 'Uyo Land Desk', slug: 'uyo-land-desk', photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400', is_verified: true },
-      ];
-      properties = [];
-    } else {
-      notFound();
-    }
+  } catch (error) {
+    console.error('Agency profile could not be loaded:', error);
   }
+
+  if (!agency) notFound();
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -135,12 +95,12 @@ export default async function AgencyDetailPage({ params }: Props) {
                 {properties.map((p: any) => (
                   <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group">
                     <div className="h-48 overflow-hidden">
-                      <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600'} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <img src={getPropertyImage(p)} alt={p.title} className="w-full h-full object-cover bg-forest-50 group-hover:scale-105 transition-transform" />
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-charcoal line-clamp-2">{p.title}</h3>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {p.area}, {p.state}</p>
-                      <p className="font-display text-lg text-forest mt-2">₦{(p.price / 1000000).toFixed(0)}M</p>
+                      <p className="font-display text-lg text-forest mt-2">{formatPropertyPrice(p.price, p.price_period)}</p>
                     </div>
                   </Link>
                 ))}

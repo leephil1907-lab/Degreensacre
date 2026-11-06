@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { getProperties } from '@/lib/db-helpers';
 import { sanitize, sanitizeForDb, PROPERTY_TYPES, NIGERIAN_STATES } from '@/lib/validation';
+import { parseCoordinates } from '@/lib/property';
 
 // GET /api/properties - List properties with filtering
 export async function GET(request: NextRequest) {
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     if (!body.state || !NIGERIAN_STATES.includes(body.state)) errors.push('Valid state is required');
     if (!body.area || body.area.trim().length < 2) errors.push('Area is required');
     if (!body.description || body.description.trim().length < 50) errors.push('Description is required (min 50 characters)');
+    if (body.coordinates !== undefined && body.coordinates !== null && !parseCoordinates(body.coordinates)) errors.push('Valid latitude and longitude coordinates are required when a map location is supplied');
 
     if (errors.length > 0) {
       return NextResponse.json(
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
       lga: sanitizeForDb(body.lga || ''),
       city: sanitizeForDb(body.city || ''),
       state: body.state,
-      coordinates: body.coordinates || null,
+      coordinates: parseCoordinates(body.coordinates),
       features: body.features || [],
       amenities: body.amenities || [],
       documentation: sanitizeForDb(body.documentation || ''),

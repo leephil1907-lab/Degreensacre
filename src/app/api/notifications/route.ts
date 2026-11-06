@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { sanitizeForDb } from '@/lib/validation';
+import { isUuid } from '@/lib/validation';
 
 // GET /api/notifications - Get user's notifications
 export async function GET() {
@@ -51,22 +51,24 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
 
+    let result;
     if (body.mark_all) {
-      // Mark all as read
-      await supabase
+      result = await supabase
         .from('notifications')
         .update({ is_read: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
-    } else if (body.notification_id) {
-      // Mark specific notification as read
-      await supabase
+    } else if (isUuid(String(body.notification_id || ''))) {
+      result = await supabase
         .from('notifications')
         .update({ is_read: true })
         .eq('id', body.notification_id)
         .eq('user_id', user.id);
+    } else {
+      return NextResponse.json({ error: 'A valid notification ID or mark_all is required', success: false }, { status: 400 });
     }
 
+    if (result.error) throw result.error;
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('PATCH /api/notifications error:', error);

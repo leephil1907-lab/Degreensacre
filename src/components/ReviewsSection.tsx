@@ -93,14 +93,8 @@ export default function ReviewsSection() {
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        const data = await res.json();
         setSubmitted(true);
         setForm({ name: '', email: '', rating: 5, title: '', message: '', location: '' });
-        fetchReviews();
-        // Open WhatsApp notification for admin
-        if (data.whatsapp_notify) {
-          window.open(data.whatsapp_notify, '_blank');
-        }
       } else {
         const data = await res.json();
         setError(data.error || 'Failed to submit review');
@@ -208,7 +202,7 @@ export default function ReviewsSection() {
             <div className="bg-forest/5 border border-forest/20 rounded-2xl p-8 text-center">
               <CheckCircle className="w-12 h-12 text-forest mx-auto mb-4" />
               <h3 className="font-display text-2xl text-charcoal mb-2">Thank you for your review!</h3>
-              <p className="text-gray-600 text-sm">Your review is now live on the website. We appreciate your feedback!</p>
+              <p className="text-gray-600 text-sm">Your review has been saved and will appear publicly after our team approves it. We appreciate your feedback!</p>
               <button onClick={() => { setShowForm(false); setSubmitted(false); }} className="mt-4 text-forest font-semibold text-sm underline">
                 Close
               </button>

@@ -1,24 +1,32 @@
 import Link from 'next/link';
-import { properties as staticProperties } from '@/data/properties';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { formatPropertyPrice } from '@/lib/property';
 export default async function LagosLocationPage() {
   let lagosProperties: any[] = [];
-  let isDemo = false;
+  let totalCount = 0;
+  let loadError = '';
   try {
     const supabase = await createServerSupabaseClient();
-    const { data } = await supabase.from('properties').select('*').eq('state', 'Lagos').eq('status', 'available').order('date_added', { ascending: false }).limit(20);
-    if (data && data.length > 0) {
-      lagosProperties = data.map((p: any) => ({ ...p, images: p.images || [], verified: p.verification_status === 'verified', verificationStatus: p.verification_status }));
-      isDemo = false;
-    } else {
-      lagosProperties = staticProperties.filter(p => p.state === 'Lagos' && p.status === 'available');
-      isDemo = true;
-    }
+    const { data, error, count } = await supabase
+      .from('properties')
+      .select('*, property_images(url, display_order, is_primary)', { count: 'exact' })
+      .eq('state', 'Lagos')
+      .eq('status', 'available')
+      .order('date_added', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    totalCount = count ?? data?.length ?? 0;
+    lagosProperties = (data || []).map((property: any) => {
+      const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
+      const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
+      const images = [...new Set([...galleryImages, ...legacyImages])];
+      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'], verified: property.verification_status === 'verified', verificationStatus: property.verification_status };
+    });
   } catch {
-    lagosProperties = staticProperties.filter(p => p.state === 'Lagos' && p.status === 'available');
-    isDemo = true;
+    loadError = 'Lagos listings could not be loaded. Please try again later.';
   }
-  const featuredProperties = lagosProperties.filter((p: any) => p.featured).slice(0, 4);
+  const minimumPrice = lagosProperties.length > 0 ? Math.min(...lagosProperties.map((property) => Number(property.price) || 0)) : null;
+  const featuredProperties = [...lagosProperties.filter((property) => property.featured), ...lagosProperties.filter((property) => !property.featured)].slice(0, 4);
   
   const areas = ['Lekki', 'Ikoyi', 'Victoria Island', 'Ikeja', 'Surulere', 'Ajah', 'Magodo'];
   
@@ -43,7 +51,7 @@ export default async function LagosLocationPage() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                <div className="text-2xl font-bold">{lagosProperties.length}+</div>
+                <div className="text-2xl font-bold">{totalCount}</div>
                 <div className="text-white/80">Properties Available</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
@@ -51,7 +59,7 @@ export default async function LagosLocationPage() {
                 <div className="text-white/80">Prime Locations</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                <div className="text-2xl font-bold">₦45M+</div>
+                <div className="text-2xl font-bold">{minimumPrice !== null ? `₦${minimumPrice.toLocaleString()}` : '—'}</div>
                 <div className="text-white/80">Starting Price</div>
               </div>
             </div>
@@ -84,7 +92,7 @@ export default async function LagosLocationPage() {
                   </svg>
                 </div>
                 <h3 className="font-bold text-lg mb-2">High ROI</h3>
-                <p className="text-gray-600 text-sm">Lagos properties appreciate 15-25% annually in prime areas</p>
+                <p className="text-gray-600 text-sm">Property values vary by location, documentation, infrastructure and market conditions</p>
               </div>
               
               <div className="text-center p-6 bg-ivory rounded-xl">
@@ -136,13 +144,16 @@ export default async function LagosLocationPage() {
       </section>
 
       {/* Featured Properties — DB-primary, fallback to demo */}
-      {featuredProperties.length > 0 && (
+{loadError && <section className="section-padding bg-white"><div className="container-custom"><p role="alert" className="mx-auto max-w-2xl rounded-xl border border-red-200 bg-red-50 p-5 text-center text-sm text-red-700">{loadError}</p></div></section>}
+      {!loadError && featuredProperties.length === 0 && <section className="section-padding bg-white"><div className="container-custom text-center"><h2 className="font-display text-2xl text-charcoal">No Lagos listings are currently available</h2><p className="mt-3 text-gray-600">New properties will appear here after they are published. You can also browse all locations or contact our team.</p><Link href="/properties" className="btn-primary mt-6 inline-flex">Browse all properties</Link></div></section>}
+
+            {featuredProperties.length > 0 && (
         <section className="section-padding bg-white">
           <div className="container-custom">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-charcoal mb-2">Featured Lagos Properties</h2>
-                <p className="text-gray-600">Handpicked premium properties across Lagos</p>
+                <h2 className="text-3xl font-bold text-charcoal mb-2">Lagos Property Listings</h2>
+                <p className="text-gray-600">Latest available properties across Lagos</p>
               </div>
               <Link href="/properties?state=Lagos" className="hidden md:inline-flex items-center text-forest hover:text-forest-600 font-semibold">
                 View All Lagos Properties
@@ -174,7 +185,7 @@ export default async function LagosLocationPage() {
                     </div>
                     <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
                       <p className="text-xl font-bold text-forest">
-                        ₦{(property.price / 1000000).toFixed(0)}M
+                        {formatPropertyPrice(property.price, property.price_period)}
                       </p>
                     </div>
                   </div>
@@ -215,27 +226,6 @@ export default async function LagosLocationPage() {
             <h2 className="text-3xl font-bold text-charcoal mb-8 text-center">Lagos Real Estate Insights</h2>
             
             <div className="space-y-6">
-              <div className="bg-white rounded-xl p-6 shadow-soft">
-                <h3 className="text-xl font-bold text-charcoal mb-3">Price Trends</h3>
-                <p className="text-gray-700 mb-4">
-                  Lagos property prices have shown consistent appreciation over the past decade. Prime areas like Ikoyi and Victoria Island command ₦500M-₦2B for luxury homes, while Lekki and Ajah offer more accessible options starting from ₦45M.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-ivory rounded-lg p-4">
-                    <div className="text-sm text-gray-600 mb-1">Lekki Phase 1</div>
-                    <div className="text-lg font-bold text-forest">₦120M - ₦500M</div>
-                  </div>
-                  <div className="bg-ivory rounded-lg p-4">
-                    <div className="text-sm text-gray-600 mb-1">Ikoyi</div>
-                    <div className="text-lg font-bold text-forest">₦500M - ₦2B+</div>
-                  </div>
-                  <div className="bg-ivory rounded-lg p-4">
-                    <div className="text-sm text-gray-600 mb-1">Ajah</div>
-                    <div className="text-lg font-bold text-forest">₦45M - ₦150M</div>
-                  </div>
-                </div>
-              </div>
-
               <div className="bg-white rounded-xl p-6 shadow-soft">
                 <h3 className="text-xl font-bold text-charcoal mb-3">Investment Tips</h3>
                 <ul className="space-y-3 text-gray-700">

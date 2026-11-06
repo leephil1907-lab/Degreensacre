@@ -230,7 +230,7 @@ integration, and all bug fixes
 ### What You Can Do Now:
 1. **Share the repository** with team members
 2. **Set up CI/CD** with GitHub Actions
-3. **Deploy to production** using Vercel or similar
+3. **Deploy to production** using the included Render Blueprint
 4. **Create issues** for future enhancements
 5. **Add collaborators** for team development
 6. **Set up branch protection** rules
@@ -240,25 +240,22 @@ integration, and all bug fixes
 
 ## 🚀 DEPLOYMENT RECOMMENDATION
 
-**Recommended: Deploy to Vercel**
+**Recommended: Deploy to Render**
 
 ### Steps:
-1. Go to https://vercel.com
-2. Sign in with GitHub
-3. Import repository: `leephil1907-lab/Degreensacre`
-4. Configure environment variables
-5. Deploy!
+1. Push the migrated project to GitHub.
+2. In Render, choose **New → Blueprint**.
+3. Select repository: `leephil1907-lab/Degreensacre`.
+4. Review `render.yaml` and enter the requested environment values.
+5. Deploy and verify `/api/health`.
 
-**Vercel will:**
-- Auto-detect Next.js
-- Build and deploy automatically
-- Provide custom domain support
-- Handle SSL certificates
-- Offer preview deployments
-- Enable edge functions
-- Provide analytics
+**Render will:**
+- Run the reproducible Next.js build and start commands
+- Deploy automatically from the configured branch
+- Provide custom domains and managed TLS certificates
+- Run the configured HTTP health check
 
-**Estimated deployment time:** 2-3 minutes
+See `RENDER_DEPLOYMENT.md` for the complete go-live and DNS cutover checklist.
 
 ---
 

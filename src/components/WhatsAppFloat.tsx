@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { whatsappLink } from '@/lib/site-settings';
 
 export default function WhatsAppFloat() {
+  const { settings } = useSiteSettings();
   const [show, setShow] = useState(false);
   const [pulse, setPulse] = useState(true);
 
@@ -28,7 +31,7 @@ export default function WhatsAppFloat() {
 
       {/* Button */}
       <a
-        href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties%20on%20De-Greenacres"
+        href={whatsappLink(settings, "Hello, I'm interested in your properties on De-Greenacres")}
         target="_blank"
         rel="noopener noreferrer"
         className={`group flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-strong transition-transform hover:scale-105 ${

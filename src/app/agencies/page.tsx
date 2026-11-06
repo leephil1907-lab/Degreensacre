@@ -1,90 +1,33 @@
 import Link from 'next/link';
+import { ArrowRight, BadgeCheck, Building2, MapPin } from 'lucide-react';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { Building2, BadgeCheck, MapPin, ArrowRight, Users } from 'lucide-react';
 
-export const metadata = {
-  title: 'Agencies — De-Greenacres Properties',
-  description: 'Browse verified agencies on De-Greenacres.',
-};
-
-const demoAgencies = [
-  {
-    id: 'demo-ag-1',
-    name: 'De-Greenacres Properties Limited',
-    slug: 'de-greenacres-properties-limited',
-    email: 'info@degreenacresproperties.com',
-    phone: '+2348065019971',
-    logo_url: '/logo-256.png',
-    description: 'CAC RC: 1856064 — Full-service property company: sales, land, verification, inspection, management.',
-    address: '5 Borogade Crescent, Off Okengbero Street, New Oko-Oba, Lagos',
-    state: 'Lagos',
-    website: 'https://degreenacresproperties.com',
-    is_verified: true,
-  },
-  {
-    id: 'demo-ag-2',
-    name: 'De-Greenacres — Uyo Hub',
-    slug: 'de-greenacres-uyo-hub',
-    email: 'uyo@degreenacresproperties.com',
-    phone: '+2347041754800',
-    logo_url: '/logo-256.png',
-    description: 'Southeast hub: Uyo, Enugu, Asaba, Port Harcourt — land banking & residential.',
-    address: 'Uyo, Akwa Ibom State — New Coastal Highway corridor',
-    state: 'Akwa Ibom',
-    website: 'https://degreenacresproperties.com',
-    is_verified: true,
-  },
-];
+export const metadata = { title: 'Agencies', description: 'Browse published agency profiles on De-Greenacres.' };
+export const dynamic = 'force-dynamic';
 
 export default async function AgenciesPage() {
   let agencies: any[] = [];
-  let isDemo = false;
+  let loadError = false;
   try {
     const supabase = await createServerSupabaseClient();
-    const { data } = await supabase.from('agencies').select('*').order('created_at', { ascending: false }).limit(24);
-    if (data && data.length > 0) {
-      agencies = data;
-      isDemo = false;
-    } else {
-      agencies = demoAgencies;
-      isDemo = true;
-    }
-  } catch {
-    agencies = demoAgencies;
-    isDemo = true;
+    const { data, error } = await supabase.from('agencies').select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    agencies = data || [];
+  } catch (error) {
+    console.error('Agencies could not be loaded:', error);
+    loadError = true;
   }
 
   return (
     <div className="min-h-screen bg-ivory">
-      <section className="bg-charcoal text-white py-16">
-        <div className="container-custom">
-          <p className="text-xs font-bold text-sage uppercase tracking-[0.2em] mb-3">NETWORK</p>
-          <h1 className="font-display text-5xl mb-4">Agencies</h1>
-          <p className="text-white/80 max-w-2xl">Verified agencies. Every property is attached to a real agency and agent — no anonymous listings.</p>
-        </div>
-      </section>
-
-      <section className="section-padding">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {agencies.map((ag: any) => (
-              <Link key={ag.id || ag.slug} href={`/agencies/${ag.slug}`} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all group flex gap-4">
-                <img src={ag.logo_url || '/logo-256.png'} alt={ag.name} className="w-16 h-16 rounded-xl object-cover border border-gray-100 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="font-bold text-charcoal group-hover:text-forest flex items-center gap-1">{ag.name} {ag.is_verified && <BadgeCheck className="w-4 h-4 text-forest" />}</h3>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {ag.state} • {ag.address?.slice(0, 40)}...</p>
-                  <p className="text-sm text-gray-600 line-clamp-2 mt-2">{ag.description}</p>
-                  <div className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-forest">View agency <ArrowRight className="w-4 h-4" /></div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-10 bg-white rounded-2xl border border-gray-100 p-6 text-center">
-            <p className="text-sm text-gray-600">Looking for a person? <Link href="/agents" className="text-forest font-bold underline">Browse agents →</Link></p>
-          </div>
-        </div>
-      </section>
+      <section className="bg-charcoal py-16 text-white"><div className="container-custom"><p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-sage">Network</p><h1 className="font-display text-5xl">Agencies</h1><p className="mt-4 max-w-2xl text-white/75">Browse agency profiles, team members and their currently linked property listings.</p></div></section>
+      <section className="section-padding"><div className="container-custom">
+        {loadError && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">Agency profiles are temporarily unavailable. Please refresh or contact our team.</div>}
+        {!loadError && agencies.length === 0 ? <div className="rounded-2xl border border-gray-100 bg-white py-20 text-center"><Building2 className="mx-auto mb-4 h-12 w-12 text-gray-300" /><h2 className="font-display text-2xl text-charcoal">No agency profiles published yet</h2><p className="mt-2 text-sm text-gray-500">Published agency profiles will appear here.</p></div> : (
+          <div className="grid gap-6 md:grid-cols-2">{agencies.map((agency) => <Link key={agency.id} href={`/agencies/${agency.slug}`} className="group flex gap-4 rounded-2xl border border-gray-100 bg-white p-6 transition hover:shadow-lg"><img src={agency.logo_url || '/logo-256.png'} alt={agency.name} className="h-16 w-16 shrink-0 rounded-xl border border-gray-100 object-cover" /><div className="min-w-0 flex-1"><h2 className="flex items-center gap-1 font-bold text-charcoal group-hover:text-forest">{agency.name}{agency.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-forest" />}</h2><p className="mt-1 flex items-center gap-1 text-xs text-gray-500"><MapPin className="h-3 w-3" />{[agency.city, agency.state].filter(Boolean).join(', ') || agency.state}</p><p className="mt-2 line-clamp-2 text-sm text-gray-600">{agency.description}</p><span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-forest">View agency <ArrowRight className="h-4 w-4" /></span></div></Link>)}</div>
+        )}
+        <div className="mt-10 rounded-2xl border border-gray-100 bg-white p-6 text-center"><p className="text-sm text-gray-600">Looking for a person? <Link href="/agents" className="font-bold text-forest underline">Browse agents →</Link></p></div>
+      </div></section>
     </div>
   );
 }

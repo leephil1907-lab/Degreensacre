@@ -6,6 +6,7 @@ interface LogoProps {
   showText?: boolean;
   href?: string;
   className?: string;
+  onDark?: boolean;
 }
 
 const sizes = {
@@ -14,7 +15,7 @@ const sizes = {
   lg: { img: 64, text: 'text-lg', sub: 'text-xs' },
 };
 
-export default function Logo({ size = 'md', showText = true, href = '/', className = '' }: LogoProps) {
+export default function Logo({ size = 'md', showText = true, href = '/', className = '', onDark = false }: LogoProps) {
   const s = sizes[size];
 
   const content = (
@@ -29,10 +30,10 @@ export default function Logo({ size = 'md', showText = true, href = '/', classNa
       />
       {showText && (
         <div>
-          <div className={`font-bold ${s.text} text-charcoal dark:text-white tracking-tight leading-tight`}>
+          <div className={`font-sans font-bold ${s.text} ${onDark ? 'text-white' : 'text-charcoal dark:text-white'} tracking-tight leading-tight`}>
             De-Greenacres
           </div>
-          <div className={`${s.sub} text-gray-500 dark:text-gray-300 tracking-wide uppercase leading-tight`}>
+          <div className={`${s.sub} ${onDark ? 'text-white/55' : 'text-gray-500 dark:text-gray-300'} font-sans tracking-wide uppercase leading-tight`}>
             Properties Limited
           </div>
         </div>

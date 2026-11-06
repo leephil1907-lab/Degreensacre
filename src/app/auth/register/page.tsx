@@ -76,7 +76,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-3xl font-serif text-charcoal-900 mb-4">Check Your Email</h1>
           <p className="text-charcoal-600 mb-6">
-            We've sent a verification link to <strong>{formData.email}</strong>. Please check your email and click the link to verify your account.
+            We&apos;ve sent a verification link to <strong>{formData.email}</strong>. Please check your email and click the link to verify your account.
           </p>
           <Link
             href="/auth/login"

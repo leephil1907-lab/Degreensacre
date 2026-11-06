@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   ArrowLeft, MapPin, Bed, Bath, Square, Car, Heart, Share2,
   Phone, Mail, MessageSquare, CheckCircle, Shield, Clock,
@@ -12,7 +13,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdSense from '@/components/GoogleAdsense';
-import { properties as sampleProperties } from '@/data/properties';
+import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates } from '@/lib/property';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { normalizeWhatsappNumber } from '@/lib/site-settings';
+
+const PropertyMapView = dynamic(() => import('@/components/PropertyMapView'), {
+  ssr: false,
+  loading: () => <div className="grid h-80 place-items-center rounded-xl bg-forest-50"><Loader2 className="h-7 w-7 animate-spin text-forest" /></div>,
+});
 
 interface Property {
   id: string;
@@ -55,38 +63,43 @@ interface Property {
   total_plots?: number;
   date_added: string;
   published_at?: string;
+  images?: string[];
   property_images?: { url: string; display_order: number; is_primary: boolean; alt_text?: string }[];
   property_documents?: { name: string; document_type: string; url: string; is_public: boolean }[];
-  agents?: { name: string; phone: string; whatsapp: string; email: string; photo_url?: string };
+  agents?: { name: string; phone: string; whatsapp: string; email: string; photo_url?: string; user_id?: string };
 }
 
 export default function PropertyDetailClient({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { settings } = useSiteSettings();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentImage, setCurrentImage] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState('');
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [showViewing, setShowViewing] = useState(false);
   const [enquiryForm, setEnquiryForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [enquirySubmitting, setEnquirySubmitting] = useState(false);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
+  const [enquiryError, setEnquiryError] = useState('');
   const [viewingForm, setViewingForm] = useState({ preferred_date: '', preferred_time: '', notes: '' });
   const [viewingSubmitting, setViewingSubmitting] = useState(false);
   const [viewingSuccess, setViewingSuccess] = useState(false);
+  const [viewingError, setViewingError] = useState('');
+  const [directMessageSubmitting, setDirectMessageSubmitting] = useState(false);
+  const [directMessageError, setDirectMessageError] = useState('');
   const [slug, setSlug] = useState<string>('');
   const [agentProfile, setAgentProfile] = useState<any>(null);
   const [agencyProfile, setAgencyProfile] = useState<any>(null);
+  const mapProperties = useMemo(() => property ? [property] : [], [property]);
+  const propertyCoordinates = property ? getPropertyCoordinates(property) : null;
 
   useEffect(() => {
     params.then(p => setSlug(p.slug));
   }, [params]);
-
-  useEffect(() => {
-    if (slug) fetchProperty();
-  }, [slug]);
 
   const fetchProperty = async () => {
     setLoading(true);
@@ -129,64 +142,17 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
         }
       }
 
-      // Fallback: check sample properties from static data
-      const sampleMatch = sampleProperties.find(p => p.slug === slug);
-      if (sampleMatch) {
-        // Convert sample property to match the Property interface
-        setProperty({
-          id: sampleMatch.id,
-          slug: sampleMatch.slug,
-          title: sampleMatch.title,
-          type: sampleMatch.type,
-          property_type: sampleMatch.propertyType,
-          price: sampleMatch.price,
-          price_period: sampleMatch.pricePeriod,
-          bedrooms: sampleMatch.bedrooms,
-          bathrooms: sampleMatch.bathrooms,
-          toilets: sampleMatch.toilets,
-          sqm: sampleMatch.sqm,
-          parking: sampleMatch.parking,
-          area: sampleMatch.area,
-          state: sampleMatch.state,
-          lga: sampleMatch.lga,
-          address: sampleMatch.address,
-          description: sampleMatch.description,
-          features: sampleMatch.features,
-          amenities: [],
-          verification_status: sampleMatch.verificationStatus || 'verified',
-          status: sampleMatch.status,
-          featured: sampleMatch.featured,
-          views: sampleMatch.views,
-          saves: 0,
-          furnished: sampleMatch.furnished,
-          serviced: sampleMatch.serviced,
-          gated_estate: sampleMatch.gatedEstate,
-          documentation: sampleMatch.documentation,
-          payment_plan: sampleMatch.paymentPlan,
-          paymentPlan: sampleMatch.paymentPlan,
-          development_status: sampleMatch.developmentStatus,
-          developmentStatus: sampleMatch.developmentStatus,
-          coordinates: sampleMatch.coordinates,
-          landmarks: sampleMatch.landmarks,
-          region: sampleMatch.region,
-          date_added: sampleMatch.dateAdded,
-          property_images: sampleMatch.images.map((url, i) => ({
-            url,
-            display_order: i,
-            is_primary: i === 0,
-          })),
-        });
-        setLoading(false);
-        return;
-      }
-
-      setError('Property not found');
+      setError(response.status === 404 ? 'Property not found or no longer available.' : 'This property could not be loaded. Please try again.');
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (slug) void fetchProperty();
+  }, [slug]);
 
   const toggleSave = async () => {
     if (!user) {
@@ -209,6 +175,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const handleEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
     setEnquirySubmitting(true);
+    setEnquiryError('');
     try {
       const response = await fetch('/api/enquiries', {
         method: 'POST',
@@ -219,11 +186,12 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
           source: 'property_detail',
         }),
       });
-      if (!response.ok) throw new Error('Failed to submit');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Your enquiry could not be sent.');
       setEnquirySuccess(true);
       setEnquiryForm({ name: '', email: '', phone: '', message: '' });
     } catch (error) {
-      console.error('Enquiry error:', error);
+      setEnquiryError(error instanceof Error ? error.message : 'Your enquiry could not be sent. Please try again.');
     } finally {
       setEnquirySubmitting(false);
     }
@@ -232,6 +200,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const handleViewing = async (e: React.FormEvent) => {
     e.preventDefault();
     setViewingSubmitting(true);
+    setViewingError('');
     try {
       const response = await fetch('/api/viewings', {
         method: 'POST',
@@ -241,20 +210,68 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
           property_id: property?.id,
         }),
       });
-      if (!response.ok) throw new Error('Failed to schedule');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Your viewing request could not be sent.');
       setViewingSuccess(true);
       setViewingForm({ preferred_date: '', preferred_time: '', notes: '' });
     } catch (error) {
-      console.error('Viewing error:', error);
+      setViewingError(error instanceof Error ? error.message : 'Your viewing request could not be sent. Please try again.');
     } finally {
       setViewingSubmitting(false);
     }
   };
 
-  const formatPrice = (price: number, period?: string) => {
-    if (price >= 1000000000) return `₦${(price / 1000000000).toFixed(1)}B${period ? `/${period}` : ''}`;
-    if (price >= 1000000) return `₦${(price / 1000000).toFixed(1)}M${period ? `/${period}` : ''}`;
-    return `₦${price.toLocaleString()}${period ? `/${period}` : ''}`;
+  const startAgentConversation = async () => {
+    if (!property) return;
+    if (!user) {
+      router.push(`/auth/login?redirect=/properties/${property.slug}`);
+      return;
+    }
+    const recipientId = agentProfile?.user_id || property.agents?.user_id;
+    if (!recipientId) {
+      setDirectMessageError('Direct chat is not linked for this agent. Please use the enquiry form, phone or WhatsApp.');
+      return;
+    }
+    setDirectMessageSubmitting(true);
+    setDirectMessageError('');
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_id: recipientId,
+          property_id: property.id,
+          content: `Hello, I'm interested in ${property.title} in ${property.area}, ${property.state}. Please share more details.`,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'The conversation could not be started.');
+      router.push('/messages');
+    } catch (messageError) {
+      setDirectMessageError(messageError instanceof Error ? messageError.message : 'The conversation could not be started.');
+    } finally {
+      setDirectMessageSubmitting(false);
+    }
+  };
+
+  const shareProperty = async () => {
+    if (!property) return;
+    setShareFeedback('');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: property.title, text: `View ${property.title} on De-Greenacres`, url: window.location.href });
+        setShareFeedback('Property shared.');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(window.location.href);
+        setShareFeedback('Link copied to clipboard.');
+      } else {
+        setShareFeedback('Copy the page URL from your browser to share this property.');
+      }
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
+      setShareFeedback('Sharing was unavailable. Copy the page URL from your browser.');
+    }
+    window.setTimeout(() => setShareFeedback(''), 4000);
   };
 
   if (loading) {
@@ -279,7 +296,9 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
     );
   }
 
-  const images = property.property_images || [];
+  const images = property.property_images?.length
+    ? property.property_images
+    : (property.images || []).map((url, index) => ({ url, display_order: index, is_primary: index === 0, alt_text: '' }));
 
   return (
     <div className="min-h-screen bg-ivory-50">
@@ -406,6 +425,8 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleSave}
+                    aria-label={isSaved ? 'Remove property from saved list' : 'Save this property'}
+                    aria-pressed={isSaved}
                     className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
                       isSaved ? 'bg-green-50 border-green-300 text-green-600' : 'border-charcoal-200 text-charcoal-400 hover:text-green-600'
                     }`}
@@ -413,16 +434,18 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     {isSaved ? <Bookmark className="w-5 h-5 fill-current" /> : <BookmarkPlus className="w-5 h-5" />}
                   </button>
                   <button
-                    onClick={() => navigator.share?.({ title: property.title, url: window.location.href })}
+                    onClick={() => void shareProperty()}
+                    aria-label="Share this property"
                     className="w-10 h-10 rounded-full flex items-center justify-center border border-charcoal-200 text-charcoal-400 hover:text-green-600 transition-colors"
                   >
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+              {shareFeedback && <p className="mb-3 text-right text-xs font-semibold text-forest" role="status">{shareFeedback}</p>}
 
               <p className="text-3xl font-bold text-green-600 mb-6">
-                {formatPrice(property.price, property.price_period)}
+                {formatPropertyPrice(property.price, property.price_period)}
               </p>
 
               {/* Quick Stats */}
@@ -628,35 +651,24 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               </div>
             )}
 
-            {/* Map */}
-            {property.coordinates && (
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
-                  <Map className="w-5 h-5 text-green-600" />
-                  Location Map
-                </h2>
-                <div className="rounded-xl overflow-hidden border border-charcoal-200 h-64">
-                  <iframe
-                    title={`Map of ${property.title}`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.lng - 0.008}%2C${property.coordinates.lat - 0.004}%2C${property.coordinates.lng + 0.008}%2C${property.coordinates.lat + 0.004}&layer=mapnik&marker=${property.coordinates.lat}%2C${property.coordinates.lng}`}
-                  />
+            {/* Location and address search */}
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-serif text-charcoal-900 flex items-center gap-2"><Map className="w-5 h-5 text-forest" /> Location & nearby area</h2>
+                  <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-charcoal-500"><MapPin className="mt-0.5 w-3.5 h-3.5 shrink-0 text-forest" />{getPropertyAddress(property)}</p>
                 </div>
-                <p className="text-xs text-charcoal-500 mt-2 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {property.address && `${property.address}, `}{property.area}, {property.state}
-                </p>
+                {propertyCoordinates && <a href={`https://www.google.com/maps/dir/?api=1&destination=${propertyCoordinates.lat},${propertyCoordinates.lng}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-forest/15 px-4 py-2 text-xs font-extrabold text-forest hover:bg-forest-50"><Navigation className="w-4 h-4" /> Get directions</a>}
               </div>
-            )}
+              <PropertyMapView properties={mapProperties} initialAddress={getPropertyAddress(property, true)} className="h-80 rounded-xl sm:h-96" emptyMessage="This listing does not have a saved map location yet." />
+              <p className="mt-3 text-[11px] leading-5 text-charcoal-400">Property markers use coordinates saved by the listing team. Address-search results are labelled separately; confirm the exact property location with the agent before travelling.</p>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Agent Card */}
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+            <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-36">
               <h3 className="font-serif text-lg text-charcoal-900 mb-4">Contact Agent</h3>
               
               <div className="flex items-center gap-3 mb-4">
@@ -688,14 +700,14 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               </div>
               <div className="space-y-3">
                 <a
-                  href={`tel:${agentProfile?.phone || property.agents?.phone || '+2348065019971'}`}
+                  href={`tel:${agentProfile?.phone || property.agents?.phone || settings.contact_phone}`}
                   className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
                 >
                   <Phone className="w-5 h-5" />
                   Call Agent
                 </a>
                 <a
-                  href={`https://wa.me/${(agentProfile?.whatsapp || agentProfile?.phone || '2347041754800').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${agentProfile?.name || 'De-Greenacres'}, I'm interested in: ${property.title} at ${property.area}, ${property.state}. Price: ₦${(property.price || 0).toLocaleString()}.${property.documentation ? ' Documentation: ' + property.documentation + '.' : ''}${property.bedrooms ? ' ' + property.bedrooms + ' bedrooms.' : ''} Please send more details and available inspection dates.`)}`}
+                  href={`https://wa.me/${normalizeWhatsappNumber(agentProfile?.whatsapp || agentProfile?.phone || property.agents?.whatsapp || property.agents?.phone || settings.whatsapp_number)}?text=${encodeURIComponent(`Hello ${agentProfile?.name || 'De-Greenacres'}, I'm interested in: ${property.title} at ${property.area}, ${property.state}. Price: ${formatPropertyPrice(property.price, property.price_period)}.${property.documentation ? ' Documentation: ' + property.documentation + '.' : ''}${property.bedrooms ? ' ' + property.bedrooms + ' bedrooms.' : ''} Please send more details and available inspection dates.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-lg font-medium hover:bg-[#20BD5A] transition-colors"
@@ -703,8 +715,21 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   <MessageSquare className="w-5 h-5" />
                   WhatsApp
                 </a>
+                {(agentProfile?.user_id || property.agents?.user_id) && user?.id !== (agentProfile?.user_id || property.agents?.user_id) && (
+                  <button
+                    onClick={() => void startAgentConversation()}
+                    disabled={directMessageSubmitting}
+                    className="w-full flex items-center justify-center gap-2 border border-forest text-forest py-3 rounded-lg font-medium hover:bg-forest/5 transition-colors disabled:opacity-50"
+                  >
+                    {directMessageSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageSquare className="w-5 h-5" />}
+                    Start Property Chat
+                  </button>
+                )}
+                {directMessageError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{directMessageError}</p>}
                 <button
                   onClick={() => setShowEnquiry(!showEnquiry)}
+                  aria-expanded={showEnquiry}
+                  aria-controls="property-enquiry-form"
                   className="w-full flex items-center justify-center gap-2 border border-green-600 text-green-600 py-3 rounded-lg font-medium hover:bg-green-50 transition-colors"
                 >
                   <Mail className="w-5 h-5" />
@@ -721,7 +746,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
 
               {/* Enquiry Form */}
               {showEnquiry && (
-                <div className="mt-4 pt-4 border-t border-charcoal-100">
+                <div id="property-enquiry-form" className="mt-4 pt-4 border-t border-charcoal-100">
                   {enquirySuccess ? (
                     <div className="text-center py-4">
                       <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
@@ -732,6 +757,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                       <input
                         type="text"
                         placeholder="Your Name"
+                        aria-label="Your name"
                         required
                         value={enquiryForm.name}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })}
@@ -740,6 +766,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                       <input
                         type="email"
                         placeholder="Your Email"
+                        aria-label="Your email address"
                         required
                         value={enquiryForm.email}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
@@ -748,18 +775,21 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                       <input
                         type="tel"
                         placeholder="Your Phone"
+                        aria-label="Your phone number"
                         value={enquiryForm.phone}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
                         className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                       <textarea
                         placeholder="Your Message"
+                        aria-label="Your property enquiry"
                         required
                         rows={3}
                         value={enquiryForm.message}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
                         className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
+                      {enquiryError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{enquiryError}</p>}
                       <button
                         type="submit"
                         disabled={enquirySubmitting}
@@ -810,6 +840,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         onChange={(e) => setViewingForm({ ...viewingForm, notes: e.target.value })}
                         className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
+                      {viewingError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{viewingError}</p>}
                       <button
                         type="submit"
                         disabled={viewingSubmitting}

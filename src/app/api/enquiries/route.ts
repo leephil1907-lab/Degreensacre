@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createEnquiry } from '@/lib/db-helpers';
-import { isEmail, isPhone, sanitizeForDb, validateLength } from '@/lib/validation';
+import { isEmail, isPhone, isUuid, sanitizeForDb } from '@/lib/validation';
+import { requestRateLimit } from '@/lib/rate-limit';
 
 // POST /api/enquiries - Submit enquiry
 export async function POST(request: NextRequest) {
+  const rate = requestRateLimit(request, 'enquiry', 10);
+  if (!rate.allowed) return NextResponse.json({ error: 'Too many enquiries from this connection. Please try again later.', success: false }, { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } });
   try {
     const body = await request.json();
     
     // Validate input
     const errors: string[] = [];
     
-    if (!body.buyer_name || body.buyer_name.trim().length < 2) {
-      errors.push('Name is required (min 2 characters)');
+    if (body.property_id && !isUuid(String(body.property_id))) errors.push('A valid property ID is required');
+    if (!body.buyer_name || body.buyer_name.trim().length < 2 || body.buyer_name.length > 120) {
+      errors.push('Name is required (2–120 characters)');
     }
     if (!body.buyer_email || !isEmail(body.buyer_email)) {
       errors.push('Valid email is required');

@@ -1,13 +1,33 @@
-'use client';
-
-import ScrollReveal from '@/components/ScrollReveal';
 import Link from 'next/link';
-import { properties } from '@/data/properties';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { DEFAULT_SITE_SETTINGS, whatsappLink } from '@/lib/site-settings';
 
-export default function DiasporaInvestmentPage() {
-  const investmentProperties = properties
-    .filter(p => p.verificationStatus === 'verified' && p.status === 'available')
-    .slice(0, 6);
+export default async function DiasporaInvestmentPage() {
+  let settings = { ...DEFAULT_SITE_SETTINGS };
+  let investmentProperties: any[] = [];
+  let loadError = '';
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: savedSettings } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
+    if (savedSettings) settings = { ...settings, ...savedSettings };
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*, property_images(url, display_order, is_primary)')
+      .eq('verification_status', 'verified')
+      .eq('status', 'available')
+      .order('featured', { ascending: false })
+      .order('date_added', { ascending: false })
+      .limit(6);
+    if (error) throw error;
+    investmentProperties = (data || []).map((property: any) => {
+      const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
+      const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
+      const images = [...new Set([...galleryImages, ...legacyImages])];
+      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'] };
+    });
+  } catch {
+    loadError = 'Verified investment listings could not be loaded. Please try again later.';
+  }
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -39,16 +59,16 @@ export default function DiasporaInvestmentPage() {
             
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                <div className="text-2xl font-bold">500+</div>
-                <div className="text-white/80">Diaspora Clients</div>
+                <div className="text-2xl font-bold">Remote</div>
+                <div className="text-white/80">Consultations</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                <div className="text-2xl font-bold">₦2B+</div>
-                <div className="text-white/80">Invested</div>
+                <div className="text-2xl font-bold">Verified</div>
+                <div className="text-white/80">Listings</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                <div className="text-2xl font-bold">15+</div>
-                <div className="text-white/80">Countries</div>
+                <div className="text-2xl font-bold">Guided</div>
+                <div className="text-white/80">Due Diligence</div>
               </div>
             </div>
           </div>
@@ -61,7 +81,7 @@ export default function DiasporaInvestmentPage() {
           <div className="max-w-4xl mx-auto text-center mb-12">
             <h2 className="text-4xl font-bold text-charcoal mb-4">Why Invest in Nigerian Real Estate?</h2>
             <p className="text-lg text-gray-600">
-              Nigeria offers exceptional investment opportunities with high returns and long-term growth potential
+              Explore property options with clear documentation, independent advice and a process designed for remote buyers
             </p>
           </div>
 
@@ -72,9 +92,9 @@ export default function DiasporaInvestmentPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3">High ROI</h3>
+              <h3 className="text-xl font-bold mb-3">Informed Choices</h3>
               <p className="text-gray-600">
-                Nigerian properties appreciate 15-30% annually in prime areas, outperforming many global markets.
+                Compare locations, documentation, property condition and costs without relying on guaranteed-return claims.
               </p>
             </div>
 
@@ -139,8 +159,8 @@ export default function DiasporaInvestmentPage() {
               },
               {
                 step: '03',
-                title: 'Secure Transaction',
-                description: 'Complete purchase with our secure payment process and legal documentation support',
+                title: 'Due Diligence',
+                description: 'Review ownership and property documentation with independent professional guidance before making payment',
                 icon: (
                   <svg className="w-8 h-8 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -233,6 +253,9 @@ export default function DiasporaInvestmentPage() {
             </p>
           </div>
 
+          {loadError && <p role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">{loadError}</p>}
+          {!loadError && investmentProperties.length === 0 && <p className="mb-6 rounded-xl bg-white p-8 text-center text-gray-600">No verified listings are currently available. Please contact our team for assistance or check back soon.</p>}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {investmentProperties.map((property) => (
               <Link key={property.id} href={`/properties/${property.slug}`} className="card hover-lift group">
@@ -253,7 +276,7 @@ export default function DiasporaInvestmentPage() {
                   </div>
                   <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
                     <p className="text-xl font-bold text-forest">
-                      ₦{(property.price / 1000000).toFixed(0)}M
+                      ₦{Number(property.price).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -318,7 +341,7 @@ export default function DiasporaInvestmentPage() {
               },
               {
                 title: 'Virtual Tours',
-                description: 'Live video tours and 360° property walkthroughs so you can inspect from anywhere',
+                description: 'Arrange live video walkthroughs with our team so you can review a property from anywhere',
                 icon: (
                   <svg className="w-8 h-8 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -367,57 +390,6 @@ export default function DiasporaInvestmentPage() {
         </div>
       </section>
 
-      {/* Success Stories */}
-      <section className="section-padding bg-ivory">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h2 className="text-4xl font-bold text-charcoal mb-4">Diaspora Success Stories</h2>
-            <p className="text-lg text-gray-600">
-              Hear from Nigerians abroad who invested successfully with De-Greenacres
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                name: 'Dr. Chidi O.',
-                location: 'Houston, USA',
-                quote: 'De-Greenacres made it possible for me to invest in Lagos while living in Texas. The verification process gave me confidence.',
-                investment: '₦180M Property in Lekki'
-              },
-              {
-                name: 'Ngozi A.',
-                location: 'London, UK',
-                quote: 'As a busy professional in London, I needed a trustworthy partner. De-Greenacres delivered excellent service and transparency.',
-                investment: '₦120M Land in Abuja'
-              },
-              {
-                name: 'Tunde B.',
-                location: 'Toronto, Canada',
-                quote: 'The virtual tours and legal support were invaluable. I purchased my dream home without having to travel to Nigeria.',
-                investment: '₦220M Duplex in Enugu'
-              }
-            ].map((story, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-soft">
-                <div className="flex items-center gap-2 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-4 italic">&quot;{story.quote}&quot;</p>
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="font-bold text-charcoal">{story.name}</div>
-                  <div className="text-sm text-gray-600">{story.location}</div>
-                  <div className="text-xs text-forest font-semibold mt-1">{story.investment}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="section-padding bg-gradient-to-br from-charcoal to-forest text-white">
         <div className="container-custom text-center">
@@ -430,7 +402,7 @@ export default function DiasporaInvestmentPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <a
-              href="https://wa.me/2347041754800?text=Hello%20De-Greenacres,%20I'm%20a%20Nigerian%20living%20abroad%20and%20interested%20in%20investing%20in%20property.%20Please%20send%20me%20more%20information."
+              href={whatsappLink(settings, "Hello De-Greenacres, I'm a Nigerian living abroad and interested in investing in property. Please send me more information.")}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary bg-white text-forest hover:bg-ivory w-full sm:w-auto"

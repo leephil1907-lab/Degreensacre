@@ -19,7 +19,7 @@ export async function getProperties(filters: {
   
   let query = supabase
     .from('properties')
-    .select('*', { count: 'exact' })
+    .select('*, property_images(*)', { count: 'exact' })
     .eq('status', filters.status || 'available');
 
   if (filters.type) query = query.eq('type', filters.type);
@@ -30,12 +30,14 @@ export async function getProperties(filters: {
   if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
   if (filters.featured) query = query.eq('featured', true);
 
-  const orderBy = filters.orderBy || 'date_added';
-  const orderDirection = filters.orderDirection || 'desc';
+  const allowedOrderFields = ['date_added', 'published_at', 'price', 'views', 'title'];
+  const orderBy = allowedOrderFields.includes(filters.orderBy || '') ? filters.orderBy! : 'date_added';
+  const orderDirection = filters.orderDirection === 'asc' ? 'asc' : 'desc';
   query = query.order(orderBy, { ascending: orderDirection === 'asc' });
 
-  if (filters.limit) query = query.limit(filters.limit);
-  if (filters.offset) query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+  const limit = Number.isInteger(filters.limit) ? Math.min(Math.max(filters.limit!, 1), 100) : 50;
+  const offset = Number.isInteger(filters.offset) ? Math.max(filters.offset!, 0) : 0;
+  query = query.range(offset, offset + limit - 1);
 
   const { data, error, count } = await query;
 
@@ -49,9 +51,10 @@ export async function getPropertyBySlug(slug: string) {
   
   const { data: property, error } = await supabase
     .from('properties')
-    .select('*')
+    .select('*, property_images(*)')
     .eq('slug', slug)
-    .single();
+    .eq('status', 'available')
+    .maybeSingle();
 
   if (error) throw error;
 

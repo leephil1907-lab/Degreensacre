@@ -290,17 +290,7 @@
 5. Create tables for properties, users, etc.
 
 ### How to Deploy:
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
-# Or use Vercel dashboard
-# Connect GitHub repo
-# Auto-deploy on push
-```
+The current production target is Render. Create a **New → Blueprint** from the GitHub repository and follow `RENDER_DEPLOYMENT.md`. Render runs `npm ci && npm run build`, starts the app with `npm run start`, and checks `/api/health`.
 
 ---
 

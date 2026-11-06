@@ -1,190 +1,170 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { ChevronDown, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import { Phone, Menu, X } from 'lucide-react';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { formatPhoneNumber, whatsappLink } from '@/lib/site-settings';
+
+const primaryNav = [
+  { label: 'Buy', href: '/properties?type=sale' },
+  { label: 'Rent', href: '/properties?type=rent' },
+  { label: 'Land', href: '/properties?type=land' },
+  { label: 'Developments', href: '/developments' },
+];
+
+const exploreNav = [
+  { label: 'Commercial property', href: '/properties?type=commercial', description: 'Offices, shops and business spaces' },
+  { label: 'Short lets', href: '/properties?type=short-let', description: 'Flexible furnished stays' },
+  { label: 'Invest from abroad', href: '/diaspora', description: 'Guidance for diaspora buyers' },
+  { label: 'Agencies & agents', href: '/agencies', description: 'Browse the professional network' },
+  { label: 'Property insights', href: '/insights', description: 'Buying, renting and documentation guides' },
+  { label: 'Browse locations', href: '/locations', description: 'Explore property by state and city' },
+];
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
+  const exploreRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const { user, profile, loading, signOut } = useAuth();
+  const { settings } = useSiteSettings();
+  const whatsappHref = whatsappLink(settings, "Hello, I'm interested in your properties");
 
-  const navItems = [
-    { label: 'Buy', href: '/properties?type=sale' },
-    { label: 'Rent', href: '/properties?type=rent' },
-    { label: 'Land', href: '/land' },
-    { label: 'Commercial', href: '/properties?type=commercial' },
-    { label: 'Short Let', href: '/properties?type=short-let' },
-    { label: 'Investment', href: '/diaspora' },
-    { label: 'About', href: '/about' },
-  ];
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setExploreOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setExploreOpen(false);
+      }
+    };
+    const onPointerDown = (event: MouseEvent) => {
+      if (exploreRef.current && !exploreRef.current.contains(event.target as Node)) setExploreOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('mousedown', onPointerDown);
+    };
+  }, []);
 
   const closeMobile = () => setMobileMenuOpen(false);
+  const isCurrent = (href: string) => !href.includes('?') && pathname.startsWith(href);
 
   return (
-    <header className="bg-[#fffff8] dark:bg-charcoal shadow-soft sticky top-0 z-50 transition-colors">
-      {/* Top Bar */}
-      <div className="bg-forest text-ivory text-xs py-2.5">
-        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="font-semibold tracking-wide">RC: 1856064</span>
-            <span className="hidden sm:inline text-ivory/30">|</span>
-            <span className="hidden sm:inline text-ivory/70">CAC Registered</span>
+    <header className="sticky top-0 z-[70] border-b border-forest/5 bg-[#fffff8]/95 shadow-soft backdrop-blur-lg transition-colors dark:bg-charcoal/95">
+      <div className="bg-forest text-xs text-ivory">
+        <div className="container-custom flex min-h-10 items-center justify-between gap-3 py-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="whitespace-nowrap font-bold tracking-wide">RC: 1856064</span>
+            <span className="hidden text-ivory/30 sm:inline" aria-hidden="true">|</span>
+            <span className="hidden text-ivory/70 sm:inline">CAC Registered</span>
           </div>
           <div className="flex items-center gap-4 sm:gap-5">
-            <div className="hidden xl:flex items-center">
-              <div className="scale-90">
-                <ThemeToggle variant="forest" />
-              </div>
-            </div>
-            <a
-              href="tel:+2348065019971"
-              className="text-ivory/70 hover:text-white transition-colors hidden sm:flex items-center gap-1.5"
-            >
-              <Phone className="w-3 h-3" />
-              <span>0806 501 9971</span>
+            <div className="hidden xl:block"><ThemeToggle variant="forest" /></div>
+            <a href={`tel:${settings.contact_phone}`} className="hidden items-center gap-1.5 text-ivory/75 transition-colors hover:text-white sm:flex">
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{formatPhoneNumber(settings.contact_phone)}</span>
             </a>
-            <a
-              href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-3.5 py-1.5 rounded-full font-semibold transition-all hover:scale-105"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              <span className="text-xs">WhatsApp</span>
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-green-600 px-3 py-1.5 font-bold text-white transition-colors hover:bg-green-500">
+              <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>WhatsApp</span>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Main Nav */}
-      <nav className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo — fixed width so it doesn't push center */}
-          <div className="flex-shrink-0 w-[180px]">
-            <Logo size="md" />
-          </div>
+      <nav className="container-custom relative" aria-label="Main navigation">
+        <div className="flex h-[4.5rem] items-center justify-between gap-4 lg:h-20">
+          <div className="shrink-0"><Logo size="md" /></div>
 
-          {/* Desktop Nav — centered with even spacing */}
-          <div className="hidden xl:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="px-3 xl:px-4 py-2 text-charcoal dark:text-gray-100 hover:text-forest dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-sage/10 dark:hover:bg-white/10 text-sm"
-              >
+          <div className="hidden items-center justify-center gap-0.5 lg:flex">
+            {primaryNav.map((item) => (
+              <Link key={item.label} href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} className={`rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors hover:bg-sage/10 hover:text-forest dark:text-gray-100 dark:hover:bg-white/10 ${isCurrent(item.href) ? 'bg-sage/10 text-forest' : 'text-charcoal'}`}>
                 {item.label}
               </Link>
             ))}
+            <div className="relative" ref={exploreRef}>
+              <button type="button" onClick={() => setExploreOpen((open) => !open)} aria-expanded={exploreOpen} aria-controls="explore-menu" className={`inline-flex items-center gap-1 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors hover:bg-sage/10 hover:text-forest dark:text-gray-100 dark:hover:bg-white/10 ${exploreOpen ? 'bg-sage/10 text-forest' : 'text-charcoal'}`}>
+                Explore <ChevronDown className={`h-3.5 w-3.5 transition-transform ${exploreOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </button>
+              {exploreOpen && (
+                <div id="explore-menu" className="absolute left-1/2 top-[calc(100%+0.75rem)] w-80 -translate-x-1/2 rounded-2xl border border-forest/10 bg-[#fffff8] p-2 shadow-2xl dark:bg-charcoal">
+                  {exploreNav.map((item) => (
+                    <Link key={item.label} href={item.href} onClick={() => setExploreOpen(false)} className="block rounded-xl px-4 py-3 transition-colors hover:bg-forest-50 dark:hover:bg-white/5">
+                      <span className="block text-sm font-bold text-charcoal dark:text-white">{item.label}</span>
+                      <span className="mt-0.5 block text-xs leading-5 text-gray-500 dark:text-gray-400">{item.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Link href="/about" aria-current={pathname.startsWith('/about') ? 'page' : undefined} className={`rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors hover:bg-sage/10 hover:text-forest dark:text-gray-100 dark:hover:bg-white/10 ${pathname.startsWith('/about') ? 'bg-sage/10 text-forest' : 'text-charcoal'}`}>About</Link>
           </div>
 
-          {/* Desktop CTA — fixed width right-aligned */}
-          <div className="hidden xl:flex items-center gap-3 justify-end w-[300px]">
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
             {!loading && user ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className="px-3 py-2 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors text-sm"
-                >
+                <Link href="/dashboard" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-charcoal transition-colors hover:text-forest dark:text-white">
                   {profile?.first_name ? `Hi, ${profile.first_name}` : 'Dashboard'}
                 </Link>
-                <button
-                  onClick={() => signOut()}
-                  className="px-3 py-2 text-sm text-gray-500 hover:text-charcoal transition-colors"
-                >
-                  Sign Out
-                </button>
+                <button type="button" onClick={() => signOut()} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-500 transition-colors hover:text-charcoal dark:hover:text-white">Sign out</button>
               </>
             ) : (
-              <>
-                <Link
-                  href="/signin"
-                  className="px-3 py-2 text-charcoal dark:text-white hover:text-forest font-semibold transition-colors text-sm whitespace-nowrap"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="btn-primary text-sm !px-4 !py-2.5 whitespace-nowrap"
-                >
-                  Sign Up
-                </Link>
-              </>
+              <Link href="/signin" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-charcoal transition-colors hover:text-forest dark:text-white">Sign in</Link>
             )}
-            <Link href="/list-property" className="btn-outline text-sm !px-3 !py-2 whitespace-nowrap">
-              List Property
-            </Link>
+            <Link href="/list-property" className="btn-primary whitespace-nowrap !rounded-xl !px-4 !py-2.5 text-sm">List property</Link>
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="flex items-center gap-2 xl:hidden">
+          <div className="flex items-center gap-1.5 lg:hidden">
             <ThemeToggle />
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-charcoal dark:text-white hover:bg-ivory dark:hover:bg-gray-800"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="grid h-11 w-11 place-items-center rounded-xl text-charcoal transition-colors hover:bg-ivory dark:text-white dark:hover:bg-gray-800" aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation">
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="xl:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-[#fffff8] dark:bg-charcoal animate-fade-in">
-            <div className="flex flex-col space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="px-4 py-3 text-charcoal dark:text-gray-200 hover:text-forest dark:hover:text-forest font-medium rounded-lg hover:bg-sage/10 dark:hover:bg-gray-800 transition-colors"
-                  onClick={closeMobile}
-                >
-                  {item.label}
-                </Link>
+          <div id="mobile-navigation" className="absolute left-0 right-0 top-full max-h-[calc(100dvh-7rem)] overflow-y-auto border-t border-forest/10 bg-[#fffff8] px-4 pb-6 pt-3 shadow-2xl dark:bg-charcoal lg:hidden">
+            <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Find property</p>
+            <div className="grid grid-cols-2 gap-2">
+              {primaryNav.map((item) => (
+                <Link key={item.label} href={item.href} onClick={closeMobile} className="flex min-h-12 items-center rounded-xl bg-forest-50 px-4 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-forest-100 dark:text-gray-100 dark:hover:bg-white/10">{item.label}</Link>
               ))}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                {!loading && user ? (
-                  <>
-                    <Link href="/dashboard" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => { signOut(); closeMobile(); }}
-                      className="block px-4 py-3 text-left text-gray-600 dark:text-gray-400 font-semibold w-full"
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/signin" className="block px-4 py-3 text-charcoal dark:text-gray-200 font-semibold" onClick={closeMobile}>
-                      Sign In
-                    </Link>
-                    <Link href="/signup" className="block px-4 py-3 text-forest font-semibold" onClick={closeMobile}>
-                      Create Account
-                    </Link>
-                  </>
-                )}
-                <Link href="/list-property" className="btn-primary w-full text-center block mt-4" onClick={closeMobile}>
-                  List Property
-                </Link>
-                <a
-                  href="https://wa.me/2347041754800?text=Hello%2C%20I%27m%20interested%20in%20your%20properties"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-green-600 text-white w-full py-3 rounded-lg font-semibold mt-2"
-                  onClick={closeMobile}
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  Chat on WhatsApp
-                </a>
+            </div>
+            <p className="px-3 pb-2 pt-5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Explore & learn</p>
+            <div className="space-y-1">
+              {exploreNav.map((item) => (
+                <Link key={item.label} href={item.href} onClick={closeMobile} className="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-charcoal transition-colors hover:bg-sage/10 dark:text-gray-200 dark:hover:bg-gray-800">{item.label}</Link>
+              ))}
+              <Link href="/about" onClick={closeMobile} className="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-charcoal dark:text-gray-200">About De-Greenacres</Link>
+            </div>
+            <div className="mt-5 border-t border-forest/10 pt-5">
+              {!loading && user ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/dashboard" onClick={closeMobile} className="btn-outline text-center text-sm">Dashboard</Link>
+                  <button type="button" onClick={() => { void signOut(); closeMobile(); }} className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300">Sign out</button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/signin" onClick={closeMobile} className="btn-outline text-center text-sm">Sign in</Link>
+                  <Link href="/signup" onClick={closeMobile} className="btn-secondary text-center text-sm">Create account</Link>
+                </div>
+              )}
+              <Link href="/list-property" onClick={closeMobile} className="btn-primary mt-3 block w-full text-center">List a property</Link>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <a href={`tel:${settings.contact_phone}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-forest/15 px-3 text-xs font-bold text-forest dark:text-white"><Phone className="h-4 w-4" /> Call us</a>
+                <a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={closeMobile} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-3 text-xs font-bold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
               </div>
             </div>
           </div>
