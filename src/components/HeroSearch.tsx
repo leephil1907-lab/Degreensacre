@@ -19,7 +19,7 @@ const PROPERTY_TYPES = [
   'Office Space', 'Shop', 'Warehouse', 'Land', 'Mixed Use',
 ];
 
-const selectClass = 'w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-9 text-sm font-semibold text-charcoal transition-colors hover:border-gray-300 focus:border-forest focus:bg-white focus:ring-2 focus:ring-forest/15';
+const selectClass = 'w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-9 text-base font-medium text-charcoal transition-colors hover:border-gray-300 focus:border-forest focus:bg-white focus:ring-2 focus:ring-forest/15';
 
 export default function HeroSearch() {
   const router = useRouter();
@@ -51,10 +51,10 @@ export default function HeroSearch() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="mx-auto max-w-5xl rounded-2xl border border-white/30 bg-white/95 p-4 text-left shadow-2xl backdrop-blur-xl sm:p-6 md:rounded-3xl md:p-7" aria-label="Property search">
+    <form onSubmit={handleSearch} className="mx-auto max-w-5xl rounded-2xl border border-white/30 bg-white/95 p-4 text-left shadow-lg backdrop-blur-sm sm:p-6 md:rounded-3xl md:p-7" aria-label="Property search">
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-3" role="group" aria-label="Listing category">
         {TABS.map((tab) => (
-          <button key={tab.value} type="button" onClick={() => chooseTab(tab.value)} aria-pressed={activeTab === tab.value} className={`flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors ${activeTab === tab.value ? 'bg-forest text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-charcoal'}`}>
+          <button key={tab.value} type="button" onClick={() => chooseTab(tab.value)} aria-pressed={activeTab === tab.value} className={`flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${activeTab === tab.value ? 'bg-forest text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-charcoal'}`}>
             <tab.icon className="h-4 w-4" aria-hidden="true" />{tab.label}
           </button>
         ))}

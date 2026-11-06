@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, MessageCircle, Phone, X } from 'lucide-react';
+import { ChevronDown, Menu, MessageCircle, Phone, Search, X } from 'lucide-react';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +62,7 @@ export default function Header() {
   const isCurrent = (href: string) => !href.includes('?') && pathname.startsWith(href);
 
   return (
-    <header className="sticky top-0 z-[70] border-b border-forest/5 bg-[#fffff8]/95 shadow-soft backdrop-blur-lg transition-colors dark:bg-charcoal/95">
+    <header className="sticky top-0 z-[70] border-b border-forest/5 bg-white/95 shadow-soft backdrop-blur-lg transition-colors dark:bg-charcoal/95">
       <div className="bg-forest text-xs text-ivory">
         <div className="container-custom flex min-h-10 items-center justify-between gap-3 py-2">
           <div className="flex min-w-0 items-center gap-3">
@@ -99,7 +99,7 @@ export default function Header() {
                 Explore <ChevronDown className={`h-3.5 w-3.5 transition-transform ${exploreOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
               {exploreOpen && (
-                <div id="explore-menu" className="absolute left-1/2 top-[calc(100%+0.75rem)] w-80 -translate-x-1/2 rounded-2xl border border-forest/10 bg-[#fffff8] p-2 shadow-2xl dark:bg-charcoal">
+                <div id="explore-menu" className="absolute left-1/2 top-[calc(100%+0.75rem)] w-80 -translate-x-1/2 rounded-2xl border border-forest/10 bg-white p-2 shadow-2xl dark:bg-charcoal">
                   {exploreNav.map((item) => (
                     <Link key={item.label} href={item.href} onClick={() => setExploreOpen(false)} className="block rounded-xl px-4 py-3 transition-colors hover:bg-forest-50 dark:hover:bg-white/5">
                       <span className="block text-sm font-bold text-charcoal dark:text-white">{item.label}</span>
@@ -135,11 +135,18 @@ export default function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div id="mobile-navigation" className="absolute left-0 right-0 top-full max-h-[calc(100dvh-7rem)] overflow-y-auto border-t border-forest/10 bg-[#fffff8] px-4 pb-6 pt-3 shadow-2xl dark:bg-charcoal lg:hidden">
+          <div id="mobile-navigation" className="absolute left-0 right-0 top-full max-h-[calc(100dvh-7rem)] overscroll-contain overflow-y-auto border-t border-forest/10 bg-white px-4 pb-6 pt-3 shadow-2xl dark:bg-charcoal lg:hidden">
+            <form action="/properties" method="get" role="search" className="mb-4">
+              <label htmlFor="mobile-property-search" className="mb-2 block text-sm font-semibold text-charcoal dark:text-white">Search properties</label>
+              <div className="flex gap-2">
+                <input id="mobile-property-search" name="area" type="search" placeholder="City, area or neighbourhood" maxLength={120} className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-3 text-base text-charcoal dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                <button type="submit" aria-label="Search properties" className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-forest text-white"><Search className="h-5 w-5" /></button>
+              </div>
+            </form>
             <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Find property</p>
             <div className="grid grid-cols-2 gap-2">
               {primaryNav.map((item) => (
-                <Link key={item.label} href={item.href} onClick={closeMobile} className="flex min-h-12 items-center rounded-xl bg-forest-50 px-4 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-forest-100 dark:text-gray-100 dark:hover:bg-white/10">{item.label}</Link>
+                <Link key={item.label} href={item.href} onClick={closeMobile} className="flex min-h-12 items-center rounded-xl bg-forest-50 px-4 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-forest-100 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10">{item.label}</Link>
               ))}
             </div>
             <p className="px-3 pb-2 pt-5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Explore & learn</p>

@@ -31,7 +31,7 @@ export default function HeroCarousel() {
           <img src={SLIDES[current].url} alt="" className="h-full w-full object-cover" loading={current === 0 ? 'eager' : 'lazy'} />
         </motion.div>
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/45 to-black/75" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
       <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/25 px-2 py-1 backdrop-blur-sm">
         {SLIDES.map((slide, index) => (

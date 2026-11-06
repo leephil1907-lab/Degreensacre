@@ -3,20 +3,20 @@
 
 @theme {
   /* Banner-extracted luxury palette */
-  --color-forest: #283818;
-  --color-forest-light: #384828;
-  --color-forest-50: #f0f2ee;
-  --color-forest-100: #dce2d6;
-  --color-sage: #788848;
-  --color-sage-light: #788858;
-  --color-ivory: #f8f8e8;
-  --color-cream: #e8e8d8;
+  --color-forest: #315c49;
+  --color-forest-light: #274b3c;
+  --color-forest-50: #f2f7f4;
+  --color-forest-100: #e4eee7;
+  --color-sage: #526e50;
+  --color-sage-light: #476347;
+  --color-ivory: #fafbf9;
+  --color-cream: #f0f4f1;
   --color-charcoal: #1a1a18;
   --color-taupe: #b8b898;
-  --color-silver: #d8d8c8;
+  --color-silver: #dce5df;
   /* Legacy magenta token now maps to forest after rebrand (was #C41E7A) */
-  --color-magenta: #283818;
-  --color-magenta-light: #384828;
+  --color-magenta: #315c49;
+  --color-magenta-light: #274b3c;
   
   --font-display: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   --font-serif: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
@@ -25,23 +25,23 @@
 
 @layer base {
   :root {
-    --primary-green: #283818;
-    --primary-green-hover: #384828;
+    --primary-green: #315c49;
+    --primary-green-hover: #274b3c;
     --charcoal: #1a1a18;
     --charcoal-light: #2e2e2a;
-    --ivory: #f8f8e8;
-    --ivory-dark: #e8e8d8;
+    --ivory: #fafbf9;
+    --ivory-dark: #f0f4f1;
     --forest: var(--primary-green);
     --forest-light: var(--primary-green-hover);
-    --sage: #788848;
+    --sage: #526e50;
     --taupe: #b8b898;
-    --silver: #d8d8c8;
-    --cream: #e8e8d8;
+    --silver: #dce5df;
+    --cream: #f0f4f1;
     /* Legacy magenta -> forest after rebrand (was #C41E7A) */
-    --magenta: #283818;
+    --magenta: #315c49;
     --magenta-dark: #1a2810;
-    --magenta-light: #384828;
-    --white: #f8f8e8;
+    --magenta-light: #274b3c;
+    --white: #fafbf9;
   }
 
   * {
@@ -101,7 +101,7 @@
   }
 
   ::selection {
-    background: #dce2d6;
+    background: #e4eee7;
     color: #14200c;
   }
 }
@@ -146,7 +146,7 @@
   }
 
   .btn-gold {
-    background: linear-gradient(135deg, #b8b898 0%, #d8d8c8 50%, #b8b898 100%);
+    background: linear-gradient(135deg, #b8b898 0%, #dce5df 50%, #b8b898 100%);
     color: var(--forest);
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
@@ -160,7 +160,7 @@
   }
 
   .card {
-    background-color: #fffff8;
+    background-color: #ffffff;
     border-radius: 1rem;
     box-shadow: 0 2px 15px -3px rgba(40, 56, 24, 0.06), 0 10px 20px -2px rgba(40, 56, 24, 0.04);
     overflow: hidden;
@@ -178,7 +178,7 @@
     border: 2px solid var(--cream);
     border-radius: 0.75rem;
     font-size: 1rem;
-    background-color: #fffff8;
+    background-color: #ffffff;
     color: var(--charcoal);
   }
 
@@ -317,10 +317,10 @@
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 3px solid #fffff8;
+  border: 3px solid #ffffff;
   border-radius: 9999px 9999px 9999px 0;
-  background: #283818;
-  color: #fffff8;
+  background: #315c49;
+  color: #ffffff;
   box-shadow: 0 5px 14px rgba(20, 32, 12, 0.28);
   transform: rotate(-45deg);
 }

@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import CookieConsent from "@/components/CookieConsent";
-import LocationPermission from "@/components/LocationPermission";
 import PWARegister from "@/components/PWARegister";
 import { Providers } from "@/components/Providers";
 import { GoogleAdsenseScript } from "@/components/GoogleAdsense";
@@ -199,7 +198,6 @@ export default function RootLayout({
           <Footer />
           <WhatsAppFloat />
           <CookieConsent />
-          <LocationPermission />
           <PWARegister />
         </Providers>
       </body>

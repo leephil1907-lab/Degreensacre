@@ -27,6 +27,7 @@ export default function LocationPicker({ location, latitude, longitude, onChange
   onChange: (latitude: string, longitude: string) => void;
 }) {
   const value = useMemo(() => parseCoordinates({ lat: latitude, lng: longitude }), [latitude, longitude]);
+  const [customQuery, setCustomQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<AddressResult[]>([]);
   const [matchedAddress, setMatchedAddress] = useState('');
@@ -44,7 +45,8 @@ export default function LocationPicker({ location, latitude, longitude, onChange
   const markers = useMemo(() => value ? [{ id: 'property-location', position: value, title: 'Property location', subtitle: addressQuery, kind: 'editable' as const }] : [], [value, addressQuery]);
 
   const locate = async () => {
-    if (addressQuery.replaceAll(',', '').trim().length < 3) {
+    const searchQuery = customQuery.trim() || addressQuery;
+    if (searchQuery.replaceAll(',', '').trim().length < 3) {
       setMessage('Add at least an area and state before searching.');
       return;
     }
@@ -52,7 +54,7 @@ export default function LocationPicker({ location, latitude, longitude, onChange
     setMessage('');
     setResults([]);
     try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(addressQuery)}`);
+      const response = await fetch(`/api/geocode?q=${encodeURIComponent(searchQuery)}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Address search failed.');
       const matches = (data.results || []) as AddressResult[];
@@ -97,6 +99,8 @@ export default function LocationPicker({ location, latitude, longitude, onChange
         </button>
       </div>
 
+      <label className="mt-4 block text-xs font-semibold text-gray-600" htmlFor="location-picker-query">Search a nearby landmark or a simpler address if the full address is not found</label>
+      <input id="location-picker-query" value={customQuery} onChange={(event) => setCustomQuery(event.target.value)} maxLength={200} placeholder={addressQuery || 'Neighbourhood, city, state'} className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-base text-charcoal" />
       {message && <p className="mt-3 rounded-lg bg-white px-3 py-2 text-xs leading-5 text-gray-600" role="status">{message}</p>}
       {results.length > 1 && (
         <div className="mt-3 grid gap-2 rounded-xl border border-gray-200 bg-white p-2">

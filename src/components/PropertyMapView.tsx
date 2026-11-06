@@ -99,7 +99,7 @@ export default function PropertyMapView({
       setResults(matches);
       if (matches.length === 0) {
         setSelectedPlace(null);
-        setSearchError('No Nigerian match was found. Add a street, neighbourhood, city or state and try again.');
+        setSearchError('This address was not found in OpenStreetMap. Try the neighbourhood and state, a nearby landmark, or search Google Maps below.');
       } else if (matches.length === 1) {
         setSelectedPlace(matches[0]);
         setResults([]);
@@ -142,7 +142,7 @@ export default function PropertyMapView({
             <label htmlFor="property-address-search" className="sr-only">Find an address or landmark in Nigeria</label>
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input id="property-address-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an address or landmark" className="h-10 w-full rounded-lg border border-transparent bg-gray-50 pl-8 pr-2 text-xs text-charcoal outline-none transition focus:border-forest focus:bg-white sm:text-sm" />
+              <input id="property-address-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an address or landmark" className="h-10 w-full rounded-lg border border-transparent bg-gray-50 pl-8 pr-2 text-base text-charcoal outline-none transition focus:border-forest focus:bg-white sm:text-sm" />
             </div>
             <button type="submit" disabled={searching} className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-forest px-3 text-xs font-extrabold text-white transition-colors hover:bg-forest-light disabled:opacity-60">
               {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
@@ -150,7 +150,7 @@ export default function PropertyMapView({
           </form>
           {(results.length > 0 || searchError) && (
             <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-forest/10 bg-white p-2 shadow-xl">
-              {searchError && <p role="alert" className="px-3 py-2 text-xs leading-5 text-red-700">{searchError}</p>}
+              {searchError && <div className="px-3 py-2"><p role="alert" className="text-xs leading-5 text-gray-700">{searchError}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query + ', Nigeria')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-10 items-center text-xs font-bold text-forest underline">Search this address on Google Maps ↗</a><p className="text-[11px] leading-5 text-gray-500">External search; this does not confirm the property location.</p></div>}
               {results.length > 1 && <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-wide text-gray-400">Choose the correct match</p>}
               {results.map((result) => (
                 <button key={result.id} type="button" onClick={() => choosePlace(result)} className={`block w-full rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-forest-50 ${selectedPlace?.id === result.id ? 'bg-forest-50' : ''}`}>

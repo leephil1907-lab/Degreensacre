@@ -385,12 +385,13 @@ function PropertiesContent() {
 
       {loading ? (
         <div className="container-custom flex min-h-96 flex-col items-center justify-center py-20 text-center"><Loader2 className="h-8 w-8 animate-spin text-forest" /><p className="mt-3 text-sm text-gray-500">Loading available properties…</p></div>
-      ) : loadError && properties.length === 0 ? (
+      ) : loadError && properties.length === 0 && viewMode !== 'map' ? (
         <div className="container-custom py-16"><div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm"><SearchX className="mx-auto h-10 w-10 text-red-400" /><h2 className="mt-4 font-display text-3xl text-charcoal">We couldn’t load the listings</h2><p className="mt-3 text-sm leading-6 text-gray-500">{loadError}</p><div className="mt-6 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => void loadProperties()} className="btn-primary">Try again</button><Link href="/contact" className="btn-outline">Contact support</Link></div></div></div>
-      ) : sortedProperties.length === 0 ? (
+      ) : sortedProperties.length === 0 && viewMode !== 'map' ? (
         <div className="container-custom py-16"><div className="mx-auto max-w-xl rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">{hasActiveFilters ? <SearchX className="mx-auto h-10 w-10 text-gray-300" /> : <Home className="mx-auto h-10 w-10 text-forest/30" />}<h2 className="mt-4 font-display text-3xl text-charcoal">{hasActiveFilters ? 'No properties match these filters' : 'No properties are published yet'}</h2><p className="mt-3 text-sm leading-6 text-gray-500">{hasActiveFilters ? 'Try a wider price range, another location or fewer filters.' : 'You can check again later, contact our team or submit a property for review.'}</p><div className="mt-6 flex flex-wrap justify-center gap-3">{hasActiveFilters ? <button type="button" onClick={clearFilters} className="btn-primary">Clear all filters</button> : <><Link href="/contact" className="btn-primary">Tell us what you need</Link><Link href="/list-property" className="btn-outline">List a property</Link></>}</div></div></div>
       ) : viewMode === 'map' ? (
         <section aria-label="Property list and map">
+          {loadError && <p role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Listings are temporarily unavailable. You can still search addresses on the map; search results are not property listings.</p>}
           <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2 lg:hidden"><button type="button" onClick={() => setViewMode('grid')} className="inline-flex min-h-10 items-center gap-2 text-sm font-extrabold text-forest"><ArrowLeft className="h-4 w-4" /> Back to listings</button><span className="text-xs text-gray-500">{mappedLabel(sortedProperties)}</span></div>
           <div className="lg:grid lg:grid-cols-[minmax(23rem,30rem)_1fr]">
             <div className="hidden max-h-[720px] space-y-4 overflow-y-auto border-r border-gray-200 bg-ivory p-4 lg:block">

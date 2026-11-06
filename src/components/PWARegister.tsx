@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from 'react';
 
+const INSTALL_SNOOZE_KEY = 'degreenacres-install-snoozed-until';
+const UPDATE_SNOOZE_KEY = 'degreenacres-update-snoozed-until';
+
+function isSnoozed(key: string) {
+  try { return Number(localStorage.getItem(key) || 0) > Date.now(); } catch { return true; }
+}
+
+function hasCookieChoice() {
+  try { return Boolean(localStorage.getItem('cookie-consent')); } catch { return false; }
+}
+
+function snooze(key: string, days: number) {
+  try { localStorage.setItem(key, String(Date.now() + days * 86400000)); } catch { /* Storage may be blocked. */ }
+}
+
 export default function PWARegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
@@ -19,17 +34,25 @@ export default function PWARegister() {
       setIsInstalled(true);
     }
 
+    let installTimer: ReturnType<typeof setTimeout> | undefined;
+    let updateTimer: ReturnType<typeof setInterval> | undefined;
+    const showAfterEngagement = () => {
+      removeEngagementListeners();
+      installTimer = setTimeout(() => {
+        if (hasCookieChoice() && !isSnoozed(INSTALL_SNOOZE_KEY)) setShowInstallButton(true);
+      }, 12000);
+    };
+    const removeEngagementListeners = () => {
+      window.removeEventListener('pointerdown', showAfterEngagement);
+      window.removeEventListener('scroll', showAfterEngagement);
+      window.removeEventListener('keydown', showAfterEngagement);
+    };
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       // Wait for consent and meaningful engagement before suggesting installation.
-      if (!isStandalone && localStorage.getItem('cookie-consent')) {
-        const showAfterEngagement = () => {
-          window.removeEventListener('pointerdown', showAfterEngagement);
-          window.removeEventListener('scroll', showAfterEngagement);
-          window.removeEventListener('keydown', showAfterEngagement);
-          window.setTimeout(() => setShowInstallButton(true), 12000);
-        };
+      if (!isStandalone && !isSnoozed(INSTALL_SNOOZE_KEY)) {
         window.addEventListener('pointerdown', showAfterEngagement, { once: true, passive: true });
         window.addEventListener('scroll', showAfterEngagement, { once: true, passive: true });
         window.addEventListener('keydown', showAfterEngagement, { once: true });
@@ -39,12 +62,15 @@ export default function PWARegister() {
     window.addEventListener('beforeinstallprompt', handler);
 
     // App installed event
-    window.addEventListener('appinstalled', () => {
+    const onInstalled = () => {
+      removeEngagementListeners();
+      clearTimeout(installTimer);
       console.log('[PWA] App installed');
       setIsInstalled(true);
       setShowInstallButton(false);
       setDeferredPrompt(null);
-    });
+    };
+    window.addEventListener('appinstalled', onInstalled);
 
     // Register the offline worker only in production. Development requests must
     // always reach Next.js directly so hot reload and API tests are reliable.
@@ -62,7 +88,7 @@ export default function PWARegister() {
           console.log('[PWA] SW registered with scope:', registration.scope);
 
           // Check for updates every 60s when visible
-          setInterval(() => {
+          updateTimer = setInterval(() => {
             if (document.visibilityState === 'visible') registration.update();
           }, 60_000);
 
@@ -72,7 +98,7 @@ export default function PWARegister() {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 setWaitingWorker(newWorker);
-                setUpdateAvailable(true);
+                setUpdateAvailable(!isSnoozed(UPDATE_SNOOZE_KEY));
               }
             });
           });
@@ -80,7 +106,7 @@ export default function PWARegister() {
           // If there's already a waiting worker (e.g. from previous load)
           if (registration.waiting) {
             setWaitingWorker(registration.waiting);
-            setUpdateAvailable(true);
+            setUpdateAvailable(!isSnoozed(UPDATE_SNOOZE_KEY));
           }
         })
         .catch((error) => console.warn('[PWA] SW registration failed:', error));
@@ -88,17 +114,23 @@ export default function PWARegister() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', onInstalled);
+      removeEngagementListeners();
+      clearTimeout(installTimer);
+      clearInterval(updateTimer);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
     try {
+      await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log(`[PWA] User response: ${outcome}`);
       if (outcome === 'accepted') {
         setIsInstalled(true);
+      } else {
+        snooze(INSTALL_SNOOZE_KEY, 30);
       }
     } catch (e) {
       console.warn('[PWA] prompt failed', e);
@@ -124,7 +156,7 @@ export default function PWARegister() {
               <p className="text-xs text-ivory/80 mb-3 leading-relaxed">A new version of De-Greenacres is ready. Reload to get the latest properties and fixes.</p>
               <div className="flex gap-2">
                 <button onClick={handleUpdate} className="bg-sage hover:bg-sage-light text-white text-xs font-bold px-4 py-2.5 rounded-xl flex-1 transition-colors">Reload now</button>
-                <button onClick={() => setUpdateAvailable(false)} className="border border-white/20 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-white/10 transition-colors">Later</button>
+                <button onClick={() => { snooze(UPDATE_SNOOZE_KEY, 1); setUpdateAvailable(false); }} className="border border-white/20 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-white/10 transition-colors">Later</button>
               </div>
             </div>
           </div>
@@ -148,7 +180,7 @@ export default function PWARegister() {
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-charcoal mb-1 text-sm">Install De-Greenacres App</h3>
             <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-              Add to your home screen for instant access, offline viewing & faster property search.
+              Add to your home screen for instant access, quick access to property search. Live listings and account actions need internet.
             </p>
             <div className="flex gap-2">
               <button
@@ -158,16 +190,16 @@ export default function PWARegister() {
                 Install App
               </button>
               <button
-                onClick={() => setShowInstallButton(false)}
+                onClick={() => { snooze(INSTALL_SNOOZE_KEY, 30); setShowInstallButton(false); }}
                 className="border-2 border-forest text-forest text-xs font-semibold px-4 py-2 rounded-xl hover:bg-forest hover:text-ivory transition-colors"
               >
                 Later
               </button>
             </div>
-            <p className="text-[11px] text-gray-400 mt-3 text-center">Free · No download · Works offline</p>
+            <p className="text-[11px] text-gray-400 mt-3 text-center">Optional · Browse without installing</p>
           </div>
           <button
-            onClick={() => setShowInstallButton(false)}
+            onClick={() => { snooze(INSTALL_SNOOZE_KEY, 30); setShowInstallButton(false); }}
             aria-label="Dismiss"
             className="text-gray-400 hover:text-charcoal p-1 -mr-1"
           >
