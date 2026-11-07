@@ -494,23 +494,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ SEARCH-FRIENDLY COMPANY OVERVIEW ═══ */}
-      <section aria-labelledby="degreenacres-overview" className="section-padding bg-[#fffff8] text-charcoal">
+      {/* ═══ PROPERTY CATEGORY QUICK LINKS ═══ */}
+      <section aria-label="Find a property" className="section-padding bg-[#fffff8]">
         <div className="container-custom">
-          <div className="mx-auto max-w-4xl">
-            <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-sage">DE-GREENACRES PROPERTIES LIMITED</p>
-            <h2 id="degreenacres-overview" className="mb-6 font-display text-3xl leading-tight text-forest md:text-4xl">Your guide to finding property in Nigeria</h2>
-            <div className="space-y-3 text-sm leading-7 text-gray-700 md:text-base">
-              <p>De-Greenacres Properties Limited helps people in Nigeria and abroad find property opportunities across the country. Browse houses for sale, homes for rent, land, commercial spaces and real estate developments, or contact our team to arrange an inspection.</p>
-              <p>Explore property in Lagos, Abuja, Akwa Ibom, Enugu and other locations. Whether you are buying, renting or investing from the diaspora, De-Greenacres makes it easier to discover listings, ask questions and take the next step with greater confidence.</p>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-3 border-t border-forest/10 pt-6 text-sm font-bold">
-              <Link href="/properties?type=sale" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Properties for sale</Link>
-              <Link href="/properties?type=rent" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Property for rent</Link>
-              <Link href="/properties?type=land" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Land for sale</Link>
-              <Link href="/diaspora" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Diaspora property guide</Link>
-              <Link href="/contact" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Contact our team</Link>
-            </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              { label: 'BUY', href: '/properties?type=sale' },
+              { label: 'RENT', href: '/properties?type=rent' },
+              { label: 'LAND', href: '/properties?type=land' },
+              { label: 'COMMERCIAL', href: '/properties?type=commercial' },
+            ].map((item) => (
+              <Link key={item.label} href={item.href} className="flex min-h-28 items-center justify-center rounded-2xl border border-forest/10 bg-white px-4 py-6 text-center font-display text-xl font-bold tracking-wide text-forest shadow-sm transition-all hover:-translate-y-1 hover:border-forest/30 hover:shadow-md md:min-h-32 md:text-2xl">
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
