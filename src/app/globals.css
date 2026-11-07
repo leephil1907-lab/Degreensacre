@@ -218,9 +218,11 @@
   }
 
   .heading-primary {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 700;
+    font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
     letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: balance;
   }
 
   .section-padding {
@@ -331,3 +333,20 @@
 }
 .location-marker--search .location-marker__pin { background: #b45309; }
 .location-marker--selected .location-marker__pin { background: #607038; scale: 1.12; }
+
+
+/* Consistent editorial typography and readable long-form SEO copy. */
+.prose, .seo-copy {
+  font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.85;
+  letter-spacing: -0.008em;
+}
+h1, h2, h3, h4, .font-display {
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+@media (max-width: 639px) {
+  body { font-size: 0.975rem; }
+  h1 { letter-spacing: -0.025em; }
+  h2 { letter-spacing: -0.02em; }
+}
