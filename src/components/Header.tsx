@@ -135,9 +135,7 @@ export default function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="fixed inset-x-0 bottom-0 top-[7rem] z-[80] lg:hidden">
-            <button type="button" aria-label="Close navigation menu" onClick={closeMobile} className="absolute inset-0 h-full w-full bg-charcoal/45 backdrop-blur-[2px]" />
-            <div id="mobile-navigation" className="relative z-10 max-h-full overflow-y-auto overscroll-contain border-t border-forest/10 bg-[#fffff8] px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:bg-charcoal">
+          <div id="mobile-navigation" className="absolute inset-x-0 top-full z-[80] max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain rounded-b-2xl border-t border-forest/10 bg-[#fffff8] px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl lg:hidden dark:bg-charcoal">
               <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Find property</p>
             <div className="grid grid-cols-2 gap-2">
               {primaryNav.map((item) => (
@@ -169,7 +167,6 @@ export default function Header() {
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={closeMobile} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-3 text-xs font-bold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
               </div>
             </div>
-          </div>
           </div>
         )}
       </nav>
