@@ -12,7 +12,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import AdSense from '@/components/GoogleAdsense';
 import type { MapProperty } from '@/components/PropertyMapView';
-import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, getPropertyImage } from '@/lib/property';
+import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, getPropertyImage, isStockImage } from '@/lib/property';
 import { NIGERIAN_STATES } from '@/lib/validation';
 
 const PropertyMapView = dynamic(() => import('@/components/PropertyMapView'), {
@@ -92,7 +92,7 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
   const image = getPropertyImage(property);
   const hasPhoto = image !== '/property-placeholder.svg';
   const coordinates = getPropertyCoordinates(property);
-  const photoCount = Math.max(property.images?.length || 0, property.property_images?.length || 0);
+  const photoCount = new Set([...(property.images || []), ...(property.property_images || []).map((image) => image.url)].filter((url) => !isStockImage(url))).size;
   const size = Number(property.sqm || property.land_size || 0);
   const displayType = property.property_type === 'Land' ? 'land' : commercialPropertyTypes.has(property.property_type || '') ? 'commercial' : property.type;
   const tags = [property.documentation, property.gated_estate ? 'Gated estate' : '', property.serviced ? 'Serviced' : '', property.furnished ? 'Furnished' : ''].filter(Boolean).slice(0, compact ? 2 : 3);

@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-07",
+  "local_ui": {
+    "mode": "LOCAL_UI_WITH_ACTUAL_PUBLIC_GET_RESPONSES",
+    "route_width_checks": 20,
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "overflow_failures": 0,
+    "stock_listing_image_failures": 0,
+    "static_bank_panels": 0,
+    "page_errors": []
+  },
+  "local_postgres": {
+    "version": 17,
+    "fixture": "synthetic partial legacy schema; never production",
+    "all_five_migrations": "pass on clean fixture and reapplication",
+    "adversarial_assertions": "pass; DML rolled back"
+  },
+  "validation": {
+    "node": 22,
+    "types": "pass",
+    "lint_errors": 0,
+    "lint_warnings": 237,
+    "production_build": "pass with non-production build-validation environment"
+  },
+  "live": {
+    "/api/site-settings": {
+      "status": 200,
+      "count": null,
+      "success": true
+    },
+    "/api/reviews?limit=1": {
+      "status": 200,
+      "count": 0,
+      "success": true
+    },
+    "/api/properties?limit=1": {
+      "status": 200,
+      "count": 1,
+      "success": true
+    },
+    "/api/developments": {
+      "status": 200,
+      "count": 0,
+      "success": true
+    },
+    "/api/agencies": {
+      "status": 200,
+      "count": 0,
+      "success": true
+    },
+    "/api/agents": {
+      "status": 200,
+      "count": 0,
+      "success": true
+    },
+    "/api/health": {
+      "status": 200,
+      "count": null,
+      "success": "ok"
+    },
+    "database": {
+      "properties_preserved": 9,
+      "public_properties": 1,
+      "pending_verification_properties": 8,
+      "reviews_preserved": 6,
+      "approved_reviews": 0,
+      "live_read_only_rls": "pass: anonymous isolation and administrator access; no ordinary production account existed for further controlled acceptance"
+    }
+  }
+}

@@ -11,9 +11,8 @@ export async function GET(request: NextRequest) {
     const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 50) : 20;
     const supabase = await createServerSupabaseClient();
     const { data, error, count } = await supabase
-      .from('reviews')
+      .from('public_reviews')
       .select('id, name, rating, title, message, location, created_at, is_verified_buyer', { count: 'exact' })
-      .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(limit);
 

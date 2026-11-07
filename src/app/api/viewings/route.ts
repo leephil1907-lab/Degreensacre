@@ -97,6 +97,9 @@ export async function POST(request: NextRequest) {
     notifyEvents([...(user.email ? [{ event: 'inspection_requested' as const, to: user.email, recordId: viewing.id, data: { details: { 'Requested date': body.preferred_date, 'Requested time': body.preferred_time, Status: 'Awaiting confirmation' } } }] : []), ...teamNotice('admin_inspection', viewing.id)]);
     return NextResponse.json({ viewing, success: true });
   } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+      return NextResponse.json({ error: 'This time slot has just been reserved. Please choose another time.', success: false }, { status: 409 });
+    }
     console.error('POST /api/viewings error:', error);
     return NextResponse.json(
       { error: 'Failed to schedule viewing', success: false },

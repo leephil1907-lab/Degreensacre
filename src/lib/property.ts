@@ -16,8 +16,13 @@ export type PropertyLocation = {
 export function parseCoordinates(value: unknown): PropertyCoordinates | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const source = value as Record<string, unknown>;
-  const lat = Number(source.lat ?? source.latitude);
-  const lng = Number(source.lng ?? source.lon ?? source.longitude);
+  const rawLat = source.lat ?? source.latitude;
+  const rawLng = source.lng ?? source.lon ?? source.longitude;
+  if (![rawLat, rawLng].every((coordinate) =>
+    (typeof coordinate === 'number' || typeof coordinate === 'string') && String(coordinate).trim() !== ''
+  )) return null;
+  const lat = Number(rawLat);
+  const lng = Number(rawLng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return { lat, lng };
@@ -70,15 +75,26 @@ export function formatPropertyPrice(value: unknown, period?: string | null) {
   return `${formatted}${suffix}`;
 }
 
+// Stock-library images cannot substantiate a listing's physical appearance.
+// Preserve the stored records, but do not present these as property photographs.
+export function isStockImage(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return ['unsplash.com', 'pexels.com', 'pixabay.com'].some((domain) => host === domain || host.endsWith(`.${domain}`));
+  } catch { return false; }
+}
+
 export function getPropertyImage(property: {
   images?: unknown;
   property_images?: unknown;
 }) {
-  if (Array.isArray(property.images) && typeof property.images[0] === 'string' && property.images[0]) {
-    return property.images[0];
+  if (Array.isArray(property.images)) {
+    const actualImage = property.images.find((image) => typeof image === 'string' && image && !isStockImage(image));
+    if (actualImage) return actualImage;
   }
   if (Array.isArray(property.property_images)) {
-    const images = property.property_images as { url?: unknown; is_primary?: boolean; display_order?: number }[];
+    const images = (property.property_images as { url?: unknown; is_primary?: boolean; display_order?: number }[]).filter((image) => !isStockImage(image.url));
     const primary = images.find((image) => image.is_primary && typeof image.url === 'string');
     const first = primary || [...images].sort((a, b) => (a.display_order || 0) - (b.display_order || 0))[0];
     if (first && typeof first.url === 'string' && first.url) return first.url;

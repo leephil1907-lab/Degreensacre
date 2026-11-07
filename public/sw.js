@@ -1,5 +1,5 @@
-/* De-Greenacres Service Worker — production PWA v2.4 */
-const CACHE_VERSION = 'de-greenacres-v2.4';
+/* De-Greenacres Service Worker — production PWA v2.5 */
+const CACHE_VERSION = 'de-greenacres-v2.5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_URL = '/offline.html';

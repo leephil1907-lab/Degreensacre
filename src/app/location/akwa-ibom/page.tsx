@@ -1,3 +1,4 @@
+import { isStockImage } from '@/lib/property';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { formatPropertyPrice } from '@/lib/property';
@@ -19,7 +20,7 @@ export default async function AkwaIbomLocationPage() {
     akwaibomProperties = (data || []).map((property: any) => {
       const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
       const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
-      const images = [...new Set([...galleryImages, ...legacyImages])];
+      const images = [...new Set([...galleryImages, ...legacyImages])].filter((url) => !isStockImage(url));
       return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'], verified: property.verification_status === 'verified', verificationStatus: property.verification_status };
     });
   } catch {

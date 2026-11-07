@@ -101,7 +101,7 @@ export async function uploadPropertyImage(
   originalName: string,
   order: number = 0
 ): Promise<{ url: string; path: string; imageId: string }> {
-  const supabase = await createAdminSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   
   const path = generateFilePath(BUCKETS.PROPERTY_IMAGES, originalName, propertyId);
   const { url } = await uploadImage(BUCKETS.PROPERTY_IMAGES, file, path);
@@ -119,7 +119,10 @@ export async function uploadPropertyImage(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    await deleteFile(BUCKETS.PROPERTY_IMAGES, path).catch(() => undefined);
+    throw error;
+  }
 
   return { url, path, imageId: data.id };
 }

@@ -64,7 +64,7 @@ export default function MessagesPage() {
     try {
       const { data, error: loadError } = await supabase
         .from('messages')
-        .select('*, sender:sender_id(first_name, last_name, avatar_url)')
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
       if (loadError) throw loadError;

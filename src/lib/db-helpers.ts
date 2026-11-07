@@ -1,3 +1,14 @@
+import { randomUUID } from 'node:crypto';
+import { isStockImage } from './property';
+
+function publicPropertyPhotos<T extends { images?: string[]; property_images?: { url: string }[]; admin_notes?: unknown }>(property: T) {
+  const { admin_notes: _privateNotes, ...publicRecord } = property;
+  return {
+    ...publicRecord,
+    images: (property.images || []).filter((url) => !isStockImage(url)),
+    property_images: (property.property_images || []).filter((image) => !isStockImage(image.url)),
+  };
+}
 import { createServerSupabaseClient, createAdminSupabaseClient } from './supabase-server';
 
 // Property helpers
@@ -44,7 +55,7 @@ export async function getProperties(filters: {
 
   if (error) throw error;
 
-  return { properties: data, count };
+  return { properties: (data || []).map(publicPropertyPhotos), count };
 }
 
 export async function getPropertyBySlug(slug: string) {
@@ -59,7 +70,7 @@ export async function getPropertyBySlug(slug: string) {
 
   if (error) throw error;
 
-  return property;
+  return property ? publicPropertyPhotos(property) : null;
 }
 
 export async function incrementPropertyView(propertyId: string) {
@@ -90,19 +101,17 @@ export async function createEnquiry(enquiry: {
   const supabase = await createServerSupabaseClient();
   const user = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from('enquiries')
-    .insert({
-      ...enquiry,
-      buyer_id: user.data.user?.id || null,
-      status: 'new',
-    })
-    .select()
-    .single();
-
+  // Anonymous submissions may INSERT but must never SELECT private enquiries.
+  // Supply our own ID and return only this request's already-known fields.
+  const record = {
+    ...enquiry,
+    id: randomUUID(),
+    buyer_id: user.data.user?.id || null,
+    status: 'new',
+  };
+  const { error } = await supabase.from('enquiries').insert(record);
   if (error) throw error;
-
-  return data;
+  return record;
 }
 
 export async function getUserEnquiries(userId: string) {

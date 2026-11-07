@@ -10,17 +10,22 @@ export async function GET() {
 
     const { data: messages, error } = await supabase
       .from('messages')
-      .select('*, sender:sender_id(first_name, last_name, avatar_url), recipient:recipient_id(first_name, last_name, avatar_url)')
+      .select('*')
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
       .limit(1000);
     if (error) throw error;
 
+    const ids = [...new Set((messages || []).flatMap((message) => [message.sender_id, message.recipient_id]))];
+    const { data: summaries, error: summaryError } = await supabase.rpc('conversation_profile_summaries', { ids });
+    if (summaryError) throw summaryError;
+    const profiles = new Map<string, { first_name: string; last_name: string; avatar_url: string | null }>((summaries || []).map((profile: any) => [profile.id, profile]));
+
     const conversations = new Map<string, { id: string; lastMessage: unknown; unreadCount: number; otherUser: unknown }>();
     for (const message of messages || []) {
       if (!conversations.has(message.conversation_id)) {
         const senderIsUser = message.sender_id === user.id;
-        const profile = senderIsUser ? message.recipient : message.sender;
+        const profile = profiles.get(senderIsUser ? message.recipient_id : message.sender_id);
         conversations.set(message.conversation_id, {
           id: message.conversation_id,
           lastMessage: message,
@@ -79,7 +84,7 @@ export async function POST(request: NextRequest) {
       sender_id: user.id,
       recipient_id: recipientId,
       content: sanitizeForDb(content),
-    }).select('*, sender:sender_id(first_name, last_name, avatar_url)').single();
+    }).select('*').single();
     if (error) throw error;
 
     const { error: notificationError } = await supabase.from('notifications').insert({

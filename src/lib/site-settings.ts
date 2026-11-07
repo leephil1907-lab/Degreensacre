@@ -14,7 +14,7 @@ export type SiteSettings = {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   company_name: 'De-Greenacres Properties Limited',
-  tagline: 'Homes, land and investment opportunities — documentation reviewed.',
+  tagline: 'Properties, land and real-estate services across Nigeria.',
   contact_email: 'degreenacrespropertieslimited@gmail.com',
   contact_phone: '+2348065019971',
   whatsapp_number: '2347041754800',

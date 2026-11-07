@@ -152,10 +152,12 @@ export async function PATCH(request: NextRequest) {
 
       updates.is_verified = !targetUser.is_verified;
     } else if (body.action === 'update_account_type') {
-      if (['buyer', 'seller', 'agent', 'admin'].includes(body.account_type)) {
+      if (['buyer', 'seller', 'agent'].includes(body.account_type)) {
         updates.account_type = body.account_type;
       }
     }
+
+    if (Object.keys(updates).length === 0) return NextResponse.json({ error: 'Invalid user action or account type', success: false }, { status: 400 });
 
     const { data: updatedUser, error } = await adminSupabase
       .from('profiles')

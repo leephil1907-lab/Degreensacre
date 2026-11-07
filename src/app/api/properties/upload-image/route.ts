@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
       .eq('id', propertyId)
       .maybeSingle();
 
-    if (propError || !property || property.owner_id !== user.id) {
+    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
+    if (propError || !property || (property.owner_id !== user.id && !profile?.is_admin)) {
       return NextResponse.json(
         { error: 'Unauthorized to upload images for this property', success: false },
         { status: 403 }

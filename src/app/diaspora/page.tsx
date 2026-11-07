@@ -1,3 +1,4 @@
+import { isStockImage } from '@/lib/property';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { DEFAULT_SITE_SETTINGS, whatsappLink } from '@/lib/site-settings';
@@ -8,8 +9,8 @@ export default async function DiasporaInvestmentPage() {
   let loadError = '';
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: savedSettings } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
-    if (savedSettings) settings = { ...settings, ...savedSettings };
+    const { data: savedSettings } = await supabase.from('site_settings').select('settings').eq('id', 1).maybeSingle();
+    if (savedSettings?.settings) settings = { ...settings, ...savedSettings.settings };
     const { data, error } = await supabase
       .from('properties')
       .select('*, property_images(url, display_order, is_primary)')
@@ -22,7 +23,7 @@ export default async function DiasporaInvestmentPage() {
     investmentProperties = (data || []).map((property: any) => {
       const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
       const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
-      const images = [...new Set([...galleryImages, ...legacyImages])];
+      const images = [...new Set([...galleryImages, ...legacyImages])].filter((url) => !isStockImage(url));
       return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'] };
     });
   } catch {

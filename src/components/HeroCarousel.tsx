@@ -33,6 +33,7 @@ export default function HeroCarousel() {
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
+      <p className="absolute bottom-16 left-4 z-20 rounded bg-black/40 px-2 py-1 text-[10px] text-white/90 sm:left-6">Illustrative imagery · not property listings</p>
       <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/25 px-2 py-1 backdrop-blur-sm">
         {SLIDES.map((slide, index) => (
           <button key={slide.url} type="button" onClick={() => setCurrent(index)} aria-label={`Show ${slide.label}`} aria-pressed={index === current} className="grid h-7 w-7 place-items-center rounded-full">

@@ -1,3 +1,4 @@
+import { getPropertyImage } from '@/lib/property';
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
@@ -34,9 +35,7 @@ export async function GET() {
 
     return NextResponse.json({
       title: data.title,
-      image: Array.isArray(data.images) && typeof data.images[0] === 'string'
-        ? data.images[0]
-        : '/property-placeholder.svg',
+      image: getPropertyImage(data),
       area: data.area,
       state: data.state,
       price: formattedPrice,

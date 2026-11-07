@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdSense from '@/components/GoogleAdsense';
-import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates } from '@/lib/property';
+import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, isStockImage } from '@/lib/property';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { normalizeWhatsappNumber } from '@/lib/site-settings';
 
@@ -303,9 +303,9 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
     );
   }
 
-  const images = property.property_images?.length
+  const images = (property.property_images?.length
     ? property.property_images
-    : (property.images || []).map((url, index) => ({ url, display_order: index, is_primary: index === 0, alt_text: '' }));
+    : (property.images || []).map((url, index) => ({ url, display_order: index, is_primary: index === 0, alt_text: '' }))).filter((image) => !isStockImage(image.url));
 
   return (
     <div className="min-h-screen bg-ivory-50">
