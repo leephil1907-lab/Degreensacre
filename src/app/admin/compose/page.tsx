@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Mail, Send, CheckCircle, AlertCircle, Globe, User, Loader2,
   Users, ShoppingCart, Building2, Briefcase, Shield, UserCheck, UserX
@@ -25,26 +26,11 @@ interface SentEmail {
 }
 
 const emailTemplates = [
-  { id: 'custom', label: 'Custom Message', icon: Mail },
-  { id: 'welcome', label: 'Welcome Email', icon: CheckCircle },
-  { id: 'newsletter', label: 'Weekly Digest', icon: Globe },
-  { id: 'announcement', label: 'Announcement', icon: AlertCircle },
+  { id: 'custom', label: 'Service message', icon: Mail },
+  { id: 'announcement', label: 'Service update', icon: AlertCircle },
 ];
 
-const templateMessages: Record<string, { subject: string; body: string }> = {
-  welcome: {
-    subject: 'Welcome to De-Greenacres Properties!',
-    body: 'Hello,\n\nWelcome to De-Greenacres Properties Limited! We are thrilled to have you join our community of property buyers, sellers, and investors in Nigeria.\n\nHere is what you can do:\n• Browse verified property listings across 6+ states\n• Book property inspections for ₦20,000\n• Connect directly with property owners and agents\n• Access exclusive investment opportunities\n\nIf you have any questions, reply to this email or reach us on WhatsApp at 07041754800.\n\nBest regards,\nDe-Greenacres Properties Limited\nRC: 1856064',
-  },
-  newsletter: {
-    subject: 'This Week at De-Greenacres — New Listings & Market Updates',
-    body: 'Hello,\n\nHere is your weekly property update from De-Greenacres:\n\n🏠 NEW LISTINGS THIS WEEK\nCheck out our latest verified properties on the website.\n\n📈 MARKET INSIGHTS\nProperty values in Lagos and Abuja continue to show strong growth.\n\n🔑 FEATURED PROPERTY\nVisit our website to see this week\'s featured listing.\n\nHappy house hunting!\nDe-Greenacres Properties Limited\nRC: 1856064',
-  },
-  announcement: {
-    subject: 'Important Announcement from De-Greenacres',
-    body: 'Hello,\n\nWe have an important announcement for our valued users.\n\n[Your announcement here]\n\nFor questions, contact us on WhatsApp at 07041754800 or email degreenacrespropertieslimited@gmail.com.\n\nBest regards,\nDe-Greenacres Properties Limited\nRC: 1856064',
-  },
-};
+const templateMessages: Record<string, { subject: string; body: string }> = {};
 
 export default function ComposeEmailPage() {
   const { user, profile } = useAuth();
@@ -158,7 +144,7 @@ export default function ComposeEmailPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setResult({ success: true, message: `✅ Email sent to ${data.sent_to} recipient(s)!` });
+        setResult({ success: true, message: data.message || `Email accepted for ${data.sent_to} recipient(s).` });
         setSubject('');
         setMessage('');
         setCustomEmails('');
@@ -185,7 +171,7 @@ export default function ComposeEmailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl text-charcoal">Compose Email</h2>
-          <p className="text-sm text-gray-500 mt-1">Send branded emails to your users</p>
+          <p className="text-sm text-gray-500 mt-1">Send relevant, branded service emails to your users</p>
         </div>
         <button
           onClick={() => setShowHistory(!showHistory)}
@@ -194,6 +180,8 @@ export default function ComposeEmailPage() {
           {showHistory ? '← Back to Compose' : `View History (${sentEmails.length})`}
         </button>
       </div>
+
+      <div className="rounded-xl border border-forest/15 bg-forest-50 p-4 text-sm leading-6 text-gray-600">Every email includes the De-Greenacres logo and support footer. Use this tool only for relevant service communications; marketing needs a consent and unsubscribe system. <Link href="/admin/email-templates" className="font-bold text-forest underline">Preview all event templates</Link>.</div>
 
       {/* Result message */}
       {result && (
@@ -228,7 +216,7 @@ export default function ComposeEmailPage() {
                     <td className="px-4 py-3">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                         email.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                      }`}>{email.status}</span>
+                      }`}>{email.status === 'sent' ? 'Provider accepted' : email.status}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{new Date(email.sent_at).toLocaleString()}</td>
                   </tr>
@@ -349,7 +337,7 @@ export default function ComposeEmailPage() {
             <div className="bg-ivory rounded-xl p-5 border border-gray-200">
               <h4 className="text-xs font-bold text-charcoal uppercase tracking-wide mb-3">Email Details</h4>
               <div className="space-y-2 text-xs text-gray-500">
-                <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Branded De-Greenacres template</div>
+                <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Branded service email · logo included</div>
                 <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /> From: De-Greenacres Properties</div>
                 <div className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> Includes logo + RC badge</div>
                 <div className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Mobile responsive</div>

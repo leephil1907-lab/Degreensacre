@@ -1,3 +1,5 @@
+import { notifyEvents } from '@/lib/email-events';
+import { isUuid } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase-server';
 
@@ -39,9 +41,12 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { review_id, action } = body;
 
-    if (!review_id) return NextResponse.json({ error: 'Review ID required', success: false }, { status: 400 });
+    if (!isUuid(String(review_id || ''))) return NextResponse.json({ error: 'Valid review ID required', success: false }, { status: 400 });
 
     const adminSupabase = await createAdminSupabaseClient();
+    if (!['approve', 'reject'].includes(action)) return NextResponse.json({ error: 'Choose approve or reject.', success: false }, { status: 400 });
+    const { data: previous, error: previousError } = await adminSupabase.from('reviews').select('status').eq('id', review_id).single();
+    if (previousError) throw previousError;
     const status = action === 'approve' ? 'approved' : 'rejected';
 
     const { data: review, error } = await adminSupabase
@@ -53,6 +58,7 @@ export async function PATCH(request: NextRequest) {
 
     if (error) throw error;
 
+    if (previous.status !== review.status && review.email) notifyEvents([{ event: status === 'approved' ? 'review_approved' : 'review_rejected', to: review.email, recordId: `${review.id}:${review.updated_at}`, data: { name: review.name } }]);
     return NextResponse.json({ review, success: true });
   } catch (error: any) {
     console.error('PATCH /api/admin/reviews error:', error);
@@ -73,7 +79,7 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { review_id } = body;
 
-    if (!review_id) return NextResponse.json({ error: 'Review ID required', success: false }, { status: 400 });
+    if (!isUuid(String(review_id || ''))) return NextResponse.json({ error: 'Valid review ID required', success: false }, { status: 400 });
 
     const adminSupabase = await createAdminSupabaseClient();
     const { error } = await adminSupabase.from('reviews').delete().eq('id', review_id);

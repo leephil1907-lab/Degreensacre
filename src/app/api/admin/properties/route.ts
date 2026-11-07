@@ -1,3 +1,4 @@
+import { notifyListingChange, notifyEvents } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
 import { isUuid, NIGERIAN_STATES, PROPERTY_TYPES } from '@/lib/validation';
@@ -135,10 +136,13 @@ export async function PUT(request: NextRequest) {
     const body = await bodyJson(request);
     const id = new URL(request.url).searchParams.get('id') || String(body.id || '');
     if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const { data: previous, error: previousError } = await auth.context.supabase.from('properties').select('status').eq('id', id).single();
+    if (previousError) return databaseError(previousError, 'The property could not be loaded.');
     const payload = propertyPayload(body);
     payload.updated_at = new Date().toISOString();
     const { data, error } = await auth.context.supabase.from('properties').update(payload).eq('id', id).select('*').single();
     if (error) return databaseError(error, 'The property could not be updated.');
+    await notifyListingChange(auth.context.supabase, previous, data);
     return NextResponse.json({ property: data, success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid property.', success: false }, { status: 400 });
@@ -153,6 +157,8 @@ export async function PATCH(request: NextRequest) {
     const body = await bodyJson(request);
     const id = String(body.property_id || body.id || '');
     if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const { data: previous, error: previousError } = await auth.context.supabase.from('properties').select('status').eq('id', id).single();
+    if (previousError) return databaseError(previousError, 'The property could not be loaded.');
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (body.status !== undefined) {
       if (!STATUSES.includes(String(body.status))) throw new Error('Invalid publication status.');
@@ -170,6 +176,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data, error } = await auth.context.supabase.from('properties').update(updates).eq('id', id).select('*').single();
     if (error) return databaseError(error, 'The property could not be moderated.');
+    await notifyListingChange(auth.context.supabase, previous, data);
     return NextResponse.json({ property: data, success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid moderation request.', success: false }, { status: 400 });
@@ -184,9 +191,12 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const id = new URL(request.url).searchParams.get('id') || String(body.id || '');
     if (!isUuid(id)) return NextResponse.json({ error: 'A valid property ID is required.', success: false }, { status: 400 });
+    const { data: removed } = await auth.context.supabase.from('properties').select('owner_id, title').eq('id', id).maybeSingle();
+    const { data: owner } = removed?.owner_id ? await auth.context.supabase.from('profiles').select('email, first_name').eq('id', removed.owner_id).maybeSingle() : { data: null };
     const { data, error } = await auth.context.supabase.from('properties').delete().eq('id', id).select('id');
     if (error) return databaseError(error, 'The property could not be deleted.');
     if (!data?.length) return NextResponse.json({ error: 'Property not found.', success: false }, { status: 404 });
+    if (owner?.email) notifyEvents([{ event: 'listing_deleted', to: owner.email, recordId: id, data: { name: owner.first_name, details: { Property: removed?.title } } }]);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid delete request.', success: false }, { status: 400 });

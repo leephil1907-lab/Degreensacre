@@ -1,3 +1,4 @@
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { getProperties } from '@/lib/db-helpers';
@@ -144,6 +145,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    notifyEvents([...(user.email ? [{ event: 'listing_submitted' as const, to: user.email, recordId: property.id, data: { details: { Property: property.title, Status: 'Pending review' } } }] : []), ...teamNotice('admin_listing', property.id)]);
     return NextResponse.json({ property, success: true });
   } catch (error) {
     console.error('POST /api/properties error:', error);

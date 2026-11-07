@@ -1,0 +1,20 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { EMAIL_EVENTS, type EmailEvent } from '@/emails/events';
+
+export default function EmailTemplatesPage() {
+  const [selected, setSelected] = useState<EmailEvent>('inspection_requested');
+  const [width, setWidth] = useState<'mobile' | 'desktop'>('desktop');
+  const [query, setQuery] = useState('');
+  const current = EMAIL_EVENTS[selected];
+  return <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-forest">Brand communications</p><h2 className="mt-2 font-display text-3xl text-charcoal">One brand. Every important moment.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">{Object.keys(EMAIL_EVENTS).length} event templates using the De-Greenacres logo and identity. Previews do not send emails. Template availability does not mean an event is automated.</p></div><Link className="btn-outline text-sm" href="/admin/compose">Write a service email</Link></div>
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">Delivery requires a verified sender and Resend configuration. Authentication templates must also be installed in Supabase. Conditional events require their real workflow, scheduler or secure recipient lookup. Marketing needs recorded consent and a working unsubscribe flow.</div>
+    <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
+      <section aria-label="Email template catalogue" className="rounded-2xl border border-gray-200 bg-white p-3"><label className="sr-only" htmlFor="template-filter">Find a template</label><input id="template-filter" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find an event…" className="mb-3 w-full rounded-xl border border-gray-200 px-3 py-3 text-base" /><div className="max-h-[650px] space-y-1 overflow-y-auto">{Object.entries(EMAIL_EVENTS).filter(([key, item]) => `${key} ${item.subject} ${item.category}`.toLowerCase().includes(query.toLowerCase())).map(([key, item]) => <button key={key} type="button" onClick={() => setSelected(key as EmailEvent)} aria-pressed={selected === key} className={`w-full rounded-xl px-3 py-3 text-left ${selected === key ? 'bg-forest-50 ring-1 ring-forest/20' : 'hover:bg-gray-50'}`}><span className="block text-xs font-bold text-forest">{item.category}</span><span className="mt-1 block text-sm font-semibold text-charcoal">{item.subject}</span><span className="mt-1 block text-[11px] uppercase tracking-wide text-gray-500">{item.mode === 'transactional' ? 'Core workflow template' : item.mode === 'provider' ? 'Auth-provider setup' : item.mode === 'marketing' ? 'Consent required · not automated' : 'Conditional · not automated'}</span></button>)}</div></section>
+      <section aria-label="Selected email preview" className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 p-4"><div><p className="text-xs text-gray-500">Subject</p><h3 className="mt-1 text-sm font-bold text-charcoal">{current.subject}</h3></div><div role="group" aria-label="Preview width" className="flex gap-2">{(['mobile','desktop'] as const).map(value => <button type="button" key={value} aria-pressed={width === value} onClick={() => setWidth(value)} className={`rounded-lg px-3 py-2 text-xs font-bold ${width === value ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'}`}>{value === 'mobile' ? 'Mobile' : 'Desktop'}</button>)}</div></div><div className="bg-gray-100 p-2 sm:p-4"><iframe key={selected} title={`${current.subject} email preview`} src={`/api/admin/email-templates?event=${encodeURIComponent(selected)}`} sandbox="allow-same-origin" className="mx-auto block h-[850px] max-w-full border-0 bg-white" style={{ width: width === 'mobile' ? 360 : 680 }} /></div></section>
+    </div>
+  </div>;
+}

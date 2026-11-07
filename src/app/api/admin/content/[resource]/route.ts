@@ -1,3 +1,4 @@
+import { notifyEvents } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { CMS_RESOURCES, type CmsField, type CmsResource } from '@/lib/cms-config';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
@@ -192,6 +193,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     if (!isUuid(String(body.id || ''))) {
       return NextResponse.json({ error: 'A valid record ID is required.', success: false }, { status: 400 });
     }
+    const { data: previousReview, error: reviewLookupError } = resource.table === 'reviews' ? await auth.context.supabase.from('reviews').select('status, email, name').eq('id', body.id).single() : { data: null, error: null };
+    if (reviewLookupError) return databaseError(reviewLookupError, 'Review could not be loaded.');
     const payload = normalizePayload(resource, body);
     payload.updated_at = new Date().toISOString();
 
@@ -203,6 +206,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       .single();
 
     if (error) return databaseError(error, `Failed to update ${resource.singular}.`);
+    if (previousReview?.email && previousReview.status !== data.status && ['approved', 'rejected'].includes(data.status)) notifyEvents([{ event: data.status === 'approved' ? 'review_approved' : 'review_rejected', to: previousReview.email, recordId: `${data.id}:${data.updated_at}`, data: { name: previousReview.name } }]);
     return NextResponse.json({ item: data, success: true });
   } catch (error) {
     return NextResponse.json(

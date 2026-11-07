@@ -1,3 +1,4 @@
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createEnquiry } from '@/lib/db-helpers';
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       source: body.source || 'website',
     });
 
+    notifyEvents([{ event: 'enquiry_received', to: enquiry.buyer_email, recordId: enquiry.id, data: { name: enquiry.buyer_name } }, ...teamNotice('admin_enquiry', enquiry.id)]);
     return NextResponse.json({ enquiry, success: true });
   } catch (error) {
     console.error('POST /api/enquiries error:', error);

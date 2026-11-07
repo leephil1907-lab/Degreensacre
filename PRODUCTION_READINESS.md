@@ -22,10 +22,13 @@ The failing address reported by the owner has not yet been supplied; the exact r
 
 ## Launch blockers and next actions
 1. Inspect Render logs for `GET /api/properties error` from a fresh request. Share only the error code/message, with credentials and personal data redacted. HTTP 500 alone does not establish whether this is configuration, paused service, schema, relationship or RLS failure.
-2. Restore Supabase connector access. Verify the existing project is active, Render public URL/key refer to it, and the expected schema and RLS exist. Rehearse migrations on staging before live application; do not reset the database.
+2. Supabase was connected and inspected read-only after the initial audit: the existing project is active and anonymous SQL reads worked. The deployed browser bundle contained a literal `<SECRET>` in place of its public API key; correct this in Render and rebuild. Verify the expected schema and RLS before launch. Rehearse migrations on staging before live application; do not reset the database.
 3. Set site/auth redirect URLs to the production domain and confirm actual email delivery, registration/recovery, owner submission/upload, admin moderation, RLS isolation, enquiries and messaging against live services.
 4. Audit historical seeded database records without deleting genuine content; publish only reviewed real listings with confirmed coordinates.
 5. Rotate previously exposed privileged credentials and verify production secrets remain server-only. Use shared rate limiting before horizontal scaling.
 6. Deliver this commit to GitHub and redeploy Render, then rerun mobile and live-service acceptance checks. This local refresh has NOT been pushed or deployed.
 
 A passing Render health check confirms that the web process is responding; it is not proof that listings, authentication or email work.
+
+## Branded email addition
+The 42-event email catalogue, six Supabase authentication templates and admin template preview page are implemented locally. See EMAIL_SYSTEM.md for wired events, conditional workflows and installation. Build, render, mocked-provider-send and responsive checks passed; these are not live delivery tests. No live email-provider, auth-template or database changes were made.

@@ -40,3 +40,7 @@ export {
   SupportResolvedEmail,
   PerformanceReportEmail,
 } from './TransactionAndMarketingEmails';
+
+export { default as EventEmail } from './EventEmail';
+export { EMAIL_EVENTS } from './events';
+export type { EmailEvent, EventEmailData } from './events';

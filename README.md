@@ -173,3 +173,7 @@ The base schema is in `supabase-schema.sql`; `supabase-production-cms-migration.
 ## License
 
 Proprietary - De-Greenacres Properties Limited (RC: 1856064)
+
+## Branded email system
+
+See [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md) for the 42-event template catalogue, real workflow integration, Supabase authentication template installation, sender verification and remaining delivery requirements. Admins can preview templates at `/admin/email-templates`. Render email-provider acceptance is not an inbox-delivery guarantee.

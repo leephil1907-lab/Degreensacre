@@ -18,7 +18,7 @@ export default function PasswordResetEmail({ name, resetUrl }: Props) {
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '24px' }}>
         <tr>
           <td align="center">
-            <a href={resetUrl} style={{ display: 'inline-block', backgroundColor: '#C41E7A', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+            <a href={resetUrl} style={{ display: 'inline-block', backgroundColor: '#315c49', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
               Reset Password
             </a>
           </td>

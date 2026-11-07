@@ -1,3 +1,5 @@
+import { notifyEvents } from '@/lib/email-events';
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { sanitizeForDb, isPhone, NIGERIAN_STATES } from '@/lib/validation';
@@ -92,6 +94,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (user.email) notifyEvents([{ event: 'profile_updated', to: user.email, recordId: randomUUID() }]);
     return NextResponse.json({ profile, success: true });
   } catch (error) {
     console.error('PATCH /api/profile error:', error);

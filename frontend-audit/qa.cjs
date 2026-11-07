@@ -130,7 +130,7 @@ async function metrics(page) {
 
   await addressInput.fill('QA No Match');
   await desktop.getByRole('button', { name: 'Search', exact: true }).last().click();
-  await desktop.getByText(/No Nigerian match was found/).waitFor();
+  await desktop.getByText(/This address was not found in OpenStreetMap/).waitFor();
   assert.equal(await desktop.getByText('Address search result', { exact: true }).count(), 0);
   console.log('GEOCODE_NO_MATCH_VISIBLE', true);
   await desktop.screenshot({ path: 'frontend-audit/after-address-no-match-desktop.png', fullPage: true });

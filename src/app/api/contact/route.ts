@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { requestRateLimit } from '@/lib/rate-limit';
@@ -23,7 +25,9 @@ export async function POST(request: NextRequest) {
     if (errors.length) return NextResponse.json({ error: errors.join('. '), success: false }, { status: 400 });
 
     const supabase = await createServerSupabaseClient();
+    const recordId = randomUUID();
     const { error } = await supabase.from('contact_messages').insert({
+      id: recordId,
       name: sanitizeForDb(String(body.name)),
       email: String(body.email).toLowerCase().trim(),
       phone: body.phone ? sanitizeForDb(String(body.phone)) : null,
@@ -36,6 +40,8 @@ export async function POST(request: NextRequest) {
       console.error('Contact form persistence error:', error);
       return NextResponse.json({ error: 'Your message could not be saved. Please try again or contact us by phone.', success: false }, { status: 500 });
     }
+
+    notifyEvents([{ event: 'contact_received', to: String(body.email).trim().toLowerCase(), recordId, data: { name: String(body.name).trim(), details: { Subject: String(body.subject).trim() } } }, ...teamNotice('admin_contact', recordId)]);
 
     return NextResponse.json({ success: true, message: 'Your message has been received. Our team will respond using the contact details you provided.' }, { status: 201 });
   } catch (error) {

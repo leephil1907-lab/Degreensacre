@@ -1,3 +1,5 @@
+import { notifyEvents } from '@/lib/email-events';
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { validatePassword } from '@/lib/validation';
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (user.email) notifyEvents([{ event: 'password_changed', to: user.email, recordId: randomUUID() }]);
     return NextResponse.json({
       success: true,
       message: 'Password updated successfully',

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { requestRateLimit } from '@/lib/rate-limit';
@@ -46,7 +48,9 @@ export async function POST(request: NextRequest) {
     if (message.length > 7000) return NextResponse.json({ error: 'Inspection notes are too long.', success: false }, { status: 400 });
 
     const supabase = await createServerSupabaseClient();
+    const recordId = randomUUID();
     const { error } = await supabase.from('contact_messages').insert({
+      id: recordId,
       name: sanitizeForDb(fullName),
       email,
       phone: sanitizeForDb(phone),
@@ -59,6 +63,8 @@ export async function POST(request: NextRequest) {
       console.error('Inspection persistence error:', error);
       return NextResponse.json({ error: 'Your inspection request could not be saved. Please try again or use WhatsApp.', success: false }, { status: 500 });
     }
+
+    notifyEvents([{ event: 'inspection_requested', to: email, recordId, data: { name: fullName, details: { Property: propertyInterest, 'Requested date': preferredDate, 'Requested time': String(body.preferred_time || 'To be agreed'), Location: `${location}, ${state}`, Status: 'Awaiting confirmation' } } }, ...teamNotice('admin_inspection', recordId)]);
 
     return NextResponse.json({ success: true, message: 'Inspection request received. Our team will contact you to confirm availability.' }, { status: 201 });
   } catch (error) {

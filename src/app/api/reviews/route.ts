@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { requestRateLimit } from '@/lib/rate-limit';
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
     if (body.property_id && !isUuid(String(body.property_id))) return NextResponse.json({ error: 'Invalid property reference.', success: false }, { status: 400 });
 
     const supabase = await createServerSupabaseClient();
+    const recordId = randomUUID();
     const { error } = await supabase.from('reviews').insert({
+      id: recordId,
       name: sanitizeForDb(name),
       email,
       rating,
@@ -66,6 +70,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Your review could not be saved. Please try again later.', success: false }, { status: 500 });
     }
 
+    notifyEvents([{ event: 'review_received', to: email, recordId, data: { name, details: { Status: 'Pending moderation' } } }, ...teamNotice('admin_review', recordId)]);
     return NextResponse.json({ success: true, message: 'Thank you. Your review has been received and will appear after moderation.' }, { status: 201 });
   } catch (error) {
     console.error('POST /api/reviews error:', error);

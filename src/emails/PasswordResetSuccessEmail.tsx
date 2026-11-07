@@ -1,3 +1,4 @@
+import { emailUrl } from './brand';
 import React from 'react';
 import EmailLayout from './EmailLayout';
 
@@ -20,7 +21,7 @@ export default function PasswordResetSuccessEmail({ name }: Props) {
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
-          <a href="https://degreenacres.com/signin" style={{ display: 'inline-block', backgroundColor: '#2D5016', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href={emailUrl('/signin')} style={{ display: 'inline-block', backgroundColor: '#315c49', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             Sign In Now
           </a>
         </td></tr>

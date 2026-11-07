@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { createElement } from 'react';
+import { sendEmail } from '@/lib/email';
+import EventEmail from '@/emails/EventEmail';
+import { randomUUID } from 'node:crypto';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
 import { isEmail } from '@/lib/validation';
 
 const RECIPIENT_TYPES = ['all', 'buyers', 'sellers', 'agents', 'verified', 'unverified', 'admins', 'custom'];
 const MAX_RECIPIENTS = 100;
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] || character);
-}
-
-function campaignHtml(subject: string, message: string) {
-  const paragraphs = message.split(/\n{2,}/).map((paragraph) => `<p style="margin:0 0 16px;line-height:1.7;color:#3d4638;white-space:pre-line">${escapeHtml(paragraph)}</p>`).join('');
-  return `<!doctype html><html><body style="margin:0;background:#f5f5f0;font-family:Arial,sans-serif"><div style="max-width:600px;margin:auto;padding:24px"><div style="background:#283818;color:white;padding:28px;border-radius:16px 16px 0 0"><h1 style="margin:0;font-size:24px">De-Greenacres Properties</h1></div><div style="background:white;padding:32px;border-radius:0 0 16px 16px"><h2 style="margin-top:0;color:#283818">${escapeHtml(subject)}</h2>${paragraphs}<hr style="border:0;border-top:1px solid #e8e8d8;margin:28px 0"><p style="font-size:12px;color:#78806f">De-Greenacres Properties Limited · RC: 1856064<br>You received this email because you have an account or enquiry with us.</p></div></div></body></html>`;
-}
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdminApi();
@@ -29,6 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const recipientType = String(body.recipient_type || '');
+    if (String(body.template || '') === 'newsletter') return NextResponse.json({ error: 'Marketing newsletters require consent records and a working unsubscribe flow. Use this tool only for relevant service messages until those are configured.', success: false }, { status: 409 });
     const subject = String(body.subject || '').trim();
     const message = String(body.message || '').trim();
     if (!RECIPIENT_TYPES.includes(recipientType) || !subject || subject.length > 200 || !message || message.length > 20000) {
@@ -54,16 +49,15 @@ export async function POST(request: NextRequest) {
     if (recipientEmails.length === 0) return NextResponse.json({ error: 'No valid recipients were found.', success: false }, { status: 400 });
     if (recipientEmails.length > MAX_RECIPIENTS) return NextResponse.json({ error: `This audience has ${recipientEmails.length} recipients. Send to a segment of ${MAX_RECIPIENTS} or fewer at a time.`, success: false }, { status: 400 });
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const from = process.env.EMAIL_FROM || 'De-Greenacres <onboarding@resend.dev>';
-    const html = campaignHtml(subject, message);
+    const batchId = randomUUID();
+    const template = createElement(EventEmail, { event: 'service_notice', data: { subject, message } });
     const delivered: string[] = [];
     const failures: string[] = [];
 
     // Send individual messages so recipients cannot see one another's addresses.
     for (const email of recipientEmails) {
-      const { error } = await resend.emails.send({ from, to: [email], subject, html, replyTo: process.env.EMAIL_REPLY_TO || undefined });
-      if (error) failures.push(email); else delivered.push(email);
+      const result = await sendEmail({ to: email, subject, template, idempotencyKey: `admin-${batchId}-${recipientEmails.indexOf(email)}` });
+      if (!result.success) failures.push(email); else delivered.push(email);
     }
 
     const status = failures.length === 0 ? 'sent' : delivered.length === 0 ? 'failed' : 'partial';
@@ -81,9 +75,9 @@ export async function POST(request: NextRequest) {
     if (recordError) console.error('Campaign delivery completed but history could not be saved:', recordError.message);
 
     if (failures.length > 0) {
-      return NextResponse.json({ error: `${delivered.length} email(s) delivered; ${failures.length} failed. Check the verified sender, recipient addresses and Resend logs.`, sent_to: delivered.length, failed: failures.length, success: false }, { status: 502 });
+      return NextResponse.json({ error: `${delivered.length} email(s) accepted by the provider; ${failures.length} failed. Check the verified sender, recipient addresses and Resend logs.`, sent_to: delivered.length, failed: failures.length, success: false }, { status: 502 });
     }
-    return NextResponse.json({ success: true, sent_to: delivered.length, message: `Email delivered to ${delivered.length} recipient(s).` });
+    return NextResponse.json({ success: true, sent_to: delivered.length, message: `Email accepted by the provider for ${delivered.length} recipient(s). Inbox delivery is not yet confirmed.` });
   } catch (error) {
     console.error('POST /api/admin/send-email error:', error);
     return NextResponse.json({ error: 'The email campaign could not be sent.', success: false }, { status: 500 });

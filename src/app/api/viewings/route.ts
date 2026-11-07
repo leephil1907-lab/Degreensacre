@@ -1,3 +1,4 @@
+import { notifyEvents, teamNotice } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createViewingRequest } from '@/lib/db-helpers';
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       console.warn('Viewing saved but notification failed:', notificationError);
     }
 
+    notifyEvents([...(user.email ? [{ event: 'inspection_requested' as const, to: user.email, recordId: viewing.id, data: { details: { 'Requested date': body.preferred_date, 'Requested time': body.preferred_time, Status: 'Awaiting confirmation' } } }] : []), ...teamNotice('admin_inspection', viewing.id)]);
     return NextResponse.json({ viewing, success: true });
   } catch (error) {
     console.error('POST /api/viewings error:', error);

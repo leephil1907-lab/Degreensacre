@@ -1,3 +1,4 @@
+import { notifyListingChange, notifyEvents } from '@/lib/email-events';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase-server';
 import { getPropertyBySlug, incrementPropertyView } from '@/lib/db-helpers';
@@ -153,6 +154,7 @@ export async function PATCH(
       new_values: updates,
     });
 
+    await notifyListingChange(supabase, existing, property);
     return NextResponse.json({ property, success: true });
   } catch (error) {
     console.error('PATCH /api/properties/[slug] error:', error);
@@ -229,6 +231,7 @@ export async function DELETE(
       );
     }
 
+    if (user.email) notifyEvents([{ event: 'listing_deleted', to: user.email, recordId: existing.id, data: { details: { Property: existing.title } } }]);
     return NextResponse.json({ success: true, message: 'Property deleted' });
   } catch (error) {
     console.error('DELETE /api/properties/[slug] error:', error);

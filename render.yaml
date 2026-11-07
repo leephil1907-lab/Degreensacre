@@ -28,6 +28,9 @@ services:
         value: "De-Greenacres <noreply@degreenacresproperties.com>"
       - key: EMAIL_REPLY_TO
         value: info@degreenacresproperties.com
+      # Set this to a monitored inbox for contact/inspection/moderation notices.
+      - key: EMAIL_NOTIFICATIONS_TO
+        sync: false
       - key: NEXT_PUBLIC_WHATSAPP_NUMBER
         value: "2348065019971"
       - key: NEXT_PUBLIC_WHATSAPP_MESSAGE

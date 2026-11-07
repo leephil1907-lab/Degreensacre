@@ -1,3 +1,4 @@
+import { emailUrl } from './brand';
 import React from 'react';
 import EmailLayout from './EmailLayout';
 
@@ -15,8 +16,8 @@ export function ViewingScheduledEmail({ name, propertyTitle, date, time, address
       <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: '1.7', marginBottom: '24px' }}>
         Your property viewing has been scheduled. Here are the details:
       </p>
-      <div style={{ backgroundColor: '#f0f7eb', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 600, color: '#283818', marginBottom: '16px' }}>📋 Viewing Details</div>
+      <div style={{ backgroundColor: '#f2f7f4', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: '#315c49', marginBottom: '16px' }}>📋 Viewing Details</div>
         <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
           <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>🏠 Property:</td><td style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600, paddingBottom: '10px' }}>{propertyTitle}</td></tr>
           <tr><td style={{ fontSize: '13px', color: '#666', paddingBottom: '10px' }}>📅 Date:</td><td style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600, paddingBottom: '10px' }}>{date}</td></tr>
@@ -27,7 +28,7 @@ export function ViewingScheduledEmail({ name, propertyTitle, date, time, address
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '24px' }}>
         <tr><td align="center">
-          <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`} style={{ display: 'inline-block', backgroundColor: '#283818', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`} style={{ display: 'inline-block', backgroundColor: '#315c49', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             📍 Get Directions
           </a>
         </td></tr>
@@ -92,20 +93,20 @@ export function PriceDropEmail({ name, propertyTitle, propertyUrl, oldPrice, new
         A property you saved has dropped in price:
       </p>
       {image && <img src={image} alt={propertyTitle} width="100%" style={{ borderRadius: '8px', marginBottom: '16px' }} />}
-      <div style={{ backgroundColor: '#f0f7eb', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
+      <div style={{ backgroundColor: '#f2f7f4', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
         <div style={{ fontSize: '16px', fontWeight: 700, color: '#1A1A1A', marginBottom: '8px' }}>{propertyTitle}</div>
         <div style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>📍 {location}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '14px', color: '#999', textDecoration: 'line-through' }}>₦{oldPrice.toLocaleString()}</span>
-          <span style={{ fontSize: '22px', fontWeight: 400, fontFamily: "'DM Serif Display', Georgia, serif", color: '#283818' }}>₦{newPrice.toLocaleString()}</span>
+          <span style={{ fontSize: '22px', fontWeight: 400, fontFamily: "'DM Serif Display', Georgia, serif", color: '#315c49' }}>₦{newPrice.toLocaleString()}</span>
         </div>
-        <div style={{ marginTop: '8px', display: 'inline-block', backgroundColor: '#C41E7A', color: '#fff', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
+        <div style={{ marginTop: '8px', display: 'inline-block', backgroundColor: '#315c49', color: '#fff', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
           Save ₦{savings.toLocaleString()} ({percentage}% off)
         </div>
       </div>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}>
         <tr><td align="center">
-          <a href={propertyUrl} style={{ display: 'inline-block', backgroundColor: '#C41E7A', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href={propertyUrl} style={{ display: 'inline-block', backgroundColor: '#315c49', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             View Property Now
           </a>
         </td></tr>
@@ -132,13 +133,13 @@ export function NewPropertyAlertEmail({ name, properties }: NewPropertyAlertProp
         <div key={i} style={{ border: '1px solid #e5e5e5', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
           <div style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>{property.title}</div>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>📍 {property.location}</div>
-          <div style={{ fontSize: '18px', fontWeight: 400, fontFamily: "'DM Serif Display', Georgia, serif", color: '#283818' }}>₦{property.price.toLocaleString()}</div>
-          <a href={property.url} style={{ display: 'inline-block', marginTop: '8px', fontSize: '13px', color: '#C41E7A', fontWeight: 600, textDecoration: 'none' }}>View Details →</a>
+          <div style={{ fontSize: '18px', fontWeight: 400, fontFamily: "'DM Serif Display', Georgia, serif", color: '#315c49' }}>₦{property.price.toLocaleString()}</div>
+          <a href={property.url} style={{ display: 'inline-block', marginTop: '8px', fontSize: '13px', color: '#315c49', fontWeight: 600, textDecoration: 'none' }}>View Details →</a>
         </div>
       ))}
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginTop: '24px' }}>
         <tr><td align="center">
-          <a href="https://degreenacres.com/properties" style={{ display: 'inline-block', backgroundColor: '#283818', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
+          <a href={emailUrl('/properties')} style={{ display: 'inline-block', backgroundColor: '#315c49', color: '#ffffff', padding: '14px 40px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, textDecoration: 'none' }}>
             Browse All Properties
           </a>
         </td></tr>

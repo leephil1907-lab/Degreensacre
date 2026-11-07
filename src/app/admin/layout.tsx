@@ -20,6 +20,7 @@ const navigation = [
   { name: 'Contact Inbox', href: '/admin/messages', icon: Inbox },
   { name: 'Reviews', href: '/admin/content/reviews', icon: Star },
   { name: 'Email Center', href: '/admin/compose', icon: Mail },
+  { name: 'Email Templates', href: '/admin/email-templates', icon: BookOpenText },
   { name: 'Site Settings', href: '/admin/settings', icon: Settings },
 ];
 
