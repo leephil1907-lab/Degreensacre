@@ -135,8 +135,10 @@ export default function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div id="mobile-navigation" className="absolute left-0 right-0 top-full max-h-[calc(100dvh-7rem)] overflow-y-auto border-t border-forest/10 bg-[#fffff8] px-4 pb-6 pt-3 shadow-2xl dark:bg-charcoal lg:hidden">
-            <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Find property</p>
+          <div className="fixed inset-x-0 bottom-0 top-[7rem] z-[80] lg:hidden">
+            <button type="button" aria-label="Close navigation menu" onClick={closeMobile} className="absolute inset-0 h-full w-full bg-charcoal/45 backdrop-blur-[2px]" />
+            <div id="mobile-navigation" className="relative z-10 max-h-full overflow-y-auto overscroll-contain border-t border-forest/10 bg-[#fffff8] px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:bg-charcoal">
+              <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Find property</p>
             <div className="grid grid-cols-2 gap-2">
               {primaryNav.map((item) => (
                 <Link key={item.label} href={item.href} onClick={closeMobile} className="flex min-h-12 items-center rounded-xl bg-forest-50 px-4 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-forest-100 dark:text-gray-100 dark:hover:bg-white/10">{item.label}</Link>
