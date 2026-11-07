@@ -494,24 +494,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ PROPERTY CATEGORY QUICK LINKS ═══ */}
-      <section aria-label="Find a property" className="section-padding bg-[#fffff8]">
-        <div className="container-custom">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              { label: 'BUY', href: '/properties?type=sale' },
-              { label: 'RENT', href: '/properties?type=rent' },
-              { label: 'LAND', href: '/properties?type=land' },
-              { label: 'COMMERCIAL', href: '/properties?type=commercial' },
-            ].map((item) => (
-              <Link key={item.label} href={item.href} className="flex min-h-28 items-center justify-center rounded-2xl border border-forest/10 bg-white px-4 py-6 text-center font-display text-xl font-bold tracking-wide text-forest shadow-sm transition-all hover:-translate-y-1 hover:border-forest/30 hover:shadow-md md:min-h-32 md:text-2xl">
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══ WHATSAPP CTA ═══ */}
       <section className="py-12 bg-green-600 text-white">
         <div className="container-custom text-center">
