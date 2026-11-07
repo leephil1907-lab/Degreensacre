@@ -500,11 +500,9 @@ export default function HomePage() {
           <div className="mx-auto max-w-4xl">
             <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-sage">DE-GREENACRES PROPERTIES LIMITED</p>
             <h2 id="degreenacres-overview" className="mb-6 font-display text-3xl leading-tight text-forest md:text-4xl">Your guide to finding property in Nigeria</h2>
-            <div className="space-y-5 text-[15px] leading-8 text-gray-700 md:text-base">
-              <p>De-Greenacres Properties Limited is a Nigerian real estate company helping individuals, families, investors and Nigerians living abroad explore property opportunities. Use our property marketplace to discover land, houses, rental homes, commercial spaces and development opportunities, then contact our team to ask questions and arrange a property inspection.</p>
-              <p>Whether you are searching for land for sale in Nigeria, a home to buy, a house to rent or a property investment opportunity, start with the location and property details that matter to you. Explore listings across Lagos, Abuja, Akwa Ibom and Enugu, compare available information, and review the stated documentation and verification status before making a decision.</p>
-              <p>Buying property requires careful checks. Before paying a deposit or completing a purchase, confirm the seller's authority, inspect the property, review the title documents with an independent qualified professional and make sure the transaction terms are clear. Our team can help coordinate enquiries and inspections so you can make a more informed choice.</p>
-              <p>Nigerians in the diaspora can also use De-Greenacres to begin a property search remotely, discuss suitable locations, request documentation information and plan an in-person inspection or trusted local follow-up. A remote conversation is a starting point; always complete appropriate independent checks before committing funds.</p>
+            <div className="space-y-3 text-sm leading-7 text-gray-700 md:text-base">
+              <p>De-Greenacres Properties Limited helps people in Nigeria and abroad find property opportunities across the country. Browse houses for sale, homes for rent, land, commercial spaces and real estate developments, or contact our team to arrange an inspection.</p>
+              <p>Explore property in Lagos, Abuja, Akwa Ibom, Enugu and other locations. Whether you are buying, renting or investing from the diaspora, De-Greenacres makes it easier to discover listings, ask questions and take the next step with greater confidence.</p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3 border-t border-forest/10 pt-6 text-sm font-bold">
               <Link href="/properties?type=sale" className="rounded-full bg-forest-50 px-4 py-2 text-forest hover:bg-forest-100">Properties for sale</Link>
