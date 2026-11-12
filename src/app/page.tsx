@@ -7,8 +7,8 @@ import HeroCarousel from '@/components/HeroCarousel';
 import HeroSearch from '@/components/HeroSearch';
 import CACIcon from '@/components/CACIcon';
 import ReviewsSection from '@/components/ReviewsSection';
-import { MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
-import AdSense from '@/components/GoogleAdsense';
+import { Camera, MapPin, ArrowRight, FileCheck, Shield, Eye, CreditCard, Key, Globe, Building2, TreePine, Briefcase, Home, ClipboardCheck, BarChart3, Handshake, HardHat, Users, Calendar, Phone, CheckCircle } from 'lucide-react';
+import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 
@@ -94,16 +94,17 @@ export default function HomePage() {
               </Link>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {listingsError && <div role="alert" className="col-span-full rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{listingsError}</div>}
-            {listingsLoading && <div className="col-span-full flex min-h-48 items-center justify-center rounded-2xl border border-gray-100 bg-white text-sm text-gray-500">Loading featured properties…</div>}
-            {!listingsLoading && !listingsError && featuredProperties.length === 0 && <div className="col-span-full rounded-2xl border border-gray-100 bg-white py-12 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-gray-300" /><p className="font-display text-xl text-charcoal">No featured listings published yet</p><Link href="/properties" className="mt-3 inline-block text-sm font-bold text-forest">Search all available properties →</Link></div>}
+          <div className="flex flex-wrap justify-center gap-8">
+            {listingsError && <div role="alert" className="w-full rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{listingsError}</div>}
+            {listingsLoading && <div className="w-full flex min-h-48 items-center justify-center rounded-2xl border border-gray-100 bg-white text-sm text-gray-500">Loading featured properties…</div>}
+            {!listingsLoading && !listingsError && featuredProperties.length === 0 && <div className="w-full rounded-2xl border border-gray-100 bg-white py-12 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-gray-300" /><p className="font-display text-xl text-charcoal">No featured listings published yet</p><Link href="/properties" className="mt-3 inline-block text-sm font-bold text-forest">Search all available properties →</Link></div>}
             {featuredProperties.map((property: any, i) => (
-              <ScrollReveal key={property.id} delay={i * 0.1}>
+              <ScrollReveal key={property.id} delay={i * 0.1} className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.375rem)]">
                 <Link href={`/properties/${property.slug}`} className="group block">
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1">
                     <div className="relative h-64 overflow-hidden">
-                      <img src={getPropertyImage(property)} alt={property.title} className={`w-full h-full group-hover:scale-105 transition-transform duration-700 ${getPropertyImage(property) === '/property-placeholder.svg' ? 'object-contain bg-forest-50 p-10' : 'object-cover'}`} />
+                      <img src={getPropertyImage(property)} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      {getPropertyImage(property) === '/property-placeholder.svg' && <span className="pointer-events-none absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-sm"><Camera className="h-3 w-3" /> Photos coming soon</span>}
                       <div className="absolute top-4 left-4">
                         <span className={`px-3 py-1 text-xs font-bold rounded-md text-white ${property.type === 'sale' ? 'bg-forest' : property.type === 'land' ? 'bg-amber-600' : 'bg-blue-600'}`}>
                           {property.type === 'sale' ? 'FOR SALE' : property.type === 'land' ? 'LAND' : property.type?.toUpperCase()}
@@ -134,11 +135,13 @@ export default function HomePage() {
       </section>
 
       {/* ═══ AD — HOMEPAGE TOP (AdSense) ═══ */}
-      <section className="py-6 bg-white">
-        <div className="container-custom">
-          <AdSense label="Homepage — Top Banner (below Featured Listings)" format="horizontal" />
-        </div>
-      </section>
+{adsenseConfigured && (
+        <section className="py-6 bg-white">
+          <div className="container-custom">
+            <AdSense label="Homepage — Top Banner (below Featured Listings)" format="horizontal" />
+          </div>
+        </section>
+      )}
 
       {/* ═══ LAND INVESTMENT OPPORTUNITIES ═══ */}
       <section className="section-padding bg-forest text-white relative overflow-hidden">
@@ -395,14 +398,16 @@ export default function HomePage() {
       </section>
 
       {/* ═══ AD — HOMEPAGE BOTTOM (AdSense) ═══ */}
-      <section className="py-6 bg-ivory">
-        <div className="container-custom">
-          <AdSense label="Homepage — Bottom Banner (above WhatsApp CTA)" format="horizontal" />
-        </div>
-      </section>
+{adsenseConfigured && (
+        <section className="py-6 bg-ivory">
+          <div className="container-custom">
+            <AdSense label="Homepage — Bottom Banner (above WhatsApp CTA)" format="horizontal" />
+          </div>
+        </section>
+      )}
 
       {/* ═══ WHATSAPP CTA ═══ */}
-      <section className="py-12 bg-green-600 text-white">
+      <section className="py-12 bg-forest text-white">
         <div className="container-custom text-center">
           <h2 className="font-display text-3xl md:text-4xl mb-3">Talk to De-Greenacres right now</h2>
           <p className="text-white/80 mb-6">Our team is ready to help you find, verify and own your next property.</p>

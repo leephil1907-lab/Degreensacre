@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import AdSense from '@/components/GoogleAdsense';
+import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import InsightsExplorer from '@/components/InsightsExplorer';
 import { getPublishedArticles } from '@/lib/articles';
 
@@ -28,7 +28,9 @@ export default async function InsightsPage() {
 
       <InsightsExplorer articles={articles} />
 
-      <section className="bg-white py-8"><div className="container-custom"><AdSense label="Insights — Below articles" format="horizontal" /></div></section>
+{adsenseConfigured && (
+        <section className="bg-white py-8"><div className="container-custom"><AdSense label="Insights — Below articles" format="horizontal" /></div></section>
+      )}
 
       <section className="section-padding bg-forest text-white">
         <div className="container-custom max-w-3xl text-center">

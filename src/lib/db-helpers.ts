@@ -74,19 +74,26 @@ export async function getPropertyBySlug(slug: string) {
 }
 
 export async function incrementPropertyView(propertyId: string) {
-  // This helper runs server-side only. Use the service client so the privileged
-  // counter RPC is not exposed to anonymous or ordinary authenticated callers.
-  const supabase = await createAdminSupabaseClient();
+  // Runs server-side with the request's cookie-scoped client. The aggregate
+  // counter RPC is granted to anon/authenticated (it only bumps the published
+  // listing counter). Per-view rows are written for signed-in visitors only:
+  // anonymous visits are counted in aggregate and no IP/user-agent is stored.
+  const supabase = await createServerSupabaseClient();
 
   const { error: counterError } = await supabase.rpc('increment_property_views', {
     property_uuid: propertyId,
   });
   if (counterError) throw counterError;
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
   const { error: viewError } = await supabase.from('property_views').insert({
     property_id: propertyId,
+    user_id: user.id,
   });
-  if (viewError) throw viewError;
+  // Analytics detail must never break a public page view.
+  if (viewError) console.warn('Property view row could not be recorded:', viewError.message);
 }
 
 // Enquiry helpers

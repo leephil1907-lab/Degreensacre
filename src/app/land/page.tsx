@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ScrollReveal from '@/components/ScrollReveal';
 import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, Phone, Map, Building, Layers, Navigation } from 'lucide-react';
-import AdSense from '@/components/GoogleAdsense';
+import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 
 export default function LandPage() {
@@ -82,11 +82,13 @@ export default function LandPage() {
       </section>
 
       {/* Ad — Land page (after Coastal spotlight) */}
-      <section className="py-8 bg-white">
-        <div className="container-custom">
-          <AdSense label="Land — Below Coastal Highway Spotlight" format="horizontal" />
-        </div>
-      </section>
+{adsenseConfigured && (
+        <section className="py-8 bg-white">
+          <div className="container-custom">
+            <AdSense label="Land — Below Coastal Highway Spotlight" format="horizontal" />
+          </div>
+        </section>
+      )}
 
       {/* Locations */}
       <section className="py-12 bg-white border-b border-gray-100">
@@ -163,7 +165,7 @@ export default function LandPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                       {/* Image */}
                       <div className="relative h-64 lg:h-auto overflow-hidden">
-                        <img src={getPropertyImage(property)} alt={property.title} className={`w-full h-full ${getPropertyImage(property) === '/property-placeholder.svg' ? 'object-contain bg-forest-50 p-10' : 'object-cover'}`} />
+                        <img src={getPropertyImage(property)} alt={property.title} className="w-full h-full object-cover" />
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-amber-600 text-white px-3 py-1 text-xs font-bold rounded-md">LAND</span>
                           {property.verified && (
@@ -320,11 +322,13 @@ export default function LandPage() {
       </section>
 
       {/* Ad — Land page (after listings, before Southeast focus) */}
-      <section className="py-8 bg-ivory">
-        <div className="container-custom">
-          <AdSense label="Land — After Listings" format="horizontal" />
-        </div>
-      </section>
+{adsenseConfigured && (
+        <section className="py-8 bg-ivory">
+          <div className="container-custom">
+            <AdSense label="Land — After Listings" format="horizontal" />
+          </div>
+        </section>
+      )}
 
       {/* Southeast Focus Section */}
       <section className="section-padding bg-white">

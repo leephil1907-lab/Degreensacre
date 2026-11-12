@@ -12,7 +12,7 @@ import {
   CreditCard, Building, Map, TreePine
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AdSense from '@/components/GoogleAdsense';
+import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, isStockImage } from '@/lib/property';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { normalizeWhatsappNumber } from '@/lib/site-settings';
@@ -284,7 +284,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-forest" />
       </div>
     );
   }
@@ -295,7 +295,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
         <div className="text-center">
           <h1 className="text-2xl font-serif text-charcoal-900 mb-4">Property Not Found</h1>
           <p className="text-charcoal-500 mb-6">{error || 'This property may have been removed.'}</p>
-          <Link href="/properties" className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700">
+          <Link href="/properties" className="bg-forest text-white px-6 py-3 rounded-lg font-medium hover:bg-forest-light">
             Browse Properties
           </Link>
         </div>
@@ -314,7 +314,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-charcoal-600 hover:text-green-600 transition-colors"
+            className="flex items-center gap-2 text-charcoal-600 hover:text-forest transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Properties
@@ -364,8 +364,16 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   )}
                 </div>
               ) : (
-                <div className="w-full h-96 bg-charcoal-100 flex items-center justify-center">
-                  <MapPin className="w-12 h-12 text-charcoal-300" />
+                <div className="relative">
+                  <img src="/property-placeholder.svg" alt="" className="h-72 w-full object-cover sm:h-96" />
+                  <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-white/85 via-white/60 to-transparent px-6 pb-5 pt-16 text-center">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wide text-forest backdrop-blur-sm">
+                      <MapPin className="h-3.5 w-3.5" /> Photographs coming soon
+                    </span>
+                    <p className="max-w-sm text-xs leading-5 text-charcoal-600">
+                      Our listing team is arranging verified photographs for this property. Request an inspection to see it in person.
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -377,7 +385,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                       key={i}
                       onClick={() => setCurrentImage(i)}
                       className={`w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                        i === currentImage ? 'border-green-500' : 'border-transparent'
+                        i === currentImage ? 'border-forest' : 'border-transparent'
                       }`}
                     >
                       <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -393,7 +401,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      property.type === 'sale' ? 'bg-green-100 text-green-700' :
+                      property.type === 'sale' ? 'bg-forest-50 text-forest-800' :
                       property.type === 'rent' ? 'bg-blue-100 text-blue-700' :
                       property.type === 'land' ? 'bg-amber-100 text-amber-700' :
                       'bg-charcoal-100 text-charcoal-700'
@@ -404,7 +412,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                        property.type}
                     </span>
                     {property.verification_status === 'verified' && (
-                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 flex items-center gap-1">
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-forest-50 text-forest-800 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
                         Verified
                       </span>
@@ -435,7 +443,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     aria-label={isSaved ? 'Remove property from saved list' : 'Save this property'}
                     aria-pressed={isSaved}
                     className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
-                      isSaved ? 'bg-green-50 border-green-300 text-green-600' : 'border-charcoal-200 text-charcoal-400 hover:text-green-600'
+                      isSaved ? 'bg-forest-50 border-forest/40 text-forest' : 'border-charcoal-200 text-charcoal-400 hover:text-forest'
                     }`}
                   >
                     {isSaved ? <Bookmark className="w-5 h-5 fill-current" /> : <BookmarkPlus className="w-5 h-5" />}
@@ -443,7 +451,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   <button
                     onClick={() => void shareProperty()}
                     aria-label="Share this property"
-                    className="w-10 h-10 rounded-full flex items-center justify-center border border-charcoal-200 text-charcoal-400 hover:text-green-600 transition-colors"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-charcoal-200 text-charcoal-400 hover:text-forest transition-colors"
                   >
                     <Share2 className="w-5 h-5" />
                   </button>
@@ -451,7 +459,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               </div>
               {shareFeedback && <p className="mb-3 text-right text-xs font-semibold text-forest" role="status">{shareFeedback}</p>}
 
-              <p className="text-3xl font-bold text-green-600 mb-6">
+              <p className="text-3xl font-bold text-forest mb-6">
                 {formatPropertyPrice(property.price, property.price_period)}
               </p>
 
@@ -459,28 +467,28 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {property.bedrooms > 0 && (
                   <div className="text-center p-3 bg-ivory-50 rounded-lg">
-                    <Bed className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                    <Bed className="w-5 h-5 text-forest mx-auto mb-1" />
                     <p className="text-lg font-bold text-charcoal-900">{property.bedrooms}</p>
                     <p className="text-xs text-charcoal-500">Bedrooms</p>
                   </div>
                 )}
                 {property.bathrooms > 0 && (
                   <div className="text-center p-3 bg-ivory-50 rounded-lg">
-                    <Bath className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                    <Bath className="w-5 h-5 text-forest mx-auto mb-1" />
                     <p className="text-lg font-bold text-charcoal-900">{property.bathrooms}</p>
                     <p className="text-xs text-charcoal-500">Bathrooms</p>
                   </div>
                 )}
                 {property.sqm > 0 && (
                   <div className="text-center p-3 bg-ivory-50 rounded-lg">
-                    <Square className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                    <Square className="w-5 h-5 text-forest mx-auto mb-1" />
                     <p className="text-lg font-bold text-charcoal-900">{property.sqm}</p>
                     <p className="text-xs text-charcoal-500">Sqm</p>
                   </div>
                 )}
                 {property.parking > 0 && (
                   <div className="text-center p-3 bg-ivory-50 rounded-lg">
-                    <Car className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                    <Car className="w-5 h-5 text-forest mx-auto mb-1" />
                     <p className="text-lg font-bold text-charcoal-900">{property.parking}</p>
                     <p className="text-xs text-charcoal-500">Parking</p>
                   </div>
@@ -503,7 +511,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {[...(property.features || []), ...(property.amenities || [])].map((feature, i) => (
                     <div key={i} className="flex items-center gap-2 text-charcoal-600">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-forest flex-shrink-0" />
                       <span className="text-sm">{feature}</span>
                     </div>
                   ))}
@@ -511,10 +519,12 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               </div>
             )}
 
-            {/* Ad — Property detail (in-content) */}
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <AdSense label="Property Detail — In-content" format="horizontal" />
-            </div>
+            {/* Ad — Property detail (in-content); hidden entirely until AdSense is configured */}
+            {adsenseConfigured && (
+              <div className="bg-white rounded-xl shadow-sm p-4">
+                <AdSense label="Property Detail — In-content" format="horizontal" />
+              </div>
+            )}
 
             {/* Property Details */}
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -532,7 +542,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   <div>
                     <span className="text-sm text-charcoal-500">Documentation</span>
                     <p className="font-medium text-charcoal-900 flex items-center gap-1">
-                      <FileText className="w-4 h-4 text-green-500" />
+                      <FileText className="w-4 h-4 text-forest" />
                       {property.documentation}
                     </p>
                   </div>
@@ -569,13 +579,13 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
 
             {/* Verification Notice */}
             <div className={`rounded-xl p-5 border ${
-              property.verification_status === 'verified' ? 'bg-green-50 border-green-200' :
+              property.verification_status === 'verified' ? 'bg-forest-50 border-forest/20' :
               property.verification_status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
               'bg-red-50 border-red-200'
             }`}>
               <div className="flex items-start gap-3">
                 {property.verification_status === 'verified' ? (
-                  <Shield className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <Shield className="w-6 h-6 text-forest flex-shrink-0" />
                 ) : property.verification_status === 'pending' ? (
                   <Clock className="w-6 h-6 text-yellow-600 flex-shrink-0" />
                 ) : (
@@ -602,7 +612,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
             {(property.payment_plan || property.paymentPlan || property.development_status || property.developmentStatus || property.region) && (
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-green-600" />
+                  <CreditCard className="w-5 h-5 text-forest" />
                   Investment Details
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -616,7 +626,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     <div className="bg-ivory-50 rounded-lg p-4">
                       <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Development Status</p>
                       <p className="font-bold text-charcoal-900 text-sm flex items-center gap-1">
-                        <Building className="w-3.5 h-3.5 text-green-600" />
+                        <Building className="w-3.5 h-3.5 text-forest" />
                         {property.development_status || property.developmentStatus}
                       </p>
                     </div>
@@ -631,7 +641,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     <div className="bg-ivory-50 rounded-lg p-4">
                       <p className="text-xs text-charcoal-500 uppercase tracking-wide mb-1 font-bold">Title / Documentation</p>
                       <p className="font-bold text-charcoal-900 text-sm flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5 text-green-600" />
+                        <FileText className="w-3.5 h-3.5 text-forest" />
                         {property.documentation}
                       </p>
                     </div>
@@ -644,7 +654,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
             {property.landmarks && property.landmarks.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-serif text-charcoal-900 mb-4 flex items-center gap-2">
-                  <Navigation className="w-5 h-5 text-green-600" />
+                  <Navigation className="w-5 h-5 text-forest" />
                   Nearby Landmarks
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -679,17 +689,17 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               <h3 className="font-serif text-lg text-charcoal-900 mb-4">Contact Agent</h3>
               
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="w-12 h-12 bg-forest-50 rounded-full flex items-center justify-center overflow-hidden">
                   {(agentProfile?.photo_url || property.agents?.photo_url) ? (
                     <img src={agentProfile?.photo_url || property.agents?.photo_url} alt="" className="w-12 h-12 rounded-full object-cover" />
                   ) : (
-                    <User className="w-6 h-6 text-green-600" />
+                    <User className="w-6 h-6 text-forest" />
                   )}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-charcoal-900 flex items-center gap-1">
                     {agentProfile?.name || property.agents?.name || 'De-Greenacres Properties'}
-                    {agentProfile?.is_verified && <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><CheckCircle className="w-3 h-3" /> Verified</span>}
+                    {agentProfile?.is_verified && <span className="inline-flex items-center gap-1 bg-forest-50 text-forest-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><CheckCircle className="w-3 h-3" /> Verified</span>}
                   </p>
                   <p className="text-sm text-charcoal-500">
                     {agencyProfile?.name ? (
@@ -708,7 +718,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               <div className="space-y-3">
                 <a
                   href={`tel:${agentProfile?.phone || property.agents?.phone || settings.contact_phone}`}
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-forest text-white py-3 rounded-lg font-medium hover:bg-forest-light transition-colors"
                 >
                   <Phone className="w-5 h-5" />
                   Call Agent
@@ -737,7 +747,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   onClick={() => setShowEnquiry(!showEnquiry)}
                   aria-expanded={showEnquiry}
                   aria-controls="property-enquiry-form"
-                  className="w-full flex items-center justify-center gap-2 border border-green-600 text-green-600 py-3 rounded-lg font-medium hover:bg-green-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 border border-forest/40 text-forest py-3 rounded-lg font-medium hover:bg-forest-50 transition-colors"
                 >
                   <Mail className="w-5 h-5" />
                   Send Enquiry
@@ -756,7 +766,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div id="property-enquiry-form" className="mt-4 pt-4 border-t border-charcoal-100">
                   {enquirySuccess ? (
                     <div className="text-center py-4">
-                      <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                      <CheckCircle className="w-8 h-8 text-forest mx-auto mb-2" />
                       <p className="text-sm text-charcoal-600">Enquiry sent successfully!</p>
                     </div>
                   ) : (
@@ -768,7 +778,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         required
                         value={enquiryForm.name}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                       />
                       <input
                         type="email"
@@ -777,7 +787,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         required
                         value={enquiryForm.email}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
-                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                       />
                       <input
                         type="tel"
@@ -785,7 +795,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         aria-label="Your phone number"
                         value={enquiryForm.phone}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
-                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                       />
                       <textarea
                         placeholder="Your Message"
@@ -794,13 +804,13 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         rows={3}
                         value={enquiryForm.message}
                         onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
-                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                       />
                       {enquiryError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{enquiryError}</p>}
                       <button
                         type="submit"
                         disabled={enquirySubmitting}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                        className="w-full bg-forest text-white py-2 rounded-lg text-sm font-medium hover:bg-forest-light transition-colors disabled:opacity-50"
                       >
                         {enquirySubmitting ? 'Sending...' : 'Send Enquiry'}
                       </button>
@@ -814,7 +824,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                 <div className="mt-4 pt-4 border-t border-charcoal-100">
                   {viewingSuccess ? (
                     <div className="text-center py-4">
-                      <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                      <CheckCircle className="w-8 h-8 text-forest mx-auto mb-2" />
                       <p className="text-sm text-charcoal-600">Viewing request submitted!</p>
                     </div>
                   ) : (
@@ -827,7 +837,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                           min={new Date().toISOString().split('T')[0]}
                           value={viewingForm.preferred_date}
                           onChange={(e) => setViewingForm({ ...viewingForm, preferred_date: e.target.value })}
-                          className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -837,7 +847,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                           required
                           value={viewingForm.preferred_time}
                           onChange={(e) => setViewingForm({ ...viewingForm, preferred_time: e.target.value })}
-                          className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                         />
                       </div>
                       <textarea
@@ -845,13 +855,13 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                         rows={2}
                         value={viewingForm.notes}
                         onChange={(e) => setViewingForm({ ...viewingForm, notes: e.target.value })}
-                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-charcoal-200 rounded-lg text-sm focus:ring-2 focus:ring-forest/40 focus:border-transparent"
                       />
                       {viewingError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{viewingError}</p>}
                       <button
                         type="submit"
                         disabled={viewingSubmitting}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                        className="w-full bg-forest text-white py-2 rounded-lg text-sm font-medium hover:bg-forest-light transition-colors disabled:opacity-50"
                       >
                         {viewingSubmitting ? 'Scheduling...' : 'Schedule Viewing'}
                       </button>
@@ -862,9 +872,11 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
             </div>
 
             {/* Ad — Sidebar rectangle (below agent card, sticky) */}
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <AdSense label="Property Detail — Sidebar" format="rectangle" className="min-h-[250px]" />
-            </div>
+            {adsenseConfigured && (
+              <div className="bg-white rounded-xl shadow-sm p-4">
+                <AdSense label="Property Detail — Sidebar" format="rectangle" className="min-h-[250px]" />
+              </div>
+            )}
           </div>
         </div>
       </div>

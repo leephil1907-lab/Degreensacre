@@ -255,6 +255,57 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Brand faces (next/font). Declared here so the utility layer always wins. */
+  html,
+  body,
+  .font-sans {
+    font-family: var(--font-manrope), 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  .font-serif,
+  .font-display {
+    font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  }
+
+  /**
+   * Horizontally scrollable chip/tab rows (listing category filters, hero
+   * search tabs). Hides the scrollbar and fades the trailing edge so a clipped
+   * chip reads as "scroll for more" instead of as a broken layout on phones.
+   */
+  .scroll-row {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  @media (max-width: 1279px) {
+    .scroll-row {
+      mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+    }
+  }
+
+  .scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-row > * {
+    scroll-snap-align: start;
+  }
+}
+
+/**
+ * Scroll-reveal animations translate content horizontally before it enters the
+ * viewport, which grows the document's scrollable width on small screens and
+ * lets phones pan sideways mid-scroll. Clipping (not hiding) at the root keeps
+ * the animation and removes the horizontal jank.
+ */
+html,
+body {
+  overflow-x: clip;
 }
 
 @keyframes fade-in {

@@ -10,7 +10,7 @@ import {
   Square, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AdSense from '@/components/GoogleAdsense';
+import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import type { MapProperty } from '@/components/PropertyMapView';
 import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, getPropertyImage, isStockImage } from '@/lib/property';
 import { NIGERIAN_STATES } from '@/lib/validation';
@@ -98,10 +98,10 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
   const tags = [property.documentation, property.gated_estate ? 'Gated estate' : '', property.serviced ? 'Serviced' : '', property.furnished ? 'Furnished' : ''].filter(Boolean).slice(0, compact ? 2 : 3);
 
   return (
-    <article id={`property-card-${property.id}`} className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all ${selected ? 'border-forest ring-2 ring-forest/20' : 'border-gray-100 hover:border-forest/25 hover:shadow-lg'} ${isList ? 'sm:flex-row' : ''}`}>
+    <article id={`property-card-${property.id}`} className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all ${selected ? 'border-forest ring-2 ring-forest/20' : 'border-gray-100 hover:border-forest/25 hover:shadow-lg'} ${isList ? 'sm:flex-row' : ''} ${view === 'grid' ? 'w-full sm:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-1rem)] 2xl:w-[calc(25%-1.125rem)]' : ''}`}>
       <div className={`relative shrink-0 overflow-hidden ${isList ? 'sm:w-64 lg:w-80' : ''}`}>
         <Link href={`/properties/${property.slug}`} className="block" aria-label={`View ${property.title}`}>
-          <img src={image} alt={hasPhoto ? property.title : ''} className={`w-full transition-transform duration-500 group-hover:scale-[1.03] ${hasPhoto ? 'object-cover' : 'bg-forest-50 object-contain p-10'} ${isList ? 'h-56 sm:h-full sm:min-h-[19rem]' : compact ? 'h-48' : 'h-60'}`} loading="lazy" />
+          <img src={image} alt={hasPhoto ? property.title : ''} className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] ${isList ? 'h-56 sm:h-full sm:min-h-[19rem]' : compact ? 'h-48' : 'h-60'}`} loading="lazy" />
         </Link>
         <div className="pointer-events-none absolute left-3 top-3 flex max-w-[75%] flex-wrap gap-1.5">
           <span className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white ${displayType === 'sale' ? 'bg-forest' : displayType === 'rent' ? 'bg-blue-700' : displayType === 'land' ? 'bg-amber-700' : 'bg-charcoal'}`}>{typeLabel(displayType)}</span>
@@ -112,6 +112,7 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${saved ? 'fill-red-500 text-red-500' : ''}`} />}
         </button>
         {photoCount > 1 && <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md bg-black/70 px-2 py-1 text-[10px] font-bold text-white"><Camera className="h-3 w-3" /> {photoCount} photos</span>}
+        {!hasPhoto && <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md bg-black/55 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm"><Camera className="h-3 w-3" /> Photos coming soon</span>}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -340,11 +341,11 @@ function PropertiesContent() {
       <section className="z-40 border-b border-gray-200 bg-white shadow-sm lg:sticky lg:top-30" aria-label="Property filters">
         <div className="container-custom py-3">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 xl:pb-0" role="group" aria-label="Listing category">
+            <div className="scroll-row -mx-1 flex gap-1 px-1 pb-1 xl:pb-0" role="group" aria-label="Listing category">
               {categoryTabs.map((tab) => <button key={tab.value || 'all'} type="button" onClick={() => updateFilter('type', tab.value)} aria-pressed={filters.type === tab.value} className={`min-h-10 shrink-0 rounded-lg px-3.5 py-2 text-xs font-extrabold transition-colors ${filters.type === tab.value ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600 hover:bg-forest-50 hover:text-forest'}`}>{tab.label}</button>)}
             </div>
-            <div className="ml-auto flex shrink-0 items-center rounded-xl bg-gray-100 p-1" role="group" aria-label="Results layout">
-              {([{ value: 'map', label: 'Map', icon: MapIcon }, { value: 'grid', label: 'Grid', icon: Grid3X3 }, { value: 'list', label: 'List', icon: List }] as const).map((view) => <button key={view.value} type="button" onClick={() => { setViewMode(view.value); if (view.value !== 'map') setSelectedPropertyId(null); }} aria-pressed={viewMode === view.value} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-extrabold transition-colors ${viewMode === view.value ? 'bg-white text-forest shadow-sm' : 'text-gray-500 hover:text-charcoal'}`}><view.icon className="h-3.5 w-3.5" />{view.label}</button>)}
+            <div className="flex w-full shrink-0 items-center rounded-xl bg-gray-100 p-1 sm:w-auto xl:ml-auto" role="group" aria-label="Results layout">
+              {([{ value: 'map', label: 'Map', icon: MapIcon }, { value: 'grid', label: 'Grid', icon: Grid3X3 }, { value: 'list', label: 'List', icon: List }] as const).map((view) => <button key={view.value} type="button" onClick={() => { setViewMode(view.value); if (view.value !== 'map') setSelectedPropertyId(null); }} aria-pressed={viewMode === view.value} className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-extrabold transition-colors sm:flex-none ${viewMode === view.value ? 'bg-white text-forest shadow-sm' : 'text-gray-500 hover:text-charcoal'}`}><view.icon className="h-3.5 w-3.5" />{view.label}</button>)}
             </div>
           </div>
 
@@ -405,8 +406,8 @@ function PropertiesContent() {
       ) : (
         <section className="container-custom py-6 md:py-8" aria-label="Property results">
           {loadError && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</div>}
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'mx-auto max-w-6xl space-y-5'}>
-            {displayedProperties.map((property, index) => <Fragment key={property.id}>{renderCard(property, viewMode)}{viewMode === 'grid' && (index + 1) % 12 === 0 && index !== displayedProperties.length - 1 && <div className="sm:col-span-2 xl:col-span-3 2xl:col-span-4"><AdSense label={`In-feed ad after ${index + 1} listings`} format="horizontal" /></div>}</Fragment>)}
+          <div className={viewMode === 'grid' ? 'flex flex-wrap justify-center gap-6' : 'mx-auto max-w-6xl space-y-5'}>
+            {displayedProperties.map((property, index) => <Fragment key={property.id}>{renderCard(property, viewMode)}{viewMode === 'grid' && adsenseConfigured && (index + 1) % 12 === 0 && index !== displayedProperties.length - 1 && <div className="w-full"><AdSense label={`In-feed ad after ${index + 1} listings`} format="horizontal" /></div>}</Fragment>)}
           </div>
           {hasMore && <div className="mt-8 text-center">{loadMoreButton}<p className="mt-3 text-xs text-gray-400">Showing {Math.min(visibleCount, sortedProperties.length)} of {sortedProperties.length} matching properties</p></div>}
         </section>

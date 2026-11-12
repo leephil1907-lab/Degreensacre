@@ -4,6 +4,7 @@ import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/sup
 import { getPropertyBySlug, incrementPropertyView } from '@/lib/db-helpers';
 import { logAudit } from '@/lib/db-helpers';
 import { parseCoordinates } from '@/lib/property';
+import { requestRateLimit } from '@/lib/rate-limit';
 
 // GET /api/properties/[slug] - Get property by slug
 export async function GET(
@@ -22,9 +23,12 @@ export async function GET(
       );
     }
 
-    // Analytics must never make a valid public property unavailable.
+    // Analytics must never make a valid public property unavailable. Count at
+    // most one view per visitor per listing per 30 minutes so refreshes and
+    // automated crawlers do not inflate the displayed figure.
     try {
-      await incrementPropertyView(property.id);
+      const viewLimit = requestRateLimit(request, `property-view:${property.id}`, 1, 30 * 60 * 1000);
+      if (viewLimit.allowed) await incrementPropertyView(property.id);
     } catch (viewError) {
       console.warn('Property view could not be recorded:', viewError);
     }

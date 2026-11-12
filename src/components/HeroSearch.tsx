@@ -52,7 +52,7 @@ export default function HeroSearch() {
 
   return (
     <form onSubmit={handleSearch} className="mx-auto max-w-5xl rounded-2xl border border-white/30 bg-white/95 p-4 text-left shadow-lg backdrop-blur-sm sm:p-6 md:rounded-3xl md:p-7" aria-label="Property search">
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-3" role="group" aria-label="Listing category">
+      <div className="scroll-row -mx-1 flex gap-2 px-1 pb-3" role="group" aria-label="Listing category">
         {TABS.map((tab) => (
           <button key={tab.value} type="button" onClick={() => chooseTab(tab.value)} aria-pressed={activeTab === tab.value} className={`flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${activeTab === tab.value ? 'bg-forest text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-charcoal'}`}>
             <tab.icon className="h-4 w-4" aria-hidden="true" />{tab.label}
@@ -113,7 +113,7 @@ export default function HeroSearch() {
 
         <div className="flex items-end sm:col-span-2 lg:col-span-1">
           <button type="submit" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-forest px-5 py-3.5 font-extrabold text-white transition-colors hover:bg-forest-light active:bg-forest-800">
-            <Search className="h-5 w-5" aria-hidden="true" /><span>Search properties</span>
+            <Search className="h-5 w-5 shrink-0" aria-hidden="true" /><span className="whitespace-nowrap">Search</span>
           </button>
         </div>
       </div>

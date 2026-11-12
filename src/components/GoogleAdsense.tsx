@@ -5,6 +5,9 @@ import Script from 'next/script';
 
 const ADSENSE_ID = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || process.env.NEXT_PUBLIC_ADSENSE_ID;
 
+/** True only when a real AdSense publisher ID is configured. */
+export const adsenseConfigured = Boolean(ADSENSE_ID) && !ADSENSE_ID!.includes('XXXX') && !ADSENSE_ID!.includes('placeholder');
+
 /**
  * Loads the Google AdSense script once per page.
  * Place this once in layout.tsx.
