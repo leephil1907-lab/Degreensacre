@@ -7,6 +7,7 @@ import {
   effectiveStatus,
   formatNaira,
   invoiceBalance,
+  PAYMENT_METHOD_LABELS,
   STATUS_LABELS,
   type Invoice,
 } from './invoices';
@@ -250,6 +251,34 @@ export async function renderInvoicePdf(invoice: Invoice): Promise<Uint8Array> {
     totalRow('Balance due', money(balance), { strong: true, size: 10.5 });
   }
   y = totalY - 8;
+
+  // ---- payments received ----
+  const payments = [...(invoice.invoice_payments ?? [])].sort(
+    (a, b) => new Date(a.paid_at).getTime() - new Date(b.paid_at).getTime(),
+  );
+  if (payments.length > 0) {
+    const shown = payments.slice(0, 6);
+    const blockHeight = 30 + shown.length * 12 + (payments.length > shown.length ? 12 : 0);
+    if (y - blockHeight < 120) {
+      drawFooter();
+      page = pdf.addPage([A4.width, A4.height]);
+      y = A4.height - MARGIN;
+    }
+    text('PAYMENTS RECEIVED', MARGIN, y, { size: 7, font: bold, color: MUTED });
+    y -= 12;
+    shown.forEach((payment) => {
+      text(shortDate(payment.paid_at), MARGIN, y, { size: 8.5 });
+      text(safe(PAYMENT_METHOD_LABELS[payment.method] ?? payment.method), MARGIN + 78, y, { size: 8.5, color: MUTED });
+      text(safe(payment.reference || '-'), MARGIN + 160, y, { size: 8.5, color: MUTED });
+      textRight(money(Number(payment.amount)), A4.width - MARGIN, y, { size: 8.5, font: bold });
+      y -= 12;
+    });
+    if (payments.length > shown.length) {
+      text(`+ ${payments.length - shown.length} earlier payment(s)`, MARGIN, y, { size: 8, color: MUTED });
+      y -= 12;
+    }
+    y -= 6;
+  }
 
   // ---- amount in words ----
   page.drawRectangle({ x: MARGIN, y: y - 26, width: A4.width - MARGIN * 2, height: 26, color: CREAM });

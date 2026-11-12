@@ -29,7 +29,7 @@ export default function CookieConsent() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 animate-fade-in">
       <div className="max-w-4xl mx-auto bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl border border-cream dark:border-charcoal-700 p-5 md:p-6">
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
           <div className="hidden sm:flex w-10 h-10 bg-forest/10 rounded-xl items-center justify-center flex-shrink-0">
             <Cookie className="w-5 h-5 text-forest" />
           </div>
@@ -41,16 +41,16 @@ export default function CookieConsent() {
               <a href="/privacy" className="text-forest underline font-medium hover:text-forest-light">Privacy Policy</a>
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:flex-shrink-0">
             <button
               onClick={decline}
-              className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-charcoal dark:hover:text-white transition-colors"
+              className="flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold text-gray-600 transition-colors hover:text-charcoal dark:text-gray-400 dark:hover:text-white sm:flex-none"
             >
               Decline
             </button>
             <button
               onClick={accept}
-              className="px-5 py-2 bg-forest text-ivory text-xs font-bold rounded-lg hover:bg-forest-light transition-all shadow-sm hover:shadow-md"
+              className="flex-1 rounded-lg bg-forest px-5 py-2.5 text-xs font-bold text-ivory shadow-sm transition-all hover:bg-forest-light hover:shadow-md sm:flex-none"
             >
               Accept All
             </button>

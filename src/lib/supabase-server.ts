@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -29,6 +30,17 @@ export async function createServerSupabaseClient() {
 // Kept as a compatibility name for existing admin/data helpers. This is the
 // current administrator's RLS-scoped client, never a service-role client.
 // It MUST retain the request cookies or every admin policy sees an anonymous user.
+/**
+ * Service-role client. Only for the auth mailer, which must mint confirmation
+ * and recovery links without asking Supabase to send an e-mail. Never use it
+ * for request-scoped reads — those must stay under the caller's RLS.
+ */
+export function createServiceRoleClient() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+  return createClient(supabaseUrl, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
+
 export async function createAdminSupabaseClient() {
   return createServerSupabaseClient();
 }

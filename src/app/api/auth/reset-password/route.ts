@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { isEmail } from '@/lib/validation';
 import { getSiteUrl } from '@/lib/site';
 import { requestRateLimit } from '@/lib/rate-limit';
+import { authRedirect, createRecoveryLink, deliverAuthEmail, isAuthMailerConfigured } from '@/lib/auth-mailer';
 
 // POST /api/auth/reset-password - Request password reset
 export async function POST(request: NextRequest) {
@@ -22,6 +23,23 @@ export async function POST(request: NextRequest) {
         { error: 'Valid email is required', success: false },
         { status: 400 }
       );
+    }
+
+    // Preferred path: mint the recovery link and deliver it from our own domain.
+    if (isAuthMailerConfigured()) {
+      const link = await createRecoveryLink(body.email.toLowerCase().trim(), authRedirect('/auth/reset-password'));
+      if ('error' in link && link.error !== 'not_found') {
+        console.warn('[auth-mailer] recovery link failed');
+      }
+      if (!('error' in link)) {
+        const delivery = await deliverAuthEmail({ kind: 'reset_password', to: body.email.toLowerCase().trim(), actionLink: link.actionLink });
+        if (!delivery.success) console.warn('[auth-mailer] reset delivery failed:', delivery.error);
+      }
+      // Same answer either way: never disclose whether the address is registered.
+      return NextResponse.json({
+        success: true,
+        message: 'If that address has an account, a reset link is on its way.',
+      });
     }
 
     const supabase = await createServerSupabaseClient();

@@ -106,7 +106,7 @@ export function sanitizeInvoiceInput(body: unknown): { ok: true; value: Sanitize
 export async function listInvoices(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, invoice_items(*)')
+    .select('*, invoice_items(*), invoice_payments(*)')
     .order('created_at', { ascending: false })
     .limit(300);
   if (error) throw error;
@@ -116,13 +116,16 @@ export async function listInvoices(supabase: SupabaseClient) {
 export async function getInvoice(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, invoice_items(*)')
+    .select('*, invoice_items(*), invoice_payments(*)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   const invoice = data as Invoice;
   invoice.invoice_items = [...(invoice.invoice_items ?? [])].sort((a, b) => a.position - b.position);
+  invoice.invoice_payments = [...(invoice.invoice_payments ?? [])].sort(
+    (a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime(),
+  );
   return invoice;
 }
 
@@ -204,4 +207,55 @@ export async function updateInvoice(
 
 export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/** Payments only ever add up — the database trigger owns the invoice totals. */
+export async function recordPayment(
+  supabase: SupabaseClient,
+  invoiceId: string,
+  payment: { amount: number; method: string; reference?: string | null; paid_at?: string; notes?: string | null },
+  recordedBy: string | null,
+) {
+  const amount = Math.round(Math.max(0, Number(payment.amount) || 0) * 100) / 100;
+  if (amount <= 0) throw new Error('Enter a payment amount greater than zero.');
+
+  const { data: invoice, error: invoiceError } = await supabase
+    .from('invoices')
+    .select('id, total, amount_paid, status')
+    .eq('id', invoiceId)
+    .maybeSingle();
+  if (invoiceError) throw invoiceError;
+  if (!invoice) throw new Error('That invoice could not be found.');
+  if (invoice.status === 'void') throw new Error('Void invoices cannot accept payments.');
+
+  const outstanding = Math.max(0, Number(invoice.total) - Number(invoice.amount_paid));
+  if (outstanding <= 0.01) throw new Error('This invoice is already fully paid.');
+  if (amount > outstanding + 0.01) {
+    throw new Error(`That is more than the outstanding balance of ${outstanding.toFixed(2)}.`);
+  }
+
+  const { data, error } = await supabase
+    .from('invoice_payments')
+    .insert({
+      invoice_id: invoiceId,
+      amount,
+      method: payment.method || 'bank_transfer',
+      reference: payment.reference?.trim() || null,
+      paid_at: payment.paid_at || new Date().toISOString().slice(0, 10),
+      notes: payment.notes?.trim() || null,
+      recorded_by: recordedBy,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function removePayment(supabase: SupabaseClient, invoiceId: string, paymentId: string) {
+  const { error } = await supabase
+    .from('invoice_payments')
+    .delete()
+    .eq('id', paymentId)
+    .eq('invoice_id', invoiceId);
+  if (error) throw error;
 }

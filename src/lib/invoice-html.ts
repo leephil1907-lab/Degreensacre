@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   amountInWords,
   COMPANY,
+  PAYMENT_METHOD_LABELS,
   effectiveStatus,
   formatNaira,
   invoiceBalance,
@@ -63,6 +64,29 @@ export function renderInvoiceHtml(invoice: Invoice): string {
     )
     .join('');
 
+  const payments = [...(invoice.invoice_payments ?? [])].sort(
+    (a, b) => new Date(a.paid_at).getTime() - new Date(b.paid_at).getTime(),
+  );
+  const paymentRows = payments.length === 0 ? '' : `
+    <div class="payments">
+      <h3>Payments received</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          ${payments
+            .map(
+              (payment) => `<tr>
+                <td>${formatDate(payment.paid_at)}</td>
+                <td>${escapeHtml(PAYMENT_METHOD_LABELS[payment.method] ?? payment.method)}</td>
+                <td class="muted">${escapeHtml(payment.reference || '—')}</td>
+                <td class="num strong">${formatNaira(Number(payment.amount), true)}</td>
+              </tr>`,
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </div>`;
+
   const bankLines = [invoice.bank_name, invoice.bank_account_name, invoice.bank_account_number]
     .filter(Boolean)
     .map((line) => `<p>${escapeHtml(line)}</p>`)
@@ -117,6 +141,12 @@ export function renderInvoiceHtml(invoice: Invoice): string {
   .card { border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
   .card h3 { margin:0 0 6px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
   .card p { margin:0 0 2px; }
+  .payments { margin-top:16px; }
+  .payments h3 { margin:0 0 6px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .payments table { width:100%; border-collapse:collapse; font-size:11px; }
+  .payments th { text-align:left; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); padding:4px 6px; }
+  .payments td { padding:5px 6px; border-bottom:1px solid var(--line); }
+  .payments th.num, .payments td.num { text-align:right; }
   footer { position:absolute; left:14mm; right:14mm; bottom:10mm; border-top:1px solid var(--line); padding-top:8px; display:flex; justify-content:space-between; gap:12px; font-size:10px; color:var(--muted); }
   @media print {
     body { background:#fff; }
@@ -185,6 +215,8 @@ export function renderInvoiceHtml(invoice: Invoice): string {
         <tr class="balance"><td>Balance due</td><td class="value">${formatNaira(balance, true)}</td></tr>` : ''}
       </table>
     </div>
+
+    ${paymentRows}
 
     <div class="words"><strong>Amount in words:</strong> ${escapeHtml(amountInWords(invoice.total))}</div>
 

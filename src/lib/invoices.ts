@@ -52,6 +52,30 @@ export type InvoiceInput = {
   items: InvoiceItemInput[];
 };
 
+export const PAYMENT_METHODS = ['bank_transfer', 'cash', 'cheque', 'card', 'pos', 'other'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  bank_transfer: 'Bank transfer',
+  cash: 'Cash',
+  cheque: 'Cheque',
+  card: 'Card',
+  pos: 'POS',
+  other: 'Other',
+};
+
+export type InvoicePayment = {
+  id: string;
+  invoice_id: string;
+  amount: number;
+  method: PaymentMethod;
+  reference: string | null;
+  paid_at: string;
+  notes: string | null;
+  recorded_by: string | null;
+  created_at: string;
+};
+
 export type Invoice = Required<Pick<InvoiceInput, 'client_name'>> & {
   id: string;
   invoice_number: string;
@@ -78,7 +102,24 @@ export type Invoice = Required<Pick<InvoiceInput, 'client_name'>> & {
   created_at: string;
   updated_at: string;
   invoice_items: InvoiceItem[];
+  invoice_payments?: InvoicePayment[];
 };
+
+/** Money received against an invoice, newest first. */
+export function sortedPayments(invoice: Pick<Invoice, 'invoice_payments'>): InvoicePayment[] {
+  return [...(invoice.invoice_payments ?? [])].sort(
+    (a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime(),
+  );
+}
+
+/** How many days an unpaid balance has been overdue (0 when not overdue). */
+export function daysOverdue(dueDate: string | null): number {
+  if (!dueDate) return 0;
+  const due = new Date(`${dueDate}T23:59:59`);
+  if (Number.isNaN(due.getTime())) return 0;
+  const diff = Math.floor((Date.now() - due.getTime()) / 86_400_000);
+  return diff > 0 ? diff : 0;
+}
 
 export const COMPANY = {
   name: 'De-Greenacres Properties Limited',

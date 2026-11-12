@@ -4,13 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { friendlyAuthError } from '@/lib/auth-errors';
 import {
   Home, Heart, MessageSquare, Calendar, Bell, Settings, User,
-  MapPin, Eye, Loader2, Search, Clock, CheckCircle, XCircle, FileText
+  MapPin, Eye, Loader2, Search, Clock, CheckCircle, XCircle, FileText,
+  Receipt, Download, Wallet, ArrowRight, ShieldCheck,
 } from 'lucide-react';
+import { effectiveStatus, formatNaira, invoiceBalance, STATUS_LABELS, type Invoice } from '@/lib/invoices';
 
-type Tab = 'overview' | 'saved' | 'enquiries' | 'viewings' | 'listings' | 'messages' | 'notifications' | 'settings';
-const TAB_VALUES: Tab[] = ['overview', 'saved', 'enquiries', 'viewings', 'listings', 'messages', 'notifications', 'settings'];
+type Tab = 'overview' | 'saved' | 'enquiries' | 'viewings' | 'listings' | 'invoices' | 'messages' | 'notifications' | 'settings';
+const TAB_VALUES: Tab[] = ['overview', 'saved', 'enquiries', 'viewings', 'listings', 'invoices', 'messages', 'notifications', 'settings'];
 
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -23,6 +27,7 @@ export default function DashboardPage() {
   const [viewings, setViewings] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,13 +42,19 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes] = await Promise.all([
+      const [savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes, invoicesRes] = await Promise.all([
         fetch('/api/saved'),
         fetch('/api/enquiries'),
         fetch('/api/viewings'),
         fetch('/api/notifications'),
         fetch('/api/properties/mine'),
+        fetch('/api/invoices/mine'),
       ]);
+
+      if (invoicesRes?.ok) {
+        const data = await invoicesRes.json();
+        setInvoices(data.invoices || []);
+      }
 
       if (savedRes.ok) {
         const data = await savedRes.json();
@@ -99,55 +110,81 @@ export default function DashboardPage() {
     ...(profile?.account_type === 'seller' || profile?.account_type === 'agent' || profile?.is_admin ? [{ id: 'listings' as Tab, label: 'My Listings', icon: Home, count: myListings.length }] : []),
     { id: 'enquiries' as Tab, label: 'Enquiries', icon: MessageSquare, count: enquiries.length },
     { id: 'viewings' as Tab, label: 'Viewings', icon: Calendar, count: viewings.length },
+    { id: 'invoices' as Tab, label: 'Invoices', icon: Receipt, count: invoices.filter((invoice) => !['paid', 'void'].includes(effectiveStatus(invoice))).length },
     { id: 'notifications' as Tab, label: 'Notifications', icon: Bell, count: unreadCount },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ];
 
+  const outstandingTotal = invoices
+    .filter((invoice) => !['paid', 'void'].includes(effectiveStatus(invoice)))
+    .reduce((sum, invoice) => sum + invoiceBalance(invoice), 0);
+
   return (
-    <div className="min-h-screen bg-ivory-50">
-      {/* Dashboard Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-forest/10 rounded-full flex items-center justify-center">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover" />
-              ) : (
-                <User className="w-7 h-7 text-forest" />
-              )}
+    <div className="min-h-screen bg-[#f7f8f4]">
+      {/* Dashboard header */}
+      <div className="border-b border-gray-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-forest/10">
+                {profile?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-2xl object-cover" />
+                ) : (
+                  <User className="h-7 w-7 text-forest" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-display text-2xl text-charcoal sm:text-3xl">
+                  Welcome back, {profile?.first_name || 'there'}
+                </h1>
+                <p className="mt-0.5 truncate text-sm text-gray-500">{profile?.email}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-display text-2xl text-charcoal">
-                Welcome back, {profile?.first_name || 'User'}
-              </h1>
-              <p className="text-gray-500 text-sm">{profile?.email}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {profile?.is_verified && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Verified account
+                </span>
+              )}
+              <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-600">
+                {profile?.account_type || 'buyer'}
+              </span>
+              <Link href="/properties" className="inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white transition hover:bg-forest-light">
+                Browse properties <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Tabs */}
-          <div className="lg:w-64 flex-shrink-0">
-            <nav className="bg-white rounded-xl shadow-sm p-2 sticky top-24">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+          {/* Navigation: scrollable pills on phones, sidebar from lg */}
+          <div className="lg:w-64 lg:flex-shrink-0">
+            <nav
+              aria-label="Dashboard sections"
+              className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:sticky lg:top-24 lg:flex-col lg:overflow-visible lg:rounded-2xl lg:border lg:border-gray-100 lg:bg-white lg:p-2"
+            >
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  aria-current={activeTab === tab.id ? 'page' : undefined}
+                  className={`flex shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors lg:w-full lg:py-3 ${
                     activeTab === tab.id
-                      ? 'bg-forest/5 text-forest-light'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-forest text-white lg:bg-forest/5 lg:text-forest'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 lg:bg-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <tab.icon className="w-5 h-5" />
+                  <span className="flex items-center gap-2.5">
+                    <tab.icon className="h-4 w-4 lg:h-5 lg:w-5" />
                     {tab.label}
-                  </div>
+                  </span>
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      activeTab === tab.id ? 'bg-sage/20 text-forest' : 'bg-gray-100 text-gray-600'
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                      activeTab === tab.id ? 'bg-white/20 text-white lg:bg-sage/20 lg:text-forest' : 'bg-gray-100 text-gray-600'
                     }`}>
                       {tab.count}
                     </span>
@@ -168,35 +205,102 @@ export default function DashboardPage() {
                 {/* Overview Tab */}
                 {activeTab === 'overview' && (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="bg-white rounded-xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Heart className="w-5 h-5 text-red-500" />
-                          <span className="text-sm text-gray-500">Saved Properties</span>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                      {[
+                        { label: 'Saved properties', value: String(savedProperties.length), icon: Heart, tone: 'text-rose-500' },
+                        { label: 'Enquiries', value: String(enquiries.length), icon: MessageSquare, tone: 'text-sky-600' },
+                        { label: 'Viewings', value: String(viewings.length), icon: Calendar, tone: 'text-violet-600' },
+                        {
+                          label: outstandingTotal > 0 ? 'Balance due' : 'Invoices paid',
+                          value: outstandingTotal > 0
+                            ? formatNaira(outstandingTotal)
+                            : String(invoices.filter((invoice) => effectiveStatus(invoice) === 'paid').length),
+                          icon: Wallet,
+                          tone: outstandingTotal > 0 ? 'text-amber-600' : 'text-emerald-600',
+                        },
+                      ].map((card) => (
+                        <div key={card.label} className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+                          <div className="flex items-center gap-2">
+                            <card.icon className={`h-4 w-4 ${card.tone}`} />
+                            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{card.label}</span>
+                          </div>
+                          <p className="mt-2 font-display text-2xl text-charcoal sm:text-3xl">{card.value}</p>
                         </div>
-                        <p className="text-3xl font-bold text-charcoal">{savedProperties.length}</p>
-                      </div>
-                      <div className="bg-white rounded-xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                          <MessageSquare className="w-5 h-5 text-blue-500" />
-                          <span className="text-sm text-gray-500">Enquiries</span>
-                        </div>
-                        <p className="text-3xl font-bold text-charcoal">{enquiries.length}</p>
-                      </div>
-                      <div className="bg-white rounded-xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Calendar className="w-5 h-5 text-purple-500" />
-                          <span className="text-sm text-gray-500">Viewings</span>
-                        </div>
-                        <p className="text-3xl font-bold text-charcoal">{viewings.length}</p>
-                      </div>
+                      ))}
                     </div>
+
+                    {/* Latest invoice, if the office has billed this account */}
+                    {invoices.length > 0 && (() => {
+                      const latest = invoices[0];
+                      const status = effectiveStatus(latest);
+                      const balance = invoiceBalance(latest);
+                      return (
+                        <div className="rounded-2xl border border-gray-100 bg-white p-5">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Latest invoice</p>
+                              <p className="mt-1 font-display text-xl text-charcoal">{latest.invoice_number}</p>
+                              <p className="text-sm text-gray-500">
+                                {formatNaira(latest.total)} · issued {latest.issue_date}
+                                {latest.due_date ? ` · due ${latest.due_date}` : ''}
+                              </p>
+                            </div>
+                            <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                              status === 'paid' ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                : status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700'
+                                : 'border-amber-200 bg-amber-50 text-amber-700'
+                            }`}>
+                              {STATUS_LABELS[status]}
+                            </span>
+                          </div>
+                          <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <a
+                              href={`/api/invoices/${latest.id}/pdf`}
+                              className="inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white hover:bg-forest-light"
+                            >
+                              <Download className="h-4 w-4" /> Download invoice
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('invoices')}
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest hover:underline"
+                            >
+                              View all invoices <ArrowRight className="h-4 w-4" />
+                            </button>
+                            {balance > 0 && (
+                              <span className="ml-auto text-sm text-gray-500">
+                                Outstanding <strong className="text-charcoal">{formatNaira(balance)}</strong>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Recent Activity */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                       <h2 className="text-lg font-display text-charcoal mb-4">Recent Activity</h2>
                       {notifications.length === 0 ? (
-                        <p className="text-gray-400 text-center py-8">No recent activity</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          {[
+                            { icon: Search, title: 'Browse verified listings', text: 'Filter by state, price and property type.', href: '/properties', cta: 'Search properties' },
+                            { icon: Calendar, title: 'Book an inspection', text: 'Pick a property and choose a viewing slot.', href: '/book-inspection', cta: 'Book a viewing' },
+                            { icon: MessageSquare, title: 'Talk to our team', text: 'Ask about a listing, title or payment plan.', href: '/contact', cta: 'Contact us' },
+                          ].map((item) => (
+                            <Link
+                              key={item.title}
+                              href={item.href}
+                              className="group rounded-xl border border-gray-100 bg-gray-50/60 p-4 transition hover:border-forest/30 hover:bg-white"
+                            >
+                              <item.icon className="h-5 w-5 text-forest" />
+                              <p className="mt-2 text-sm font-bold text-charcoal">{item.title}</p>
+                              <p className="mt-1 text-xs text-gray-500">{item.text}</p>
+                              <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest">
+                                {item.cta} <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
                       ) : (
                         <div className="space-y-3">
                           {notifications.slice(0, 5).map((notif) => (
@@ -256,6 +360,94 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* Invoices Tab — the customer's own billing history */}
+                {activeTab === 'invoices' && (
+                  <section>
+                    <div className="mb-5">
+                      <h2 className="font-display text-2xl text-charcoal">Invoices &amp; payments</h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Every invoice issued to {profile?.email}. Download the PDF for your records, or check what is still outstanding.
+                      </p>
+                    </div>
+
+                    {invoices.length === 0 ? (
+                      <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center sm:p-12">
+                        <Receipt className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                        <h3 className="font-display text-lg text-charcoal">No invoices yet</h3>
+                        <p className="mt-2 text-sm text-gray-500">
+                          When De-Greenacres bills you for a property, rent or service, the invoice appears here with its balance.
+                        </p>
+                        <Link href="/properties" className="mt-6 inline-flex rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white hover:bg-forest-light">
+                          Browse properties
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {invoices.map((invoice) => {
+                          const status = effectiveStatus(invoice);
+                          const balance = invoiceBalance(invoice);
+                          const paid = (invoice.invoice_payments ?? []).length;
+                          return (
+                            <article key={invoice.id} className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="font-display text-lg text-charcoal">{invoice.invoice_number}</p>
+                                  <p className="mt-0.5 text-sm text-gray-500">
+                                    Issued {invoice.issue_date}
+                                    {invoice.due_date ? ` · due ${invoice.due_date}` : ''}
+                                    {invoice.property_title ? ` · ${invoice.property_title}` : ''}
+                                  </p>
+                                </div>
+                                <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                                  status === 'paid' ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700'
+                                    : status === 'void' ? 'border-gray-200 bg-gray-50 text-gray-500'
+                                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                                }`}>
+                                  {STATUS_LABELS[status]}
+                                </span>
+                              </div>
+
+                              <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-50 pt-4 sm:grid-cols-4">
+                                <div>
+                                  <dt className="text-[11px] uppercase tracking-wide text-gray-400">Total</dt>
+                                  <dd className="font-semibold text-charcoal">{formatNaira(invoice.total)}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-[11px] uppercase tracking-wide text-gray-400">Paid</dt>
+                                  <dd className="font-semibold text-emerald-700">{formatNaira(invoice.amount_paid)}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-[11px] uppercase tracking-wide text-gray-400">Balance</dt>
+                                  <dd className={`font-semibold ${balance > 0 ? 'text-amber-700' : 'text-charcoal'}`}>{formatNaira(balance)}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-[11px] uppercase tracking-wide text-gray-400">Payments</dt>
+                                  <dd className="font-semibold text-charcoal">{paid}</dd>
+                                </div>
+                              </dl>
+
+                              <div className="mt-4 flex flex-wrap items-center gap-3">
+                                <a
+                                  href={`/api/invoices/${invoice.id}/pdf`}
+                                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 hover:border-forest hover:text-forest"
+                                >
+                                  <Download className="h-4 w-4" /> Download PDF
+                                </a>
+                                {balance > 0 && invoice.bank_account_number && (
+                                  <p className="text-xs text-gray-500">
+                                    Pay to {invoice.bank_name} · {invoice.bank_account_name} · <strong className="text-charcoal">{invoice.bank_account_number}</strong>
+                                  </p>
+                                )}
+                              </div>
+                            </article>
+                          );
+                        })}
                       </div>
                     )}
                   </section>
@@ -446,7 +638,10 @@ export default function DashboardPage() {
 
                 {/* Settings Tab */}
                 {activeTab === 'settings' && (
-                  <DashboardSettings profile={profile} onUpdate={fetchDashboardData} />
+                  <div className="space-y-6">
+                    <DashboardSettings profile={profile} onUpdate={fetchDashboardData} />
+                    <SecurityPanel profile={profile} />
+                  </div>
                 )}
               </>
             )}
@@ -496,8 +691,8 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
 
   return (
     <div>
-      <h2 className="text-2xl font-display text-charcoal mb-6">Profile Settings</h2>
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <h2 className="mb-6 font-display text-2xl text-charcoal">Profile details</h2>
+      <div className="rounded-2xl border border-gray-100 bg-white p-6">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
             {error}
@@ -583,5 +778,98 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
         </form>
       </div>
     </div>
+  );
+}
+
+
+/** Password and sign-in security, separate from the editable profile fields. */
+function SecurityPanel({ profile }: { profile: any }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [state, setState] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [error, setError] = useState('');
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    if (password.length < 8) { setError('Choose a password of at least 8 characters.'); return; }
+    if (password !== confirm) { setError('The two passwords do not match.'); return; }
+    setState('saving');
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+      setState('done');
+      setPassword('');
+      setConfirm('');
+    } catch (err) {
+      setError(friendlyAuthError(err));
+      setState('idle');
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-gray-100 bg-white p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-xl text-charcoal">Password &amp; security</h2>
+          <p className="mt-1 text-sm text-gray-500">Signed in as {profile?.email}</p>
+        </div>
+        <span className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+          profile?.is_verified
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            : 'border-amber-200 bg-amber-50 text-amber-700'
+        }`}>
+          {profile?.is_verified ? 'Verified' : 'Unverified'}
+        </span>
+      </div>
+
+      {state === 'done' && (
+        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          Password updated. Other devices stay signed in — sign out of them from a shared computer.
+        </p>
+      )}
+      {error && (
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>
+      )}
+
+      <form onSubmit={submit} className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="new-password" className="mb-1 block text-sm font-medium text-gray-700">New password</label>
+          <input
+            id="new-password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-charcoal focus:border-forest focus:outline-none"
+            placeholder="At least 8 characters"
+          />
+        </div>
+        <div>
+          <label htmlFor="confirm-password" className="mb-1 block text-sm font-medium text-gray-700">Confirm new password</label>
+          <input
+            id="confirm-password"
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(event) => setConfirm(event.target.value)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-charcoal focus:border-forest focus:outline-none"
+            placeholder="Repeat the password"
+          />
+        </div>
+        <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
+          <button
+            type="submit"
+            disabled={state === 'saving'}
+            className="rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white transition hover:bg-forest-light disabled:opacity-60"
+          >
+            {state === 'saving' ? 'Updating…' : 'Update password'}
+          </button>
+          <Link href="/forgot-password" className="text-sm font-semibold text-forest hover:underline">
+            I don&apos;t know my current password
+          </Link>
+        </div>
+      </form>
+    </section>
   );
 }

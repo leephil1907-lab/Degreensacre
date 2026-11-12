@@ -34,6 +34,22 @@ function SignInContent() {
         ? 'Your account was created. Sign in with your email and password to continue.'
         : '';
   const supportHref = whatsappLink(settings, 'Hello De-Greenacres, I need help signing in');
+  const [resendState, setResendState] = useState<'' | 'sending' | 'sent' | 'error'>('');
+
+  const resendConfirmation = async () => {
+    if (!email.trim()) { setError('Enter the e-mail you signed up with first.'); return; }
+    setResendState('sending');
+    try {
+      const response = await fetch('/api/auth/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setResendState(response.ok ? 'sent' : 'error');
+    } catch {
+      setResendState('error');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +115,20 @@ function SignInContent() {
             <p className="text-gray-400 text-[15px] leading-relaxed">Enter your credentials to access your account</p>
           </div>
 
+          {verificationState === 'pending' && (
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+              <span>Didn&apos;t get the e-mail? Enter your address above and</span>
+              <button
+                type="button"
+                onClick={resendConfirmation}
+                disabled={resendState === 'sending'}
+                className="font-bold underline underline-offset-2 hover:text-amber-950 disabled:opacity-50"
+              >
+                {resendState === 'sending' ? 'sending…' : resendState === 'sent' ? 'link sent ✓' : 'resend it'}
+              </button>
+              {resendState === 'error' && <span className="text-red-700">— that didn&apos;t work, try again shortly.</span>}
+            </div>
+          )}
           {authNotice && (
             <div role="status" className="mb-6 rounded-xl border border-forest/15 bg-forest-50 p-4 text-sm leading-6 text-forest">
               {authNotice}

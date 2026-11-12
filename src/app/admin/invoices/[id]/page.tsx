@@ -10,6 +10,7 @@ import {
   amountInWords, effectiveStatus, formatNaira, invoiceBalance, STATUS_LABELS,
   type Invoice,
 } from '@/lib/invoices';
+import InvoicePayments from '@/components/admin/InvoicePayments';
 
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -40,40 +41,17 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     setBusy(true);
     setError('');
     try {
-      const response = await fetch(`/api/admin/invoices/${invoice.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/admin/invoices/${invoice.id}/payments`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_name: invoice.client_name,
-          client_email: invoice.client_email,
-          client_phone: invoice.client_phone,
-          client_address: invoice.client_address,
-          property_id: invoice.property_id,
-          property_title: invoice.property_title,
-          issue_date: invoice.issue_date,
-          due_date: invoice.due_date,
-          discount: invoice.discount,
-          tax_rate: invoice.tax_rate,
-          amount_paid: invoice.total,
-          status: 'paid',
-          notes: invoice.notes,
-          terms: invoice.terms,
-          bank_name: invoice.bank_name,
-          bank_account_name: invoice.bank_account_name,
-          bank_account_number: invoice.bank_account_number,
-          items: invoice.invoice_items.map((item) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-          })),
-        }),
+        body: JSON.stringify({ settle: true, method: 'bank_transfer' }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'The invoice could not be updated.');
-      setNotice('Marked as paid.');
+      if (!response.ok) throw new Error(data.error || 'The invoice could not be settled.');
+      setNotice('Balance settled — the invoice is now paid in full.');
       await load();
     } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : 'The invoice could not be updated.');
+      setError(updateError instanceof Error ? updateError.message : 'The invoice could not be settled.');
     } finally {
       setBusy(false);
     }
@@ -166,7 +144,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         </Link>
         {status !== 'paid' && (
           <button type="button" onClick={() => void markPaid()} disabled={busy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Mark paid
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Settle in full
           </button>
         )}
         <a href={`/api/admin/invoices/${invoice.id}/export?format=html`} download={`${invoice.invoice_number}.html`} className="ml-auto inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-forest">
@@ -177,7 +155,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       {notice && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{notice}</div>}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-[#eef0ea]">
+      <div className="mt-6">
+        <InvoicePayments invoice={invoice} onChanged={(updated) => { setInvoice(updated); void load(); }} />
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-[#efeee9]">
         <iframe
           title={`Preview of invoice ${invoice.invoice_number}`}
           src={`/api/admin/invoices/${invoice.id}/export?format=html`}

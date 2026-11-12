@@ -30,6 +30,53 @@ the ceiling to 30 messages/hour and lets the mail come from your own domain.
 
 ---
 
+## Two ways to lift the 2/hour ceiling
+
+Both end with e-mail arriving from your own domain. Pick one.
+
+### A. Custom SMTP inside Supabase (no extra secret in the app) — recommended
+
+Supabase Dashboard → Authentication → SMTP Settings → *Enable custom SMTP*:
+
+| Field | Value |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` (SSL) |
+| Username | `resend` |
+| Password | your Resend API key (`re_…`) |
+| Sender e-mail | `no-reply@degreenacres.org` (must be a verified Resend domain) |
+| Sender name | `De-Greenacres Properties Limited` |
+
+Raise Authentication → Rate Limits → *Emails per hour* to **30**. Nothing in the
+app needs to change; Supabase keeps sending the confirmation and reset e-mails,
+now at a usable rate and from `degreenacres.org`.
+
+### B. Send the auth e-mails ourselves (already coded)
+
+`POST /api/auth/register`, `POST /api/auth/reset-password` and the new
+`POST /api/auth/resend-confirmation` now mint the link with
+`auth.admin.generateLink()` and deliver it through Resend using the branded
+`src/emails/AuthEmail.tsx` template — our domain, our design, Resend's limits
+instead of Supabase's. Because the work happens inside the existing routes, the
+sign-up and password-reset screens are unchanged: `signUp()` and
+`resetPassword()` in `AuthContext` keep calling the same endpoints.
+
+It activates automatically once **all three** variables exist on the host:
+
+```
+RESEND_API_KEY=re_…                       # Resend API key
+EMAIL_FROM="De-Greenacres <no-reply@degreenacres.org>"
+SUPABASE_SERVICE_ROLE_KEY=…               # Supabase → Settings → API → service_role
+```
+
+`EMAIL_REPLY_TO` must also be set in production. Until every value is present,
+each route answers `{ "fallback": true }` and the screens use Supabase's own
+mailer exactly as before — so the site never breaks mid-migration.
+
+The service-role key is read only by `createServiceRoleClient()` in
+`src/lib/supabase-server.ts` and only inside the auth mailer. It is never used
+for data reads or exposed to the browser.
+
 ## Step 1 — Verify the domain at Resend (owner, ~15 minutes + DNS propagation)
 
 1. Create an account at <https://resend.com> and add the domain you send from —

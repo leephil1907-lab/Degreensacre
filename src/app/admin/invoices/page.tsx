@@ -9,6 +9,7 @@ import {
 import {
   addDaysIso,
   computeTotals,
+  daysOverdue,
   effectiveStatus,
   formatNaira,
   invoiceBalance,
@@ -163,6 +164,33 @@ export default function AdminInvoicesPage() {
     [form.items, form.discount, form.tax_rate],
   );
 
+  const [filter, setFilter] = useState<'all' | 'outstanding' | 'overdue' | 'paid'>('all');
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return invoices;
+    return invoices.filter((invoice) => {
+      const status = effectiveStatus(invoice);
+      if (filter === 'paid') return status === 'paid';
+      if (filter === 'overdue') return status === 'overdue';
+      return ['sent', 'partially_paid', 'overdue'].includes(status);
+    });
+  }, [invoices, filter]);
+
+  const aging = useMemo(() => {
+    const buckets = { current: 0, d30: 0, d60: 0, older: 0 };
+    invoices.forEach((invoice) => {
+      const status = effectiveStatus(invoice);
+      if (!['sent', 'partially_paid', 'overdue'].includes(status)) return;
+      const balance = invoiceBalance(invoice);
+      const late = daysOverdue(invoice.due_date);
+      if (late === 0) buckets.current += balance;
+      else if (late <= 30) buckets.d30 += balance;
+      else if (late <= 60) buckets.d60 += balance;
+      else buckets.older += balance;
+    });
+    return buckets;
+  }, [invoices]);
+
   const stats = useMemo(() => {
     const outstanding = invoices
       .filter((invoice) => ['sent', 'partially_paid', 'overdue'].includes(effectiveStatus(invoice)))
@@ -260,31 +288,17 @@ export default function AdminInvoicesPage() {
   const markPaid = async (invoice: Invoice) => {
     setError('');
     try {
-      const response = await fetch(`/api/admin/invoices/${invoice.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/admin/invoices/${invoice.id}/payments`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...toForm(invoice),
-          status: 'paid',
-          amount_paid: invoice.total,
-          discount: invoice.discount,
-          tax_rate: invoice.tax_rate,
-          due_date: invoice.due_date,
-          items: invoice.invoice_items.map((item) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-          })),
-        }),
+        body: JSON.stringify({ settle: true, method: 'bank_transfer' }),
       });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'The invoice could not be updated.');
-      }
-      setNotice(`${invoice.invoice_number} marked as paid.`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'The invoice could not be settled.');
+      setNotice(`${invoice.invoice_number} settled in full.`);
       await load();
     } catch (markError) {
-      setError(markError instanceof Error ? markError.message : 'The invoice could not be updated.');
+      setError(markError instanceof Error ? markError.message : 'The invoice could not be settled.');
     }
   };
 
@@ -319,6 +333,27 @@ export default function AdminInvoicesPage() {
             <p className="mt-1 font-display text-2xl text-charcoal">{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Receivables ageing — how long the outstanding money has been owed */}
+      <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Outstanding by age</p>
+          <p className="text-xs text-gray-400">Total {formatNaira(aging.current + aging.d30 + aging.d60 + aging.older)}</p>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            ['Not yet due', aging.current, 'text-forest'],
+            ['1–30 days late', aging.d30, 'text-amber-600'],
+            ['31–60 days late', aging.d60, 'text-orange-600'],
+            ['60+ days late', aging.older, 'text-red-600'],
+          ].map(([label, value, tone]) => (
+            <div key={String(label)}>
+              <p className="text-[11px] text-gray-400">{label}</p>
+              <p className={`text-lg font-bold ${tone as string}`}>{formatNaira(Number(value))}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {error && (
@@ -511,18 +546,40 @@ export default function AdminInvoicesPage() {
       )}
 
       <div className="mt-8 overflow-hidden rounded-2xl border border-gray-100 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-sm font-bold text-charcoal">All invoices</h2>
-          <span className="text-xs text-gray-400">{invoices.length} total</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+          <div className="flex flex-wrap gap-1">
+            {([
+              ['all', 'All', invoices.length],
+              ['outstanding', 'Outstanding', invoices.filter((invoice) => ['sent', 'partially_paid', 'overdue'].includes(effectiveStatus(invoice))).length],
+              ['overdue', 'Overdue', invoices.filter((invoice) => effectiveStatus(invoice) === 'overdue').length],
+              ['paid', 'Paid', invoices.filter((invoice) => effectiveStatus(invoice) === 'paid').length],
+            ] as const).map(([value, label, count]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
+                  filter === value ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {label} <span className={filter === value ? 'text-white/70' : 'text-gray-400'}>{count}</span>
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-gray-400">{filtered.length} shown</span>
         </div>
 
         {loading ? (
           <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-forest" /></div>
-        ) : invoices.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Receipt className="mx-auto h-9 w-9 text-gray-300" />
-            <p className="mt-3 font-display text-xl text-charcoal">No invoices yet</p>
-            <p className="mt-1 text-sm text-gray-500">Create your first invoice to bill a buyer, tenant or client.</p>
+            <p className="mt-3 font-display text-xl text-charcoal">{invoices.length === 0 ? 'No invoices yet' : 'Nothing in this view'}</p>
+            <p className="mt-1 text-sm text-gray-500">
+              {invoices.length === 0
+                ? 'Create your first invoice to bill a buyer, tenant or client.'
+                : 'Switch the filter to "All" to see every invoice.'}
+            </p>
             <button type="button" onClick={openCreate} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white">
               <FilePlus2 className="h-4 w-4" /> New invoice
             </button>
@@ -543,7 +600,7 @@ export default function AdminInvoicesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {invoices.map((invoice) => {
+                {filtered.map((invoice) => {
                   const status = effectiveStatus(invoice);
                   return (
                     <tr key={invoice.id} className="hover:bg-gray-50/60">

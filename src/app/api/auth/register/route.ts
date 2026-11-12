@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { isEmail, isPhone } from '@/lib/validation';
 import { requestRateLimit } from '@/lib/rate-limit';
+import { authRedirect, createUserWithConfirmationLink, deliverAuthEmail, isAuthMailerConfigured } from '@/lib/auth-mailer';
 
 const ACCOUNT_TYPES = ['buyer', 'seller', 'agent'] as const;
 
@@ -44,6 +45,51 @@ export async function POST(request: NextRequest) {
     }
     if (!ACCOUNT_TYPES.includes(requestedType as typeof ACCOUNT_TYPES[number])) {
       return NextResponse.json({ error: 'Choose a valid account type.', success: false }, { status: 400 });
+    }
+
+    // Preferred path: create the account and e-mail the confirmation link
+    // ourselves, so activation is not limited by Supabase's 2-per-hour mailer.
+    if (isAuthMailerConfigured()) {
+      const link = await createUserWithConfirmationLink({
+        email,
+        password,
+        metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone || null,
+          state: state || null,
+          account_type: requestedType,
+        },
+        redirectTo: authRedirect('/signin?verified=confirmed'),
+      });
+
+      if ('error' in link) {
+        const conflict = /already exists/i.test(link.error);
+        return NextResponse.json({ error: link.error, success: false }, { status: conflict ? 409 : 400 });
+      }
+
+      const delivery = await deliverAuthEmail({
+        kind: 'confirm_signup',
+        to: email,
+        actionLink: link.actionLink,
+        name: firstName,
+        idempotencyKey: `signup-${link.userId ?? email}`,
+      });
+
+      if (!delivery.success) {
+        console.error('[auth-mailer] confirmation delivery failed:', delivery.error);
+        return NextResponse.json({
+          error: 'Your account was created, but the confirmation e-mail could not be sent. Try “Resend confirmation” on the sign-in page in a moment.',
+          success: false,
+        }, { status: 502 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        user: { id: link.userId, email },
+        requires_email_confirmation: true,
+        mailer: 'resend',
+      }, { status: 201 });
     }
 
     const supabase = await createServerSupabaseClient();
