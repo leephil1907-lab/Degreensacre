@@ -15,6 +15,32 @@ if (apiCorsOrigin !== '*') {
   apiCorsHeaders.push({ key: 'Access-Control-Allow-Credentials', value: 'true' });
 }
 
+// Content-Security-Policy.
+// Hosts are allow-listed for the integrations the app actually ships:
+// Supabase (REST/Realtime), OpenStreetMap (tiles + embedded maps), Cloudflare
+// cdnjs (Leaflet marker sprites), Google Analytics and Google AdSense (both
+// only activate when their env vars are configured), plus the tour/embed hosts
+// used by the (hidden) virtual-tour viewer.
+// NOTE: script-src keeps 'unsafe-inline' because Next.js emits inline bootstrap
+// and JSON-LD scripts. A nonce-based policy via src/proxy.ts is the next step up
+// and should be introduced with full-page QA.
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://adservice.google.com https://fundingchoicesmessages.google.com https://ep1.adtrafficquality.google",
+  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+  "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.doubleclick.net https://*.googleusercontent.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.doubleclick.net",
+  "frame-src 'self' https://www.openstreetmap.org https://www.google.com https://maps.google.com https://*.matterport.com https://*.kuula.co https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -73,6 +99,7 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
+          { key: 'Content-Security-Policy', value: cspDirectives },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-XSS-Protection', value: '0' },

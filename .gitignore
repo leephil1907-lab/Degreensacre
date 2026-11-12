@@ -58,6 +58,7 @@ sql-*.sql
 supabase-*.sql
 # The consolidated production migration is a required deployment artifact.
 !supabase-production-cms-migration.sql
+!supabase-production-hardening.sql
 
 # Documentation (optional)
 IMPLEMENTATION_COMPLETE.md
