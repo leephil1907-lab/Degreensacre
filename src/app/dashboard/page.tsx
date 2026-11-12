@@ -9,12 +9,12 @@ import { friendlyAuthError } from '@/lib/auth-errors';
 import {
   Home, Heart, MessageSquare, Calendar, Bell, Settings, User,
   MapPin, Eye, Loader2, Search, Clock, CheckCircle, XCircle, FileText,
-  Receipt, Download, Wallet, ArrowRight, ShieldCheck,
+  Receipt, Download, Wallet, ArrowRight, ShieldCheck, BellRing, Pause, Play, Trash2,
 } from 'lucide-react';
 import { effectiveStatus, formatNaira, invoiceBalance, STATUS_LABELS, type Invoice } from '@/lib/invoices';
 
-type Tab = 'overview' | 'saved' | 'enquiries' | 'viewings' | 'listings' | 'invoices' | 'messages' | 'notifications' | 'settings';
-const TAB_VALUES: Tab[] = ['overview', 'saved', 'enquiries', 'viewings', 'listings', 'invoices', 'messages', 'notifications', 'settings'];
+type Tab = 'overview' | 'saved' | 'searches' | 'enquiries' | 'viewings' | 'listings' | 'invoices' | 'messages' | 'notifications' | 'settings';
+const TAB_VALUES: Tab[] = ['overview', 'saved', 'searches', 'enquiries', 'viewings', 'listings', 'invoices', 'messages', 'notifications', 'settings'];
 
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [searches, setSearches] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -42,14 +43,20 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes, invoicesRes] = await Promise.all([
+      const [savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes, invoicesRes, searchesRes] = await Promise.all([
         fetch('/api/saved'),
         fetch('/api/enquiries'),
         fetch('/api/viewings'),
         fetch('/api/notifications'),
         fetch('/api/properties/mine'),
         fetch('/api/invoices/mine'),
+        fetch('/api/searches'),
       ]);
+
+      if (searchesRes?.ok) {
+        const data = await searchesRes.json();
+        setSearches(data.searches || []);
+      }
 
       if (invoicesRes?.ok) {
         const data = await invoicesRes.json();
@@ -110,6 +117,7 @@ export default function DashboardPage() {
     ...(profile?.account_type === 'seller' || profile?.account_type === 'agent' || profile?.is_admin ? [{ id: 'listings' as Tab, label: 'My Listings', icon: Home, count: myListings.length }] : []),
     { id: 'enquiries' as Tab, label: 'Enquiries', icon: MessageSquare, count: enquiries.length },
     { id: 'viewings' as Tab, label: 'Viewings', icon: Calendar, count: viewings.length },
+    { id: 'searches' as Tab, label: 'Search alerts', icon: BellRing, count: searches.filter((search) => search.alert_enabled).length },
     { id: 'invoices' as Tab, label: 'Invoices', icon: Receipt, count: invoices.filter((invoice) => !['paid', 'void'].includes(effectiveStatus(invoice))).length },
     { id: 'notifications' as Tab, label: 'Notifications', icon: Bell, count: unreadCount },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
@@ -363,6 +371,14 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </section>
+                )}
+
+                {/* Search alerts Tab */}
+                {activeTab === 'searches' && (
+                  <SearchAlerts
+                    searches={searches}
+                    onChanged={fetchDashboardData}
+                  />
                 )}
 
                 {/* Invoices Tab — the customer's own billing history */}
@@ -870,6 +886,149 @@ function SecurityPanel({ profile }: { profile: any }) {
           </Link>
         </div>
       </form>
+    </section>
+  );
+}
+
+/** Saved searches with instant e-mail alerts, managed from the dashboard. */
+function SearchAlerts({ searches, onChanged }: { searches: any[]; onChanged: () => void }) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const update = async (id: string, changes: Record<string, unknown>) => {
+    setBusyId(id);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/searches', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...changes }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'That change could not be saved.');
+      setNotice(changes.alert_enabled === false
+        ? 'Alerts paused for this search.'
+        : changes.alert_enabled === true
+          ? 'Alerts switched back on.'
+          : 'Search updated.');
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'That change could not be saved.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const remove = async (id: string, name: string) => {
+    setBusyId(id);
+    setError('');
+    try {
+      const response = await fetch(`/api/searches?id=${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'That search could not be deleted.');
+      }
+      setNotice(`“${name}” deleted.`);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'That search could not be deleted.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl text-charcoal">Search alerts</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            We e-mail you when a newly published property matches a search you saved. No marketing, just listings that fit.
+          </p>
+        </div>
+        <Link href="/properties" className="inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white hover:bg-forest-light">
+          Save a new search <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {notice && <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
+      {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+
+      {searches.length === 0 ? (
+        <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center sm:p-12">
+          <BellRing className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <h3 className="font-display text-lg text-charcoal">No saved searches yet</h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+            Filter the marketplace the way you like — say, 3-bedroom flats in Lekki under ₦3m — then press
+            <strong className="text-charcoal"> Save this search</strong>. You will hear from us the moment something fits.
+          </p>
+          <Link href="/properties" className="mt-6 inline-flex rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white hover:bg-forest-light">
+            Browse properties
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {searches.map((search) => (
+            <article key={search.id} className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-display text-lg text-charcoal">{search.name}</p>
+                  <p className="mt-0.5 text-sm text-gray-500">{search.summary}</p>
+                  <p className="mt-2 text-xs text-gray-400">
+                    {search.match_count} {search.match_count === 1 ? 'property matches' : 'properties match'} right now
+                    {search.last_notified_at ? ` · last alert ${new Date(search.last_notified_at).toLocaleDateString('en-NG')}` : ' · no alert sent yet'}
+                  </p>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                  search.alert_enabled ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-gray-50 text-gray-500'
+                }`}>
+                  {search.alert_enabled ? 'Alerts on' : 'Paused'}
+                </span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-50 pt-4">
+                <label className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                  Alerts
+                  <select
+                    value={search.alert_frequency}
+                    disabled={busyId === search.id}
+                    onChange={(event) => update(search.id, { alert_frequency: event.target.value })}
+                    className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-bold text-charcoal outline-none focus:border-forest"
+                  >
+                    <option value="instant">As soon as it is listed</option>
+                    <option value="daily">Daily summary</option>
+                    <option value="weekly">Weekly summary</option>
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  disabled={busyId === search.id}
+                  onClick={() => update(search.id, { alert_enabled: !search.alert_enabled })}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-forest hover:text-forest disabled:opacity-50"
+                >
+                  {search.alert_enabled ? <><Pause className="h-3.5 w-3.5" /> Pause</> : <><Play className="h-3.5 w-3.5" /> Resume</>}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={busyId === search.id}
+                  onClick={() => remove(search.id, search.name)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </button>
+
+                <Link href="/properties" className="ml-auto text-xs font-bold text-forest hover:underline">
+                  View matches
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

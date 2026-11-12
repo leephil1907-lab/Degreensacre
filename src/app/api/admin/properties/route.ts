@@ -1,4 +1,5 @@
 import { notifyListingChange, notifyEvents } from '@/lib/email-events';
+import { notifySavedSearchMatches } from '@/lib/saved-search-alerts';
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
 import { isUuid, NIGERIAN_STATES, PROPERTY_TYPES } from '@/lib/validation';
@@ -143,6 +144,10 @@ export async function PUT(request: NextRequest) {
     const { data, error } = await auth.context.supabase.from('properties').update(payload).eq('id', id).select('*').single();
     if (error) return databaseError(error, 'The property could not be updated.');
     await notifyListingChange(auth.context.supabase, previous, data);
+    // A listing that just went public is the moment saved-search alerts exist for.
+    if (previous.status !== 'available' && data.status === 'available') {
+      await notifySavedSearchMatches(auth.context.supabase, data);
+    }
     return NextResponse.json({ property: data, success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid property.', success: false }, { status: 400 });
@@ -177,6 +182,10 @@ export async function PATCH(request: NextRequest) {
     const { data, error } = await auth.context.supabase.from('properties').update(updates).eq('id', id).select('*').single();
     if (error) return databaseError(error, 'The property could not be moderated.');
     await notifyListingChange(auth.context.supabase, previous, data);
+    // A listing that just went public is the moment saved-search alerts exist for.
+    if (previous.status !== 'available' && data.status === 'available') {
+      await notifySavedSearchMatches(auth.context.supabase, data);
+    }
     return NextResponse.json({ property: data, success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid moderation request.', success: false }, { status: 400 });

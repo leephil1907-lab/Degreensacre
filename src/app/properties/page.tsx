@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Bath, Bed, Camera, Car, CheckCircle, Grid3X3, Heart, Home,
-  List, Loader2, Map as MapIcon, MapPin, Search, SearchX, SlidersHorizontal,
+  Bell, BellRing, List, Loader2, Map as MapIcon, MapPin, Search, SearchX, SlidersHorizontal,
   Square, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -169,6 +169,10 @@ function PropertiesContent() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState('');
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false);
+  const [saveSearchName, setSaveSearchName] = useState('');
+  const [saveSearchState, setSaveSearchState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveSearchError, setSaveSearchError] = useState('');
 
   const loadProperties = useCallback(async (offset = 0, append = false) => {
     if (append) setLoadingMore(true);
@@ -263,6 +267,26 @@ function PropertiesContent() {
   const displayedProperties = sortedProperties.slice(0, visibleCount);
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const hasActiveFilters = activeFilterCount > 0;
+  const saveSearch = async () => {
+    setSaveSearchError('');
+    setSaveSearchState('saving');
+    try {
+      const response = await fetch('/api/searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ criteria: filters, name: saveSearchName.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'That search could not be saved.');
+      setSaveSearchState('saved');
+      setActionNotice(`Search saved. We will e-mail you when a property matches “${data.search?.name ?? 'your search'}”.`);
+      setTimeout(() => { setSaveSearchOpen(false); setSaveSearchState('idle'); setSaveSearchName(''); }, 1600);
+    } catch (error) {
+      setSaveSearchState('idle');
+      setSaveSearchError(error instanceof Error ? error.message : 'That search could not be saved.');
+    }
+  };
+
   const hasMore = visibleCount < sortedProperties.length || properties.length < totalProperties;
 
   const updateFilter = (key: keyof Filters, value: string) => setFilters((current) => ({ ...current, [key]: value }));
@@ -359,6 +383,16 @@ function PropertiesContent() {
             <label className="hidden lg:block"><span className="sr-only">Maximum price</span><select value={filters.maxPrice} onChange={(event) => updateFilter('maxPrice', event.target.value)} className={controlClass}><option value="">Any price</option><option value="30000000">Under ₦30M</option><option value="50000000">Under ₦50M</option><option value="100000000">Under ₦100M</option><option value="200000000">Under ₦200M</option><option value="500000000">Under ₦500M</option></select></label>
             <label className="hidden lg:block"><span className="sr-only">Minimum bedrooms</span><select value={filters.bedrooms} onChange={(event) => updateFilter('bedrooms', event.target.value)} className={controlClass}><option value="">Any beds</option>{[1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}+ beds</option>)}</select></label>
             <button type="button" onClick={() => setShowFilters((open) => !open)} aria-expanded={showFilters} aria-controls="advanced-property-filters" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold transition-colors ${showFilters ? 'bg-forest text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}><SlidersHorizontal className="h-4 w-4" /> Filters{activeFilterCount > 0 && <span className={`grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] ${showFilters ? 'bg-white text-forest' : 'bg-forest text-white'}`}>{activeFilterCount}</span>}</button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!user) { router.push('/signin?redirect=/properties'); return; }
+                setSaveSearchOpen(true);
+              }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-forest/30 px-4 py-2.5 text-sm font-extrabold text-forest transition-colors hover:bg-forest-50"
+            >
+              <Bell className="h-4 w-4" /> Save this search
+            </button>
             {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex min-h-10 items-center gap-1 px-2 text-xs font-extrabold text-red-700 hover:underline"><X className="h-3.5 w-3.5" /> Clear</button>}
           </div>
 
@@ -381,6 +415,40 @@ function PropertiesContent() {
             <label className="flex items-center gap-1 text-xs text-gray-500"><span className="hidden sm:inline">Sort:</span><select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="rounded-lg border border-transparent bg-transparent px-1 py-1 font-bold text-charcoal outline-none focus:border-forest"><option value="newest">Newest</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="popular">Most viewed</option></select></label>
           </div>
         </div>
+        {saveSearchOpen && (
+          <div className="border-t border-forest/10 bg-white">
+            <div className="container-custom flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
+              <div className="flex items-start gap-3 sm:flex-1">
+                <BellRing className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
+                <div>
+                  <p className="text-sm font-bold text-charcoal">Save this search</p>
+                  <p className="text-xs text-gray-500">We e-mail you when a newly published property matches these filters. Unsubscribe any time from your dashboard.</p>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  value={saveSearchName}
+                  onChange={(event) => setSaveSearchName(event.target.value)}
+                  placeholder="Name this search (optional)"
+                  maxLength={80}
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-forest"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={saveSearch}
+                    disabled={saveSearchState === 'saving' || saveSearchState === 'saved'}
+                    className="min-h-11 flex-1 rounded-xl bg-forest px-4 text-sm font-bold text-white transition hover:bg-forest-light disabled:opacity-60 sm:flex-none"
+                  >
+                    {saveSearchState === 'saving' ? 'Saving…' : saveSearchState === 'saved' ? 'Saved ✓' : 'Save'}
+                  </button>
+                  <button type="button" onClick={() => setSaveSearchOpen(false)} className="min-h-11 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+                </div>
+              </div>
+            </div>
+            {saveSearchError && <p className="container-custom pb-3 text-xs font-semibold text-red-700">{saveSearchError}</p>}
+          </div>
+        )}
         {actionNotice && <div className="border-t border-forest/10 bg-forest-50"><div className="container-custom flex items-center justify-between gap-3 py-2 text-xs font-semibold text-forest-800" role="status"><span>{actionNotice}</span><button type="button" onClick={() => setActionNotice('')} aria-label="Dismiss notification"><X className="h-4 w-4" /></button></div></div>}
       </section>
 

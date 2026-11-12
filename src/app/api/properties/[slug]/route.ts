@@ -1,4 +1,5 @@
 import { notifyListingChange, notifyEvents } from '@/lib/email-events';
+import { notifySavedSearchMatches } from '@/lib/saved-search-alerts';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase-server';
 import { getPropertyBySlug, incrementPropertyView } from '@/lib/db-helpers';
@@ -159,6 +160,9 @@ export async function PATCH(
     });
 
     await notifyListingChange(supabase, existing, property);
+    if (existing?.status !== 'available' && property.status === 'available') {
+      await notifySavedSearchMatches(supabase, property);
+    }
     return NextResponse.json({ property, success: true });
   } catch (error) {
     console.error('PATCH /api/properties/[slug] error:', error);
