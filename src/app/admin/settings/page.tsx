@@ -132,7 +132,7 @@ export default function AdminSettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Global website configuration</p>
-        <h2 className="font-display text-3xl text-charcoal">Site Settings</h2>
+        <h1 className="font-display text-3xl text-charcoal">Site Settings</h1>
         <p className="mt-2 text-sm text-gray-500">Manage the company details used by public contact actions and inspection requests.</p>
       </div>
 

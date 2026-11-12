@@ -29,7 +29,7 @@ const cspDirectives = [
   "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://adservice.google.com https://fundingchoicesmessages.google.com https://ep1.adtrafficquality.google",
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-  "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.doubleclick.net https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https://degreenacres.org https://*.degreenacres.org https://degreensacre.onrender.com https://*.supabase.co https://images.unsplash.com https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.doubleclick.net https://*.googleusercontent.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.doubleclick.net",
   "frame-src 'self' https://www.openstreetmap.org https://www.google.com https://maps.google.com https://*.matterport.com https://*.kuula.co https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
   "worker-src 'self' blob:",
@@ -37,7 +37,7 @@ const cspDirectives = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
   'upgrade-insecure-requests',
 ].join('; ');
 

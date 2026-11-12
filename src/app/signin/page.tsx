@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { whatsappLink } from '@/lib/site-settings';
 import { Eye, EyeOff, ArrowRight, Shield, Mail, Lock } from 'lucide-react';
 import AuthBrandingPanel from '@/components/AuthBrandingPanel';
 import Logo from '@/components/Logo';
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 function SignInContent() {
   const router = useRouter();
@@ -38,10 +40,25 @@ function SignInContent() {
     setIsLoading(true);
     setError('');
     try {
-      await signIn(email.trim(), password);
-      router.replace(destination);
+      const data = await signIn(email.trim(), password);
+      // Administrators belong in the control panel, not the buyer dashboard.
+      let isAdmin = false;
+      if (data?.user) {
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        isAdmin = Boolean(profileRow?.is_admin);
+      }
+      const target = requestedRedirect
+        ? destination
+        : isAdmin
+          ? '/admin/dashboard'
+          : '/dashboard';
+      router.replace(target);
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password. Please try again.');
+      setError(friendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }

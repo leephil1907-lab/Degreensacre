@@ -21,7 +21,7 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
-  slug: '', title: '', description: '', property_type: '', type: 'sale', price: '', price_period: '',
+  slug: '', title: '', description: '', property_type: 'Detached Duplex', type: 'sale', price: '', price_period: '',
   bedrooms: '0', bathrooms: '0', toilets: '0', parking: '0', sqm: '0', land_size: '',
   address: '', area: '', lga: '', city: '', state: 'Lagos', latitude: '', longitude: '', documentation: '',
   status: 'draft', verification_status: 'pending', furnished: false, serviced: false,
@@ -112,6 +112,21 @@ export default function AdminPropertiesPage() {
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Never let a blocked HTML5 validation leave the administrator guessing.
+    const missing: string[] = [];
+    if (!form.title.trim()) missing.push('a listing title');
+    if (!form.slug.trim()) missing.push('a URL slug');
+    if (!form.property_type) missing.push('a property type');
+    if (!form.price || Number(form.price) <= 0) missing.push('a price');
+    if (!form.area.trim()) missing.push('an area or neighbourhood');
+    if (form.description.trim().length < 50) missing.push('a description of at least 50 characters');
+    if (missing.length > 0) {
+      setError(`Please complete ${missing.join(', ')} before saving.`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setSaving(true);
     setError('');
     setNotice('');
@@ -271,7 +286,7 @@ export default function AdminPropertiesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Inventory</p><h2 className="font-display text-3xl text-charcoal">Properties</h2><p className="mt-2 text-sm text-gray-500">Create, verify, publish and maintain every listing field.</p></div>
+        <div><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Inventory</p><h1 className="font-display text-3xl text-charcoal">Properties</h1><p className="mt-2 text-sm text-gray-500">Create, verify, publish and maintain every listing field.</p></div>
         <button onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white hover:bg-forest-light"><Plus className="h-4 w-4" /> Add property</button>
       </div>
 

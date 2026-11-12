@@ -119,7 +119,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl text-charcoal">User Management</h2>
+          <h1 className="font-display text-2xl text-charcoal">User Management</h1>
           <p className="text-sm text-gray-500 mt-1">{total} registered user{total !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={exportCSV} className="flex items-center gap-2 bg-forest text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-forest-light transition-colors">

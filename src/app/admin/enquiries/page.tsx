@@ -85,7 +85,7 @@ export default function EnquiriesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="font-display text-2xl text-charcoal">Enquiries & Messages</h2>
+        <h1 className="font-display text-2xl text-charcoal">Enquiries &amp; Messages</h1>
         <p className="text-sm text-gray-500 mt-1">{total} total enquiries · {enquiries.filter(e => e.status === 'new').length} new</p>
       </div>
 

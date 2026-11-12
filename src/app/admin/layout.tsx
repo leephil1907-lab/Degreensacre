@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Building2, Users, MessageSquare, Settings, Inbox,
   LogOut, Bell, Menu, X, ChevronRight, Mail, Star, Loader2,
-  BookOpenText, ExternalLink,
+  BookOpenText, ExternalLink, Receipt, ShieldCheck,
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,8 +14,10 @@ import { useAuth } from '@/contexts/AuthContext';
 const navigation = [
   { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Properties', href: '/admin/properties', icon: Building2 },
+  { name: 'Invoices', href: '/admin/invoices', icon: Receipt },
   { name: 'Content Manager', href: '/admin/content', icon: BookOpenText },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Management', href: '/admin/management', icon: ShieldCheck },
   { name: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
   { name: 'Contact Inbox', href: '/admin/messages', icon: Inbox },
   { name: 'Reviews', href: '/admin/content/reviews', icon: Star },
@@ -114,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <button className="rounded-xl p-2 text-gray-600 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open admin navigation"><Menu className="h-6 w-6" /></button>
             <div>
-              <h1 className="font-display text-xl text-charcoal sm:text-2xl">Administration</h1>
+              <p className="font-display text-xl text-charcoal sm:text-2xl">Administration</p>
               <p className="hidden text-xs text-gray-400 sm:block">Content and operations control centre</p>
             </div>
           </div>

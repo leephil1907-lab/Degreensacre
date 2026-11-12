@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Manrope } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { PublicHeader, PublicFooter } from "@/components/SiteChrome";
 import PageTransition from "@/components/PageTransition";
-import WhatsAppFloat from "@/components/WhatsAppFloat";
-import CookieConsent from "@/components/CookieConsent";
 import PWARegister from "@/components/PWARegister";
 import { Providers } from "@/components/Providers";
 import { GoogleAdsenseScript } from "@/components/GoogleAdsense";
@@ -189,15 +186,13 @@ export default function RootLayout({
       </head>
       <body className={`${manrope.variable} ${dmSerif.variable} font-sans`}>
         <Providers>
-          <Header />
+          <PublicHeader />
           <main className="min-h-screen">
             <PageTransition>
               {children}
             </PageTransition>
           </main>
-          <Footer />
-          <WhatsAppFloat />
-          <CookieConsent />
+          <PublicFooter />
           <PWARegister />
         </Providers>
       </body>

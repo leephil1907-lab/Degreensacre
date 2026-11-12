@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { whatsappLink } from '@/lib/site-settings';
 import { ArrowLeft, CheckCircle, Shield, Mail, ArrowRight, Lock, KeyRound } from 'lucide-react';
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 export default function ForgotPasswordPage() {
   const { resetPassword } = useAuth();
@@ -26,7 +27,7 @@ export default function ForgotPasswordPage() {
       await resetPassword(email.trim());
       setIsSubmitted(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send reset email. Please try again.');
+      setError(friendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }

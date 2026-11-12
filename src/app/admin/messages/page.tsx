@@ -74,7 +74,7 @@ export default function AdminMessagesPage() {
 
   return (
     <div className="space-y-6">
-      <div><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Visitor requests</p><h2 className="font-display text-3xl text-charcoal">Contact Inbox</h2><p className="mt-2 text-sm text-gray-500">Review contact messages and inspection requests saved by the public website.</p></div>
+      <div><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Visitor requests</p><h1 className="font-display text-3xl text-charcoal">Contact Inbox</h1><p className="mt-2 text-sm text-gray-500">Review contact messages and inspection requests saved by the public website.</p></div>
       <div className="grid grid-cols-3 gap-4"><div className="rounded-2xl border border-gray-100 bg-white p-4"><p className="text-2xl font-bold text-charcoal">{messages.length}</p><p className="text-xs text-gray-500">Total messages</p></div><div className="rounded-2xl border border-gray-100 bg-white p-4"><p className="text-2xl font-bold text-amber-600">{newCount}</p><p className="text-xs text-gray-500">New / unread</p></div><div className="rounded-2xl border border-gray-100 bg-white p-4"><p className="text-2xl font-bold text-forest">{inspectionCount}</p><p className="text-xs text-gray-500">Inspection requests</p></div></div>
       {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}<button onClick={() => void loadMessages()} className="ml-3 font-bold underline">Retry</button></div>}
 

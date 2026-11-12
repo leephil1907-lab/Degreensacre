@@ -170,7 +170,7 @@ export default function ComposeEmailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl text-charcoal">Compose Email</h2>
+          <h1 className="font-display text-2xl text-charcoal">Compose Email</h1>
           <p className="text-sm text-gray-500 mt-1">Send relevant, branded service emails to your users</p>
         </div>
         <button

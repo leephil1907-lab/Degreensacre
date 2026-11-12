@@ -27,7 +27,7 @@ export async function requireAdminApi(): Promise<AdminAuthResult> {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, is_suspended')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -45,6 +45,15 @@ export async function requireAdminApi(): Promise<AdminAuthResult> {
     return {
       response: NextResponse.json(
         { error: 'Administrator access required.', success: false },
+        { status: 403 },
+      ),
+    };
+  }
+
+  if (profile.is_suspended) {
+    return {
+      response: NextResponse.json(
+        { error: 'This administrator account is suspended.', success: false },
         { status: 403 },
       ),
     };

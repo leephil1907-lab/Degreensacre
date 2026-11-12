@@ -244,7 +244,7 @@ export default function ContentManager({ resourceName }: { resourceName: string 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-sage">Website content</p>
-          <h2 className="font-display text-3xl text-charcoal">{resource.plural}</h2>
+          <h1 className="font-display text-3xl text-charcoal">{resource.plural}</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">{resource.description}</p>
         </div>
         <button onClick={openCreate} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white transition hover:bg-forest-light">

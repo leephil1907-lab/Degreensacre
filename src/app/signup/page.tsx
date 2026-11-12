@@ -9,6 +9,7 @@ import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ArrowLeft, Building2,
 import AuthBrandingPanel from '@/components/AuthBrandingPanel';
 import Logo from '@/components/Logo';
 import { NIGERIAN_STATES } from '@/lib/validation';
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 const ACCOUNT_TYPES = [
   { value: 'buyer', label: 'Buyer / Investor', icon: Home, desc: 'Find and purchase properties' },
@@ -61,7 +62,7 @@ export default function SignUpPage() {
       else if (result?.requiresEmailConfirmation) router.replace('/signin?verified=pending');
       else router.replace('/signin?verified=created');
     } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
+      setError(friendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }
