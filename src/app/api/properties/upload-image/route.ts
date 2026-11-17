@@ -84,10 +84,10 @@ export async function POST(request: NextRequest) {
       image: { id: imageId, url, path, display_order: displayOrder, is_primary: isPrimary },
       success: true,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('POST /api/properties/upload-image error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to upload image', success: false },
+      { error: 'Failed to upload image', success: false },
       { status: 500 }
     );
   }

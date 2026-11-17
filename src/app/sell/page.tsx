@@ -1,6 +1,5 @@
 'use client';
 
-import ScrollReveal from '@/components/ScrollReveal';
 import Link from 'next/link';
 
 export default function SellPage() {

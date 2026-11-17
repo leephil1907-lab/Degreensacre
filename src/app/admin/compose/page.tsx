@@ -8,11 +8,12 @@ import {
   Mail, Send, CheckCircle, AlertCircle, Globe, User, Loader2,
   Users, ShoppingCart, Building2, Briefcase, Shield, UserCheck, UserX
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface RecipientOption {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   count: number;
 }
 
@@ -52,47 +53,6 @@ export default function ComposeEmailPage() {
     if (profile && !profile.is_admin) { router.push('/'); return; }
   }, [user, profile, router]);
 
-  // Fetch real user counts
-  const fetchCounts = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/users?limit=1000');
-      if (res.ok) {
-        const data = await res.json();
-        const users = data.users || [];
-        const total = users.length;
-        const buyers = users.filter((u: any) => u.account_type === 'buyer').length;
-        const sellers = users.filter((u: any) => u.account_type === 'seller').length;
-        const agents = users.filter((u: any) => u.account_type === 'agent').length;
-        const verified = users.filter((u: any) => u.is_verified).length;
-        const unverified = users.filter((u: any) => !u.is_verified).length;
-        const admins = users.filter((u: any) => u.is_admin).length;
-
-        setRecipientOptions([
-          { id: 'all', label: 'All Users', icon: Users, count: total },
-          { id: 'buyers', label: 'Buyers', icon: ShoppingCart, count: buyers },
-          { id: 'sellers', label: 'Sellers', icon: Building2, count: sellers },
-          { id: 'agents', label: 'Agents', icon: Briefcase, count: agents },
-          { id: 'verified', label: 'Verified Users', icon: UserCheck, count: verified },
-          { id: 'unverified', label: 'Unverified Users', icon: UserX, count: unverified },
-          { id: 'admins', label: 'Admins', icon: Shield, count: admins },
-          { id: 'custom', label: 'Custom Emails', icon: Mail, count: 0 },
-        ]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch user counts:', err);
-      // Fallback
-      setRecipientOptions([
-        { id: 'all', label: 'All Users', icon: Users, count: 0 },
-        { id: 'buyers', label: 'Buyers', icon: ShoppingCart, count: 0 },
-        { id: 'sellers', label: 'Sellers', icon: Building2, count: 0 },
-        { id: 'agents', label: 'Agents', icon: Briefcase, count: 0 },
-        { id: 'custom', label: 'Custom Emails', icon: Mail, count: 0 },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   // Fetch sent email history
   const fetchHistory = useCallback(async () => {
     try {
@@ -106,15 +66,54 @@ export default function ComposeEmailPage() {
     }
   }, []);
 
-  useEffect(() => { fetchCounts(); fetchHistory(); }, [fetchCounts, fetchHistory]);
-
-  // Apply template content
   useEffect(() => {
-    if (template !== 'custom' && templateMessages[template]) {
-      setSubject(templateMessages[template].subject);
-      setMessage(templateMessages[template].body);
+    let active = true;
+    fetch('/api/admin/users?limit=1000')
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        const users: Array<{ account_type?: string; is_verified?: boolean; is_admin?: boolean }> = data.users || [];
+        setRecipientOptions([
+          { id: 'all', label: 'All Users', icon: Users, count: users.length },
+          { id: 'buyers', label: 'Buyers', icon: ShoppingCart, count: users.filter((u) => u.account_type === 'buyer').length },
+          { id: 'sellers', label: 'Sellers', icon: Building2, count: users.filter((u) => u.account_type === 'seller').length },
+          { id: 'agents', label: 'Agents', icon: Briefcase, count: users.filter((u) => u.account_type === 'agent').length },
+          { id: 'verified', label: 'Verified Users', icon: UserCheck, count: users.filter((u) => u.is_verified).length },
+          { id: 'unverified', label: 'Unverified Users', icon: UserX, count: users.filter((u) => !u.is_verified).length },
+          { id: 'admins', label: 'Admins', icon: Shield, count: users.filter((u) => u.is_admin).length },
+          { id: 'custom', label: 'Custom Emails', icon: Mail, count: 0 },
+        ]);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch user counts:', err);
+        if (active) {
+          setRecipientOptions([
+            { id: 'all', label: 'All Users', icon: Users, count: 0 },
+            { id: 'buyers', label: 'Buyers', icon: ShoppingCart, count: 0 },
+            { id: 'sellers', label: 'Sellers', icon: Building2, count: 0 },
+            { id: 'agents', label: 'Agents', icon: Briefcase, count: 0 },
+            { id: 'custom', label: 'Custom Emails', icon: Mail, count: 0 },
+          ]);
+        }
+      })
+      .finally(() => { if (active) setLoading(false); });
+
+    fetch('/api/admin/send-email')
+      .then(async (res) => (res.ok ? res.json() : null))
+      .then((data) => { if (active && data) setSentEmails(data.emails || []); })
+      .catch((err) => console.error('Failed to fetch email history:', err));
+
+    return () => { active = false; };
+  }, []);
+
+  const selectTemplate = (nextTemplate: string) => {
+    setTemplate(nextTemplate);
+    if (nextTemplate !== 'custom' && templateMessages[nextTemplate]) {
+      setSubject(templateMessages[nextTemplate].subject);
+      setMessage(templateMessages[nextTemplate].body);
     }
-  }, [template]);
+  };
 
   const handleSend = async () => {
     if (!subject || !message) {
@@ -152,8 +151,8 @@ export default function ComposeEmailPage() {
       } else {
         setResult({ success: false, message: data.error || 'Failed to send email' });
       }
-    } catch (err: any) {
-      setResult({ success: false, message: err.message || 'Network error' });
+    } catch (err) {
+      setResult({ success: false, message: err instanceof Error ? err.message : 'Network error' });
     } finally {
       setSending(false);
     }
@@ -241,7 +240,7 @@ export default function ComposeEmailPage() {
                   return (
                     <button
                       key={t.id}
-                      onClick={() => setTemplate(t.id)}
+                      onClick={() => selectTemplate(t.id)}
                       className={`p-4 rounded-xl border-2 text-center transition-all ${
                         template === t.id ? 'border-forest bg-forest/5' : 'border-gray-100 hover:border-gray-200'
                       }`}

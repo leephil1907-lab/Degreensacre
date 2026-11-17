@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -7,8 +8,50 @@ import { MapPin, FileCheck, CreditCard, Eye, TreePine, ArrowRight, CheckCircle, 
 import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
 
+type RawLandProperty = {
+  id: string;
+  slug?: string;
+  title: string;
+  description?: string | null;
+  price: number;
+  price_period?: string | null;
+  area: string;
+  state: string;
+  images?: string[];
+  property_images?: Array<{ url: string }>;
+  sqm?: number | null;
+  land_size?: number | null;
+  verification_status?: string | null;
+  available_plots?: number | null;
+  availablePlots?: number | null;
+  total_plots?: number | null;
+  totalPlots?: number | null;
+  payment_plan?: string | null;
+  paymentPlan?: string | null;
+  development_status?: string | null;
+  developmentStatus?: string | null;
+  documentation?: string | null;
+  landmarks?: string[];
+  features?: string[];
+  coordinates?: { lat: number; lng: number } | null;
+  region?: string | null;
+};
+
+type LandProperty = RawLandProperty & {
+  images: string[];
+  sqm: number;
+  landSize: number;
+  verified: boolean;
+  verificationStatus?: string | null;
+  availablePlots: number | null;
+  totalPlots: number | null;
+  paymentPlan: string | null;
+  developmentStatus: string | null;
+  pricePerSqm?: number;
+};
+
 export default function LandPage() {
-  const [dbLand, setDbLand] = useState<any[]>([]);
+  const [dbLand, setDbLand] = useState<LandProperty[]>([]);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
@@ -18,11 +61,11 @@ export default function LandPage() {
         const res = await fetch('/api/properties?propertyType=Land&limit=50');
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Land listings could not be loaded.');
-        const list = (data.properties || []).map((p: any) => ({
+        const list = (data.properties || []).map((p: RawLandProperty): LandProperty => ({
           ...p,
-          images: p.images || p.property_images?.map((x: any) => x.url) || [],
-          sqm: p.sqm || p.land_size || 0,
-          landSize: p.land_size || p.sqm || 0,
+          images: p.images || p.property_images?.map((x) => x.url) || [],
+          sqm: Number(p.sqm || p.land_size || 0),
+          landSize: Number(p.land_size || p.sqm || 0),
           verified: p.verification_status === 'verified',
           verificationStatus: p.verification_status,
           availablePlots: p.available_plots ?? p.availablePlots ?? null,
@@ -42,13 +85,13 @@ export default function LandPage() {
   }, []);
 
   const landProperties = dbLand;
-  const regions = [...new Set(landProperties.map((p: any) => p.region).filter(Boolean))];
+  const regions = [...new Set(landProperties.map((p) => p.region).filter((r): r is string => Boolean(r)))];
   const [activeRegion, setActiveRegion] = useState('all');
   const [expandedMap, setExpandedMap] = useState<string | null>(null);
 
-  const filtered = activeRegion === 'all' ? landProperties : landProperties.filter((p: any) => p.region === activeRegion);
+  const filtered = activeRegion === 'all' ? landProperties : landProperties.filter((p) => p.region === activeRegion);
   const hasPlotInventory = landProperties.some((property) => property.availablePlots !== null);
-  const totalAvailable = landProperties.reduce((sum: number, p: any) => sum + (p.availablePlots || 0), 0);
+  const totalAvailable = landProperties.reduce((sum: number, p) => sum + (p.availablePlots || 0), 0);
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -164,8 +207,8 @@ export default function LandPage() {
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                       {/* Image */}
-                      <div className="relative h-64 lg:h-auto overflow-hidden">
-                        <img src={getPropertyImage(property)} alt={property.title} className="w-full h-full object-cover" />
+                      <div className="relative h-64 lg:h-auto lg:min-h-[280px] overflow-hidden">
+                        <Image src={getPropertyImage(property)} alt={property.title} fill sizes="(max-width: 1024px) 100vw, 33vw" unoptimized className="object-cover" />
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-amber-600 text-white px-3 py-1 text-xs font-bold rounded-md">LAND</span>
                           {property.verified && (

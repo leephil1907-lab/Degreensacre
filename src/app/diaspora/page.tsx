@@ -1,11 +1,27 @@
-import { isStockImage } from '@/lib/property';
+import Image from 'next/image';
+import { isStockImage, PUBLIC_PROPERTY_COLUMNS } from '@/lib/property';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { DEFAULT_SITE_SETTINGS, whatsappLink } from '@/lib/site-settings';
+import DiasporaCurrencyConverter from '@/components/DiasporaCurrencyConverter';
+
+type PropertyListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  area: string;
+  state: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqm: number;
+  featured: boolean;
+  images: string[];
+};
 
 export default async function DiasporaInvestmentPage() {
   let settings = { ...DEFAULT_SITE_SETTINGS };
-  let investmentProperties: any[] = [];
+  let investmentProperties: PropertyListItem[] = [];
   let loadError = '';
   try {
     const supabase = await createServerSupabaseClient();
@@ -13,18 +29,18 @@ export default async function DiasporaInvestmentPage() {
     if (savedSettings?.settings) settings = { ...settings, ...savedSettings.settings };
     const { data, error } = await supabase
       .from('properties')
-      .select('*, property_images(url, display_order, is_primary)')
+      .select(`${PUBLIC_PROPERTY_COLUMNS}, property_images(url, display_order, is_primary)`)
       .eq('verification_status', 'verified')
       .eq('status', 'available')
       .order('featured', { ascending: false })
       .order('date_added', { ascending: false })
       .limit(6);
     if (error) throw error;
-    investmentProperties = (data || []).map((property: any) => {
+    investmentProperties = (data || []).map((property) => {
       const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
       const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
       const images = [...new Set([...galleryImages, ...legacyImages])].filter((url) => !isStockImage(url));
-      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'] };
+      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'] } as PropertyListItem;
     });
   } catch {
     loadError = 'Verified investment listings could not be loaded. Please try again later.';
@@ -34,10 +50,13 @@ export default async function DiasporaInvestmentPage() {
     <div className="min-h-screen bg-ivory">
       {/* Hero Section */}
       <section className="relative h-[600px] overflow-hidden">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=90"
           alt="Global Investment"
-          className="w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/80 via-charcoal/60 to-charcoal/90" />
         
@@ -202,47 +221,7 @@ export default async function DiasporaInvestmentPage() {
       </section>
 
       {/* Currency Converter */}
-      <section className="section-padding bg-white">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-forest to-forest-600 rounded-2xl p-8 md:p-12 text-white">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-4">Currency Converter</h2>
-                <p className="text-white/90">See how much your investment is worth in Naira</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                  <div className="text-sm text-white/80 mb-2">Foreign Currency</div>
-                  <div className="flex items-center gap-3">
-                    <select className="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-3 font-semibold">
-                      <option>USD</option>
-                      <option>GBP</option>
-                      <option>EUR</option>
-                      <option>CAD</option>
-                    </select>
-                    <input
-                      type="number"
-                      placeholder="Amount"
-                      className="flex-1 bg-white/20 text-white border border-white/30 rounded-lg px-4 py-3 placeholder-white/60"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                  <div className="text-sm text-white/80 mb-2">Nigerian Naira (NGN)</div>
-                  <div className="text-3xl font-bold">₦0.00</div>
-                  <div className="text-xs text-white/60 mt-2">Exchange rate: ₦1,580/USD</div>
-                </div>
-              </div>
-
-              <div className="text-center text-sm text-white/80">
-                * Exchange rates are indicative and subject to market fluctuations
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <DiasporaCurrencyConverter />
 
       {/* Featured Properties */}
       <section className="section-padding bg-ivory">
@@ -261,10 +240,13 @@ export default async function DiasporaInvestmentPage() {
             {investmentProperties.map((property) => (
               <Link key={property.id} href={`/properties/${property.slug}`} className="card hover-lift group">
                 <div className="relative h-64 overflow-hidden">
-                  <img
+                  <Image
                     src={property.images[0]}
                     alt={property.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    unoptimized
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 left-4 flex flex-col space-y-2">
                     {property.featured && <span className="badge-featured">Featured</span>}

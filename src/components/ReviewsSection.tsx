@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, CheckCircle, MapPin, Quote, Loader2, Send, Shield } from 'lucide-react';
 
 interface Review {
@@ -58,21 +58,21 @@ export default function ReviewsSection() {
     name: '', email: '', rating: 5, title: '', message: '', location: '',
   });
 
-  const fetchReviews = useCallback(async () => {
-    try {
-      const res = await fetch('/api/reviews?limit=50');
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data.reviews || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch reviews:', err);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    let active = true;
+    fetch('/api/reviews?limit=50')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data) setReviews(data.reviews || []);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch reviews:', err);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, []);
-
-  useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,8 +99,8 @@ export default function ReviewsSection() {
         const data = await res.json();
         setError(data.error || 'Failed to submit review');
       }
-    } catch (err: any) {
-      setError(err.message || 'Network error');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setSubmitting(false);
     }

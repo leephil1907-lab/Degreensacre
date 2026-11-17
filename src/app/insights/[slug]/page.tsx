@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Calendar, Clock, User } from 'lucide-react';
@@ -53,7 +54,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-ivory">
       <section className="relative h-[440px] overflow-hidden md:h-[540px]">
-        <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
+        <Image src={article.image || '/property-placeholder.svg'} alt={article.title} fill sizes="100vw" unoptimized priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-charcoal/20" />
         <div className="absolute inset-x-0 bottom-0 p-6 md:p-12">
           <div className="container-custom max-w-4xl">
@@ -80,7 +81,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           </article>
 
           {related.length > 0 && (
-            <div className="mt-12"><h2 className="mb-6 font-display text-3xl text-charcoal">Related guides</h2><div className="grid gap-6 md:grid-cols-3">{related.map((item) => <Link key={item.id} href={`/insights/${item.slug}`} className="group overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-lg"><img src={item.image} alt={item.title} className="h-40 w-full object-cover transition group-hover:scale-[1.02]" /><div className="p-4"><span className="text-xs font-bold text-forest">{item.category}</span><h3 className="mt-2 line-clamp-2 font-bold leading-snug text-charcoal group-hover:text-forest">{item.title}</h3><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-forest">Read guide <ArrowRight className="h-3.5 w-3.5" /></span></div></Link>)}</div></div>
+            <div className="mt-12"><h2 className="mb-6 font-display text-3xl text-charcoal">Related guides</h2><div className="grid gap-6 md:grid-cols-3">{related.map((item) => <Link key={item.id} href={`/insights/${item.slug}`} className="group overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-lg"><div className="relative h-40 w-full overflow-hidden"><Image src={item.image || '/property-placeholder.svg'} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" unoptimized className="object-cover transition group-hover:scale-[1.02]" /></div><div className="p-4"><span className="text-xs font-bold text-forest">{item.category}</span><h3 className="mt-2 line-clamp-2 font-bold leading-snug text-charcoal group-hover:text-forest">{item.title}</h3><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-forest">Read guide <ArrowRight className="h-3.5 w-3.5" /></span></div></Link>)}</div></div>
           )}
         </div>
       </section>

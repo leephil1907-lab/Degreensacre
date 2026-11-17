@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { whatsappLink } from '@/lib/site-settings';
-import { ArrowLeft, CheckCircle, Shield, Mail, ArrowRight, Lock, KeyRound } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield, Mail, ArrowRight } from 'lucide-react';
 import { friendlyAuthError } from '@/lib/auth-errors';
 
 export default function ForgotPasswordPage() {
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
     try {
       await resetPassword(email.trim());
       setIsSubmitted(true);
-    } catch (err: any) {
+    } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
       setIsLoading(false);

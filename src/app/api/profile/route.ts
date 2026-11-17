@@ -54,16 +54,23 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const updates: any = {};
+    const updates: Record<string, string | null> = {};
+
+    if (body.phone && typeof body.phone === 'string' && !isPhone(body.phone.trim())) {
+      return NextResponse.json(
+        { error: 'Please provide a valid phone number', success: false },
+        { status: 400 }
+      );
+    }
 
     // Allowed fields
-    const allowedFields: Record<string, (value: any) => any> = {
-      first_name: (v) => sanitizeForDb(v),
-      last_name: (v) => sanitizeForDb(v),
-      phone: (v) => v ? sanitizeForDb(v) : null,
-      country: (v) => sanitizeForDb(v),
-      state: (v) => v && NIGERIAN_STATES.includes(v) ? v : null,
-      bio: (v) => sanitizeForDb(v),
+    const allowedFields: Record<string, (value: unknown) => string | null> = {
+      first_name: (v) => sanitizeForDb(String(v ?? '')),
+      last_name: (v) => sanitizeForDb(String(v ?? '')),
+      phone: (v) => (v ? sanitizeForDb(String(v)) : null),
+      country: (v) => sanitizeForDb(String(v ?? '')),
+      state: (v) => (typeof v === 'string' && NIGERIAN_STATES.includes(v) ? v : null),
+      bio: (v) => sanitizeForDb(String(v ?? '')),
     };
 
     for (const [field, transform] of Object.entries(allowedFields)) {

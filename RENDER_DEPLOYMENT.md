@@ -19,7 +19,7 @@ Review the instance plan shown by Render before creating the service. The Bluepr
 1. Create or open the Supabase project.
 2. Back up the target database. For a fresh database, run `supabase-schema.sql` first and then `supabase-production-cms-migration.sql`. For an existing database, review and apply the production migration during a controlled maintenance window; test the same sequence on staging first. The migration inserts no listings, reviews, profiles, agencies, agents, developments or articles, and it changes publication defaults without deleting existing records. Audit any records created by retired seed scripts separately before launch.
 3. The production migration creates the public `property-images` bucket and its owner/admin RLS policies. Verify that bucket and policies after the migration; do not substitute a service-role key or make private document buckets public.
-4. Copy the Supabase project URL and **anon/publishable key**. This application is designed for anon-key access with Row Level Security; do not add a service-role key to Render.
+4. Copy the Supabase project URL and **anon/publishable key**. Public and user-scoped reads use the anon key under Row Level Security. Only add `SUPABASE_SERVICE_ROLE_KEY` on the server if you enable server-side custom auth mail (`src/lib/auth-mailer.tsx`), staff auth-ban synchronization, or the scheduled saved-search digest (`/api/cron/saved-searches`); it is restricted to `createServiceRoleClient()` and never exposed to the browser.
 5. Create a Resend API key and verify the sender domain used by `EMAIL_FROM`.
 
 ## 2. Create the Render service with the Blueprint
@@ -34,8 +34,11 @@ Review the instance plan shown by Render before creating the service. The Bluepr
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://YOUR_PROJECT.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-| `NEXT_PUBLIC_SITE_URL` | Expected Render URL, for example `https://degreensacre.onrender.com`, or the final HTTPS custom domain |
+| `SUPABASE_SERVICE_ROLE_KEY` | Optional server-only service-role key (required for `/api/cron/saved-searches`, custom Resend auth mail, and staff auth-ban sync) |
+| `CRON_SECRET` | Long random secret guarding `GET /api/cron/saved-searches` (`Authorization: Bearer <CRON_SECRET>`) |
+| `NEXT_PUBLIC_SITE_URL` | Expected Render URL (`https://degreensacre.onrender.com`) or final HTTPS custom domain |
 | `RESEND_API_KEY` | A newly created Resend API key |
+| `EMAIL_NOTIFICATIONS_TO` | Monitored internal inbox for contact, inspection, and moderation alerts |
 
 Render supplies `PORT` and `RENDER_EXTERNAL_URL`; do not set either manually. Non-secret company, WhatsApp, and sender settings are declared in `render.yaml` and can be changed in **Environment**.
 
@@ -43,17 +46,28 @@ Render supplies `PORT` and `RENDER_EXTERNAL_URL`; do not set either manually. No
 
 If Render assigns a different `onrender.com` hostname, update `NEXT_PUBLIC_SITE_URL` to the assigned HTTPS URL and redeploy. `NEXT_PUBLIC_*` values are embedded during the build, so changing them requires a new deploy.
 
-## 3. Configure authentication redirects
+## 3. Configure Supabase Auth redirects, password policy & templates
 
 In **Supabase → Authentication → URL Configuration**:
 
-1. Set **Site URL** to the same origin as `NEXT_PUBLIC_SITE_URL`.
-2. Add the password-recovery redirect:
-   - `https://YOUR_DOMAIN/auth/reset-password`
-3. Keep the local development URLs if needed:
-   - `http://localhost:3000`
-   - `http://localhost:3000/auth/reset-password`
-4. If a custom domain replaces the Render hostname, add its URLs before switching DNS.
+1. Set **Site URL** to the same origin as `NEXT_PUBLIC_SITE_URL` (`https://degreensacre.onrender.com` or your verified custom domain).
+2. Confirm **Redirect URLs** only include active origins (stale Vercel preview URLs were removed on 2026-11-17):
+   - `https://degreensacre.onrender.com/**`
+   - `https://degreenacres.org/**`
+   - `https://www.degreenacres.org/**`
+   - `http://localhost:3000/**`
+3. In **Supabase → Authentication → Providers → Email**, set **Minimum password length** to **`10`** (the Supabase project currently defaults to `6`, whereas `/signup` and `/auth/reset-password` require 10+ characters).
+4. In **Supabase → Authentication → SMTP Settings**, enable custom SMTP with Resend (`smtp.resend.com`, port `465`, user `resend`) and raise rate limits to 30/hour, or configure `SUPABASE_SERVICE_ROLE_KEY` on Render for app-sent auth mail.
+5. In **Supabase → Authentication → Email Templates**, paste the branded HTML templates from `email-deliverables/supabase-auth/*.html`.
+
+## 3b. Configure Scheduled Digests, Backups & Monitoring
+
+- **Saved-search digest cron**: Create a daily Render Cron Job calling:
+  `curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://degreensacre.onrender.com/api/cron/saved-searches`
+  Requires both `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` on the web service.
+- **Database backups**: Verify Supabase automated daily backups (and Point-in-Time Recovery if on Pro+) are active before launch.
+- **Resend deliverability monitoring**: Enable Resend bounce and complaint webhooks/alerts for your verified sending domain so hard bounces and spam complaints are surfaced immediately.
+- **Render health & uptime**: Monitor `/api/health` (`200 { "status": "ok" }`) and set Render deploy/failure notifications.
 
 ## 4. Bootstrap the first administrator
 
@@ -108,15 +122,16 @@ Then test these browser flows:
 - Individual transactional email delivery through Resend and its delivery-history record
 - PWA manifest/service-worker installation; confirm API, admin and private account responses are not served from the worker cache
 
-## 6. Move a custom domain from Vercel to Render
+## 6. Retire Vercel / verify custom domain on Render
 
-1. In the Render service, open **Settings → Custom Domains** and add the apex and `www` domains.
-2. Create the DNS records exactly as shown by Render. For `www`, this is normally a CNAME to the service's `onrender.com` hostname; use Render's displayed target rather than an old Vercel target.
+Render (`https://degreensacre.onrender.com`) is the canonical deployment target. Vercel deployment is intentionally disabled/avoided.
+
+1. In the Render service, open **Settings → Custom Domains** and add the apex and `www` domains when ready.
+2. Create the DNS records exactly as shown by Render (point `www` CNAME to `degreensacre.onrender.com`, never to a legacy Vercel target).
 3. Wait for DNS verification and Render's TLS certificate issuance.
 4. Set `NEXT_PUBLIC_SITE_URL=https://YOUR_CUSTOM_DOMAIN` in Render and redeploy.
 5. Update Supabase Site/redirect URLs and the Resend sender configuration if the email domain changes.
-6. Test the custom domain and keep the previous Vercel deployment available for rollback until verification is complete.
-7. After the cutover is stable, remove the old Vercel domain assignments or retire the Vercel project to avoid serving stale production copies.
+6. Keep stale Vercel preview URLs removed from Supabase `uri_allow_list`.
 
 ## Local production rehearsal
 

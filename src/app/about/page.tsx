@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import ScrollReveal from '@/components/ScrollReveal';
 import CACIcon from '@/components/CACIcon';
-import { Shield, MapPin, FileCheck, Eye, Key, Handshake, BarChart3, TreePine, ArrowRight, CheckCircle } from 'lucide-react';
+import { Shield, MapPin, FileCheck, Eye, Key, Handshake, BarChart3, TreePine, CheckCircle } from 'lucide-react';
 
 export default function AboutPage() {
   return (

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowRight, BookOpenText, Calendar, Clock, Search } from 'lucide-react';
@@ -9,7 +10,7 @@ function ArticleCard({ article, featured = false }: { article: Article; featured
   return (
     <Link href={`/insights/${article.slug}`} className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
       <div className={`relative overflow-hidden ${featured ? 'h-64' : 'h-48'}`}>
-        <img src={article.image} alt={article.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <Image src={article.image || '/property-placeholder.svg'} alt={article.title} fill sizes="(max-width: 768px) 100vw, 50vw" unoptimized className="object-cover transition duration-500 group-hover:scale-105" />
         <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-xs font-bold text-white">{article.category}</span>
       </div>
       <div className={featured ? 'p-6' : 'p-5'}>

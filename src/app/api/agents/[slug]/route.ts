@@ -21,7 +21,7 @@ export async function GET(
     }
 
     // Fetch properties listed by this agent (via owner_id = agent.user_id)
-    let properties: any[] = [];
+    let properties: Record<string, unknown>[] = [];
     if (agent?.user_id) {
       const { data: props } = await supabase
         .from('properties')

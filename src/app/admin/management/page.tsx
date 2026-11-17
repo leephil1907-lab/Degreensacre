@@ -117,7 +117,37 @@ export default function AdminManagementPage() {
     }
   }, [loadReports, loadStaff, loadActivity]);
 
-  useEffect(() => { void loadAll(); }, [loadAll]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch('/api/admin/management/reports', { cache: 'no-store' }).then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Reports could not be generated.');
+        return d;
+      }),
+      fetch('/api/admin/management/staff', { cache: 'no-store' }).then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'The staff list could not be loaded.');
+        return d.staff ?? [];
+      }),
+      fetch('/api/admin/management/activity?limit=150', { cache: 'no-store' }).then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'The activity log could not be loaded.');
+        return d.activity ?? [];
+      }),
+    ])
+      .then(([nextReports, nextStaff, nextActivity]) => {
+        if (!active) return;
+        setReports(nextReports);
+        setStaff(nextStaff);
+        setActivity(nextActivity);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Management data could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const updateStaff = async (member: Staff, patch: Record<string, unknown>, message: string) => {
     setBusyId(member.id);

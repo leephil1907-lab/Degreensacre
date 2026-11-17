@@ -12,6 +12,13 @@ type SiteSettingsContextValue = {
 
 const SiteSettingsContext = createContext<SiteSettingsContextValue | undefined>(undefined);
 
+async function fetchSiteSettings(): Promise<SiteSettings> {
+  const response = await fetch('/api/site-settings', { cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Settings could not be loaded.');
+  return { ...DEFAULT_SITE_SETTINGS, ...(data.settings || {}) };
+}
+
 export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -19,10 +26,8 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
 
   const refresh = useCallback(async () => {
     try {
-      const response = await fetch('/api/site-settings', { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Settings could not be loaded.');
-      setSettings({ ...DEFAULT_SITE_SETTINGS, ...(data.settings || {}) });
+      const next = await fetchSiteSettings();
+      setSettings(next);
       setError('');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Settings could not be loaded.');
@@ -32,8 +37,24 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let active = true;
+    fetchSiteSettings()
+      .then((next) => {
+        if (!active) return;
+        setSettings(next);
+        setError('');
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        setError(loadError instanceof Error ? loadError.message : 'Settings could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <SiteSettingsContext.Provider value={{ settings, loading, error, refresh }}>

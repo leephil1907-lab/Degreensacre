@@ -1,27 +1,44 @@
-import { isStockImage } from '@/lib/property';
+import Image from 'next/image';
+import { isStockImage, PUBLIC_PROPERTY_COLUMNS, formatPropertyPrice } from '@/lib/property';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { formatPropertyPrice } from '@/lib/property';
+
+type LocationProperty = {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  price_period?: string | null;
+  area: string;
+  state: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqm: number;
+  featured: boolean;
+  images: string[];
+  verificationStatus: string;
+};
+
 export default async function AkwaIbomLocationPage() {
-  let akwaibomProperties: any[] = [];
+  let akwaibomProperties: LocationProperty[] = [];
   let totalCount = 0;
   let loadError = '';
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error, count } = await supabase
       .from('properties')
-      .select('*, property_images(url, display_order, is_primary)', { count: 'exact' })
+      .select(`${PUBLIC_PROPERTY_COLUMNS}, property_images(url, display_order, is_primary)`, { count: 'exact' })
       .eq('state', 'Akwa Ibom')
       .eq('status', 'available')
       .order('date_added', { ascending: false })
       .limit(20);
     if (error) throw error;
     totalCount = count ?? data?.length ?? 0;
-    akwaibomProperties = (data || []).map((property: any) => {
+    akwaibomProperties = (data || []).map((property) => {
       const legacyImages = Array.isArray(property.images) ? property.images.filter((url: unknown): url is string => typeof url === 'string') : [];
       const galleryImages = Array.isArray(property.property_images) ? property.property_images.map((image: { url?: string }) => image.url).filter((url: unknown): url is string => typeof url === 'string') : [];
       const images = [...new Set([...galleryImages, ...legacyImages])].filter((url) => !isStockImage(url));
-      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'], verified: property.verification_status === 'verified', verificationStatus: property.verification_status };
+      return { ...property, images: images.length > 0 ? images : ['/property-placeholder.svg'], verified: property.verification_status === 'verified', verificationStatus: property.verification_status } as LocationProperty;
     });
   } catch {
     loadError = 'Akwa Ibom listings could not be loaded. Please try again later.';
@@ -35,10 +52,13 @@ export default async function AkwaIbomLocationPage() {
     <div className="min-h-screen bg-ivory">
       {/* Hero Section */}
       <section className="relative h-[500px] overflow-hidden">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=90"
           alt="Akwa Ibom Landscape"
-          className="w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-charcoal/80" />
         
@@ -168,10 +188,13 @@ export default async function AkwaIbomLocationPage() {
               {featuredProperties.map((property) => (
                 <Link key={property.id} href={`/properties/${property.slug}`} className="card hover-lift group">
                   <div className="relative h-64 overflow-hidden">
-                    <img
+                    <Image
                       src={property.images[0]}
                       alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      unoptimized
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 flex flex-col space-y-2">
                       {property.featured && <span className="badge-featured">Featured</span>}

@@ -3,6 +3,7 @@ import { notifySavedSearchMatches } from '@/lib/saved-search-alerts';
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
 import { isUuid, NIGERIAN_STATES, PROPERTY_TYPES } from '@/lib/validation';
+import { PUBLIC_PROPERTY_COLUMNS } from '@/lib/property';
 
 export const runtime = 'nodejs';
 
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
   if (auth.response) return auth.response;
 
   const status = new URL(request.url).searchParams.get('status');
-  let query = auth.context.supabase.from('properties').select('*').order('date_added', { ascending: false }).limit(500);
+  let query = auth.context.supabase.from('properties').select(PUBLIC_PROPERTY_COLUMNS).order('date_added', { ascending: false }).limit(500);
   if (status && STATUSES.includes(status)) query = query.eq('status', status);
 
   const { data, error } = await query;
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
   try {
     const payload = propertyPayload(await bodyJson(request));
     payload.owner_id = auth.context.user.id;
-    const { data, error } = await auth.context.supabase.from('properties').insert(payload).select('*').single();
+    const { data, error } = await auth.context.supabase.from('properties').insert(payload).select(PUBLIC_PROPERTY_COLUMNS).single();
     if (error) return databaseError(error, 'The property could not be created.');
     return NextResponse.json({ property: data, success: true }, { status: 201 });
   } catch (error) {
@@ -141,7 +142,7 @@ export async function PUT(request: NextRequest) {
     if (previousError) return databaseError(previousError, 'The property could not be loaded.');
     const payload = propertyPayload(body);
     payload.updated_at = new Date().toISOString();
-    const { data, error } = await auth.context.supabase.from('properties').update(payload).eq('id', id).select('*').single();
+    const { data, error } = await auth.context.supabase.from('properties').update(payload).eq('id', id).select(PUBLIC_PROPERTY_COLUMNS).single();
     if (error) return databaseError(error, 'The property could not be updated.');
     await notifyListingChange(auth.context.supabase, previous, data);
     // A listing that just went public is the moment saved-search alerts exist for.
@@ -179,7 +180,7 @@ export async function PATCH(request: NextRequest) {
     }
     if (Object.keys(updates).length === 1) throw new Error('No supported moderation changes were supplied.');
 
-    const { data, error } = await auth.context.supabase.from('properties').update(updates).eq('id', id).select('*').single();
+    const { data, error } = await auth.context.supabase.from('properties').update(updates).eq('id', id).select(PUBLIC_PROPERTY_COLUMNS).single();
     if (error) return databaseError(error, 'The property could not be moderated.');
     await notifyListingChange(auth.context.supabase, previous, data);
     // A listing that just went public is the moment saved-search alerts exist for.

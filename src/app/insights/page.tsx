@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
 import InsightsExplorer from '@/components/InsightsExplorer';
@@ -15,7 +16,7 @@ export default async function InsightsPage() {
   return (
     <div className="min-h-screen bg-ivory">
       <section className="relative h-[400px] overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1920&q=90" alt="Property research and guides" className="h-full w-full object-cover" />
+        <Image src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1920&q=90" alt="Property research and guides" fill sizes="100vw" priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-charcoal/85" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="container-custom text-center text-white">

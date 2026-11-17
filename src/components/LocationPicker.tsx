@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Loader2, MapPin, Navigation, Search, X } from 'lucide-react';
 import { getPropertyAddress, parseCoordinates, type PropertyLocation } from '@/lib/property';
@@ -33,14 +33,11 @@ export default function LocationPicker({ location, latitude, longitude, onChange
   const [matchedAddress, setMatchedAddress] = useState('');
   const [message, setMessage] = useState('');
   const addressQuery = getPropertyAddress(location, true);
-  const previousAddress = useRef(addressQuery);
-
-  useEffect(() => {
-    if (previousAddress.current !== addressQuery) {
-      previousAddress.current = addressQuery;
-      if (value) setMessage('The address changed. Review the map point before saving this listing.');
-    }
-  }, [addressQuery, value]);
+  const [confirmedAddress, setConfirmedAddress] = useState(addressQuery);
+  const addressChangedWarning = value && confirmedAddress !== addressQuery
+    ? 'The address changed. Review the map point before saving this listing.'
+    : '';
+  const statusMessage = message || addressChangedWarning;
 
   const markers = useMemo(() => value ? [{ id: 'property-location', position: value, title: 'Property location', subtitle: addressQuery, kind: 'editable' as const }] : [], [value, addressQuery]);
 
@@ -78,12 +75,14 @@ export default function LocationPicker({ location, latitude, longitude, onChange
 
   const chooseResult = (result: AddressResult) => {
     onChange(String(result.lat), String(result.lng));
+    setConfirmedAddress(addressQuery);
     setMatchedAddress(result.displayName);
     setResults([]);
     setMessage('');
   };
 
   const updateCoordinate = (key: 'lat' | 'lng', input: string) => {
+    setConfirmedAddress(addressQuery);
     onChange(key === 'lat' ? input : latitude, key === 'lng' ? input : longitude);
   };
 
@@ -101,7 +100,7 @@ export default function LocationPicker({ location, latitude, longitude, onChange
 
       <label className="mt-4 block text-xs font-semibold text-gray-600" htmlFor="location-picker-query">Search a nearby landmark or a simpler address if the full address is not found</label>
       <input id="location-picker-query" value={customQuery} onChange={(event) => setCustomQuery(event.target.value)} maxLength={200} placeholder={addressQuery || 'Neighbourhood, city, state'} className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-base text-charcoal" />
-      {message && <p className="mt-3 rounded-lg bg-white px-3 py-2 text-xs leading-5 text-gray-600" role="status">{message}</p>}
+      {statusMessage && <p className="mt-3 rounded-lg bg-white px-3 py-2 text-xs leading-5 text-gray-600" role="status">{statusMessage}</p>}
       {results.length > 1 && (
         <div className="mt-3 grid gap-2 rounded-xl border border-gray-200 bg-white p-2">
           <p className="px-2 pt-1 text-[10px] font-extrabold uppercase tracking-wide text-gray-400">Choose the correct address</p>
@@ -118,7 +117,7 @@ export default function LocationPicker({ location, latitude, longitude, onChange
 
       {value ? (
         <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <LocationMap markers={markers} selectedId="property-location" onPickLocation={(coordinates) => { onChange(coordinates.lat.toFixed(7), coordinates.lng.toFixed(7)); setMessage('Map point adjusted. Confirm it before saving.'); }} editable autoFit={false} zoom={16} className="h-72" label="Editable property location" />
+          <LocationMap markers={markers} selectedId="property-location" onPickLocation={(coordinates) => { setConfirmedAddress(addressQuery); onChange(coordinates.lat.toFixed(7), coordinates.lng.toFixed(7)); setMessage('Map point adjusted. Confirm it before saving.'); }} editable autoFit={false} zoom={16} className="h-72" label="Editable property location" />
           <div className="flex flex-col gap-2 border-t border-gray-100 px-4 py-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
             <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-forest" /> Click the map or drag the marker to refine.</span>
             <button type="button" onClick={() => { onChange('', ''); setMatchedAddress(''); setResults([]); setMessage('Map location cleared.'); }} className="inline-flex items-center gap-1 self-start font-bold text-red-700 hover:underline"><X className="h-3.5 w-3.5" /> Clear location</button>

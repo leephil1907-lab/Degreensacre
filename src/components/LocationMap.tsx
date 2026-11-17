@@ -87,22 +87,26 @@ export default function LocationMap({
       map.remove();
       mapRef.current = null;
       layerRef.current = null;
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally clearing the shared marker map on unmount
       markerRefs.current.clear();
     };
   }, []);
 
   const markerSignature = markers.map((marker) => `${marker.id}:${marker.position.lat.toFixed(6)},${marker.position.lng.toFixed(6)}`).join('|');
+  const markersRef = useRef(markers);
+  useEffect(() => { markersRef.current = markers; }, [markers]);
 
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
+    const currentMarkers = markersRef.current;
     if (!ready || !map || !layer) return;
 
     layer.clearLayers();
     markerRefs.current.clear();
     if (!markerSignature) fittedSignatureRef.current = '';
 
-    markers.forEach((item) => {
+    currentMarkers.forEach((item) => {
       const kind = item.kind || 'property';
       const icon = L.divIcon({
         className: `location-marker location-marker--${kind}${selectedId === item.id ? ' location-marker--selected' : ''}`,
@@ -159,13 +163,13 @@ export default function LocationMap({
 
     if (autoFit && markerSignature && fittedSignatureRef.current !== markerSignature) {
       fittedSignatureRef.current = markerSignature;
-      if (markers.length === 1) {
-        map.setView([markers[0].position.lat, markers[0].position.lng], Math.max(zoom, 14));
-      } else if (markers.length > 1) {
-        map.fitBounds(L.latLngBounds(markers.map((item) => [item.position.lat, item.position.lng] as [number, number])).pad(0.18), { maxZoom: 15 });
+      if (currentMarkers.length === 1) {
+        map.setView([currentMarkers[0].position.lat, currentMarkers[0].position.lng], Math.max(zoom, 14));
+      } else if (currentMarkers.length > 1) {
+        map.fitBounds(L.latLngBounds(currentMarkers.map((item) => [item.position.lat, item.position.lng] as [number, number])).pad(0.18), { maxZoom: 15 });
       }
     }
-  }, [ready, markers, markerSignature, editable, autoFit, zoom, selectedId]);
+  }, [ready, markerSignature, editable, autoFit, zoom, selectedId]);
 
   useEffect(() => {
     if (!ready || !selectedId) return;

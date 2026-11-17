@@ -19,9 +19,9 @@ export async function GET(
     const { data: agents } = await supabase.from('agents').select('*').eq('agency_id', agency.id);
 
     // Also fetch properties owned by agents of this agency (via owner_id in agents.user_id)
-    let properties: any[] = [];
+    let properties: Record<string, unknown>[] = [];
     if (agents && agents.length) {
-      const userIds = agents.map((a: any) => a.user_id).filter(Boolean);
+      const userIds = agents.map((a: { user_id?: string | null }) => a.user_id).filter(Boolean);
       if (userIds.length) {
         const { data: props } = await supabase.from('properties').select('id, slug, title, price, area, state, images, type').in('owner_id', userIds).eq('status', 'available').limit(12);
         properties = props || [];

@@ -6,12 +6,17 @@ import Link from 'next/link';
 export default function NewNotePage() {
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
-  const [notes, setNotes] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem('degreensacre-notes');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
-    const stored = localStorage.getItem('degreensacre-notes');
-    if (stored) setNotes(JSON.parse(stored));
-    // If launched as note app, focus immediately
     const params = new URLSearchParams(window.location.search);
     if (params.get('new') !== null) {
       document.getElementById('note-input')?.focus();

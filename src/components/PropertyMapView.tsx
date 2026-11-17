@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { ExternalLink, Loader2, MapPin, Navigation, Search, X } from 'lucide-react';
 import LocationMap, { type LocationMapMarker } from './LocationMap';
 import { formatPropertyPrice, getPropertyAddress, getPropertyCoordinates, type PropertyLocation } from '@/lib/property';
@@ -44,16 +44,15 @@ export default function PropertyMapView({
   emptyMessage = 'No saved property locations match this view.',
   showSearch = true,
 }: PropertyMapViewProps) {
-  const [query, setQuery] = useState(initialAddress);
+  const [queryState, setQueryState] = useState({ base: initialAddress, value: initialAddress });
+  const query = queryState.base === initialAddress ? queryState.value : initialAddress;
+  const setQuery = (value: string) => setQueryState({ base: initialAddress, value });
   const [results, setResults] = useState<AddressResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [selectedPlace, setSelectedPlace] = useState<AddressResult | null>(null);
-
-  useEffect(() => { setQuery(initialAddress); }, [initialAddress]);
-  useEffect(() => {
-    if (selectedPropertyId) setSelectedPlace(null);
-  }, [selectedPropertyId]);
+  const [placeState, setPlaceState] = useState<{ place: AddressResult | null; forSelected: string | null }>({ place: null, forSelected: selectedPropertyId });
+  const selectedPlace = placeState.forSelected === selectedPropertyId ? placeState.place : null;
+  const setSelectedPlace = (place: AddressResult | null) => setPlaceState({ place, forSelected: selectedPropertyId });
 
   const mappedProperties = useMemo(() => properties.map((property) => ({ property, coordinates: getPropertyCoordinates(property) })).filter((item) => item.coordinates !== null), [properties]);
   const selectedProperty = properties.find((property) => property.id === selectedPropertyId) || null;

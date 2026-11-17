@@ -23,16 +23,32 @@ interface Profile {
   updated_at?: string;
 }
 
+interface SignUpMetadata {
+  first_name?: string;
+  last_name?: string;
+  phone?: string | null;
+  state?: string | null;
+  account_type?: string;
+}
+
+interface AuthResult {
+  user?: User | null;
+  session?: Session | null;
+  requiresEmailConfirmation?: boolean;
+  accountCreated?: boolean;
+  [key: string]: unknown;
+}
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: any) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, metadata?: SignUpMetadata) => Promise<AuthResult>;
+  signIn: (email: string, password: string) => Promise<{ user: User | null; session: Session | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<any>;
-  resetPassword: (email: string) => Promise<any>;
+  updateProfile: (updates: Partial<Profile>) => Promise<Profile>;
+  resetPassword: (email: string) => Promise<Record<string, unknown>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: SignUpMetadata) => {
     // The server route applies validation/rate limits; a database trigger
     // creates the profile without exposing privileged credentials.
     const res = await fetch('/api/auth/register', {

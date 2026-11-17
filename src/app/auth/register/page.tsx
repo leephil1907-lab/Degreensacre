@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, Phone, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -60,8 +56,8 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create account');
     } finally {
       setLoading(false);
     }

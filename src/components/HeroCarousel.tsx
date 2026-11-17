@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
@@ -28,7 +29,7 @@ export default function HeroCarousel() {
     <div className="absolute inset-0 z-0 bg-forest" aria-label="Property image slideshow">
       <AnimatePresence mode="sync">
         <motion.div key={SLIDES[current].url} className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 1, ease: 'easeInOut' }}>
-          <img src={SLIDES[current].url} alt="" className="h-full w-full object-cover" loading={current === 0 ? 'eager' : 'lazy'} />
+          <Image src={SLIDES[current].url} alt="" fill sizes="100vw" className="object-cover" priority={current === 0} />
         </motion.div>
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />

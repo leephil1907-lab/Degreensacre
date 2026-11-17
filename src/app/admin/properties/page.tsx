@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft, Building2, CheckCircle, ExternalLink, FilePenLine, Loader2,
   Plus, Search, Trash2,
@@ -10,7 +11,20 @@ import { NIGERIAN_STATES } from '@/lib/validation';
 import { getPropertyCoordinates, type PropertyLocation } from '@/lib/property';
 import LocationPicker from '@/components/LocationPicker';
 
-type Property = Record<string, any> & { id: string; title: string; status: string };
+type Property = Record<string, unknown> & {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  property_type?: string;
+  type?: string;
+  price?: number | string;
+  price_period?: string;
+  area?: string;
+  state?: string;
+  verification_status?: string;
+  images?: string[];
+};
 type FormState = {
   slug: string; title: string; description: string; property_type: string; type: string;
   price: string; price_period: string; bedrooms: string; bathrooms: string; toilets: string;
@@ -75,7 +89,20 @@ export default function AdminPropertiesPage() {
     }
   }, []);
 
-  useEffect(() => { void loadProperties(); }, [loadProperties]);
+  useEffect(() => {
+    let active = true;
+    fetch('/api/admin/properties', { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Properties could not be loaded.');
+        if (active) setProperties(data.properties || []);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Properties could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const filtered = useMemo(() => properties.filter((property) => {
     if (statusFilter !== 'all' && property.status !== statusFilter) return false;
@@ -261,7 +288,7 @@ export default function AdminPropertiesPage() {
               {listField('features', 'Features', 'One feature per line, for example: All Rooms Ensuite.')}
               {listField('amenities', 'Amenities', 'One amenity per line, for example: 24/7 Security.')}
             </div>
-            {form.images.filter(Boolean).length > 0 && <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{form.images.filter(Boolean).slice(0, 4).map((image, index) => <img key={`${image}-${index}`} src={image} alt={`Property preview ${index + 1}`} className="h-28 w-full rounded-xl border border-gray-100 object-cover" />)}</div>}
+            {form.images.filter(Boolean).length > 0 && <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{form.images.filter(Boolean).slice(0, 4).map((image, index) => <div key={`${image}-${index}`} className="relative h-28 w-full overflow-hidden rounded-xl border border-gray-100"><Image src={image} alt={`Property preview ${index + 1}`} fill unoptimized className="object-cover" /></div>)}</div>}
           </section>
 
           <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -312,7 +339,7 @@ export default function AdminPropertiesPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((property) => (
                   <tr key={property.id} className="hover:bg-gray-50/70">
-                    <td className="px-4 py-4"><div className="flex items-center gap-3"><img src={property.images?.[0] || '/property-placeholder.svg'} alt="" className="h-12 w-16 rounded-lg object-cover" /><div className="min-w-0"><p className="max-w-64 truncate text-sm font-bold text-charcoal">{property.title}</p><p className="mt-1 text-xs text-gray-400">{property.property_type} · {property.type}</p></div></div></td>
+                    <td className="px-4 py-4"><div className="flex items-center gap-3"><Image src={property.images?.[0] || '/property-placeholder.svg'} alt="" width={64} height={48} unoptimized className="h-12 w-16 rounded-lg object-cover" /><div className="min-w-0"><p className="max-w-64 truncate text-sm font-bold text-charcoal">{property.title}</p><p className="mt-1 text-xs text-gray-400">{property.property_type} · {property.type}</p></div></div></td>
                     <td className="px-4 py-4 text-sm font-bold text-forest">₦{Number(property.price || 0).toLocaleString()}<span className="block text-[10px] font-normal text-gray-400">{property.price_period || ''}</span></td>
                     <td className="px-4 py-4 text-sm text-gray-600">{property.area}<span className="block text-xs text-gray-400">{property.state}</span></td>
                     <td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${property.status === 'available' ? 'bg-green-100 text-green-700' : property.status === 'pending_review' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>{property.status.replaceAll('_', ' ')}</span></td>

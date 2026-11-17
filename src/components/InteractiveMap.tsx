@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+const emptySubscribe = () => () => {};
 
 interface Location {
   id: string;
@@ -24,7 +26,7 @@ interface MapComponentProps {
 
 // Fix Leaflet default marker icon issue with Next.js
 const fixLeafletIcons = () => {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -76,16 +78,13 @@ export default function MapComponent({
   height = '500px',
   onLocationClick,
 }: MapComponentProps) {
-  const [isMounted, setIsMounted] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   useEffect(() => {
     fixLeafletIcons();
-    setIsMounted(true);
   }, []);
 
   const handleMarkerClick = (location: Location) => {
-    setSelectedLocation(location);
     if (onLocationClick) {
       onLocationClick(location);
     }

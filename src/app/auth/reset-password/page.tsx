@@ -83,8 +83,8 @@ function ResetPasswordContent() {
       const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
       if (signOutError) console.warn('Password changed; local recovery-session cleanup failed:', signOutError.message);
       setIsSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update password');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update password');
     } finally {
       setIsLoading(false);
     }

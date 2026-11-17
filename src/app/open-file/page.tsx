@@ -11,7 +11,13 @@ interface LaunchQueueLike {
 
 export default function OpenFilePage() {
   const [files, setFiles] = useState<File[]>([]);
-  const [message, setMessage] = useState('No file opened yet. Use your OS to open a PDF or image with De-Greenacres.');
+  const [message, setMessage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('file')) return 'File parameter detected';
+    }
+    return 'No file opened yet. Use your OS to open a PDF or image with De-Greenacres.';
+  });
 
   useEffect(() => {
     // Modern file_handlers via launchQueue
@@ -26,9 +32,6 @@ export default function OpenFilePage() {
         })
         .catch(() => setMessage('The selected file could not be opened.'));
     });
-    // Fallback: check ?file param for share_target
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('file')) setMessage('File parameter detected');
   }, []);
 
   return (

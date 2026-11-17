@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
-  Search, Mail, MoreVertical, CheckCircle, XCircle, Clock,
-  UserCheck, UserX, Download, Loader2, Shield, Users, UserPlus, Ban
+  Search, Mail, CheckCircle, Clock,
+  UserCheck, UserX, Download, Loader2, Shield, Users, UserPlus
 } from 'lucide-react';
 
 interface UserProfile {
@@ -58,10 +58,24 @@ export default function UsersPage() {
   useEffect(() => {
     if (!user) { router.push('/signin'); return; }
     if (profile && !profile.is_admin) { router.push('/'); return; }
-    fetchUsers();
-  }, [user, profile, router, fetchUsers]);
+    let active = true;
+    const params = new URLSearchParams({ limit: '50' });
+    if (search) params.set('search', search);
+    if (filterType !== 'all') params.set('account_type', filterType.toLowerCase());
+    fetch(`/api/admin/users?${params}`)
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        setUsers(data.users || []);
+        setTotal(data.count || 0);
+      })
+      .catch((err) => console.error('Failed to fetch users:', err))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user, profile, router, search, filterType]);
 
-  const handleAction = async (userId: string, action: string, extra?: any) => {
+  const handleAction = async (userId: string, action: string, extra?: Record<string, unknown>) => {
     setActionLoading(userId);
     try {
       const res = await fetch('/api/admin/users', {

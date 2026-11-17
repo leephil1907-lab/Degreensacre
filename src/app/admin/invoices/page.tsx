@@ -139,20 +139,42 @@ export default function AdminInvoicesPage() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
-
-  // Deep link from the invoice detail screen: /admin/invoices?edit=<id>
   useEffect(() => {
-    if (formOpen || editing) return;
-    const target = new URLSearchParams(window.location.search).get('edit');
-    if (!target) return;
-    const match = invoices.find((invoice) => invoice.id === target);
-    if (match) {
-      setEditing(match);
-      setForm(toForm(match));
-      setFormOpen(true);
-    }
-  }, [invoices, formOpen, editing]);
+    let active = true;
+    Promise.all([
+      fetch('/api/admin/invoices', { cache: 'no-store' }),
+      fetch('/api/admin/properties', { cache: 'no-store' }),
+    ])
+      .then(async ([invoiceResponse, propertyResponse]) => {
+        const invoiceData = await invoiceResponse.json();
+        if (!invoiceResponse.ok) throw new Error(invoiceData.error || 'Invoices could not be loaded.');
+        if (!active) return;
+        const loadedInvoices: Invoice[] = invoiceData.invoices ?? [];
+        setInvoices(loadedInvoices);
+
+        const target = new URLSearchParams(window.location.search).get('edit');
+        if (target) {
+          const match = loadedInvoices.find((invoice) => invoice.id === target);
+          if (match) {
+            setEditing(match);
+            setForm(toForm(match));
+            setFormOpen(true);
+          }
+        }
+
+        if (propertyResponse.ok) {
+          const propertyData = await propertyResponse.json();
+          if (active) {
+            setProperties((propertyData.properties ?? []).map((p: { id: string; title: string }) => ({ id: p.id, title: p.title })));
+          }
+        }
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Invoices could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const totals = useMemo(
     () =>

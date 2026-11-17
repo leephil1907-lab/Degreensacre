@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Search, MessageSquare, Clock, CheckCircle, Mail, Eye,
-  Archive, Home, Loader2, Phone, MapPin, Calendar
+  Archive, Home, Loader2, Phone
 } from 'lucide-react';
 
 interface Enquiry {
@@ -53,8 +53,22 @@ export default function EnquiriesPage() {
   useEffect(() => {
     if (!user) { router.push('/signin'); return; }
     if (profile && !profile.is_admin) { router.push('/'); return; }
-    fetchEnquiries();
-  }, [user, profile, router, fetchEnquiries]);
+    let active = true;
+    const params = new URLSearchParams({ limit: '50' });
+    if (search) params.set('search', search);
+    if (filterStatus !== 'all') params.set('status', filterStatus);
+    fetch(`/api/admin/enquiries?${params}`)
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        setEnquiries(data.enquiries || []);
+        setTotal(data.count || 0);
+      })
+      .catch((err) => console.error('Failed to fetch enquiries:', err))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user, profile, router, search, filterStatus]);
 
   const markStatus = async (id: string, status: string) => {
     try {

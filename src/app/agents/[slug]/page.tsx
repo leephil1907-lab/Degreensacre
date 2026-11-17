@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
@@ -6,18 +7,44 @@ import { Phone, Mail, BadgeCheck, Building2, MapPin, ArrowRight } from 'lucide-r
 
 interface Props { params: Promise<{ slug: string }> }
 
+type AgentDetailRow = {
+  id: string;
+  slug: string;
+  name: string;
+  photo_url?: string | null;
+  is_verified?: boolean | null;
+  bio?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  user_id?: string | null;
+  agencies?: { name?: string | null; slug?: string | null } | null;
+};
+
+type AgentPropertyRow = {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  price_period?: string | null;
+  area: string;
+  state: string;
+  images?: string[] | null;
+  type: string;
+};
+
 export default async function AgentDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  let agent: any = null;
-  let properties: any[] = [];
+  let agent: AgentDetailRow | null = null;
+  let properties: AgentPropertyRow[] = [];
 
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('agents').select('*, agencies(name, slug, logo_url, is_verified)').eq('slug', slug).single();
     if (data) {
       agent = data;
-      if (agent.user_id) {
+      if (agent && agent.user_id) {
         const { data: props } = await supabase.from('properties').select('id, slug, title, price, price_period, area, state, images, type, verification_status').eq('owner_id', agent.user_id).eq('status', 'available').limit(12);
         properties = props || [];
       }
@@ -37,7 +64,7 @@ export default async function AgentDetailPage({ params }: Props) {
           <div className="h-32 bg-gradient-to-r from-forest to-sage" />
           <div className="p-8">
             <div className="flex flex-col md:flex-row gap-6 -mt-16">
-              <img src={agent.photo_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400'} alt={agent.name} className="w-32 h-32 rounded-2xl object-cover border-4 border-white shadow-lg" />
+              <Image src={agent.photo_url || '/logo-256.png'} alt={agent.name} width={128} height={128} unoptimized className="w-32 h-32 rounded-2xl object-cover border-4 border-white shadow-lg" />
               <div className="flex-1 pt-2">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -71,10 +98,10 @@ export default async function AgentDetailPage({ params }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((p: any) => (
+              {properties.map((p) => (
                 <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group">
-                  <div className="h-48 overflow-hidden">
-                    <img src={getPropertyImage(p)} alt={p.title} className="w-full h-full object-cover bg-forest-50 group-hover:scale-105 transition-transform duration-500" />
+                  <div className="relative h-48 overflow-hidden">
+                    <Image src={getPropertyImage(p)} alt={p.title} fill sizes="(max-width: 768px) 100vw, 33vw" unoptimized className="object-cover bg-forest-50 group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-charcoal line-clamp-2">{p.title}</h3>

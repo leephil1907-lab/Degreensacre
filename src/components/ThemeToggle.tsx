@@ -1,26 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
+const emptySubscribe = () => () => {};
+
+function getThemeSnapshot(): boolean {
+  const stored = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return stored === 'dark' || (!stored && prefersDark);
+}
+
+function subscribeTheme(onChange: () => void) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === 'theme' || e.key === null) onChange();
+  };
+  mq.addEventListener('change', onChange);
+  window.addEventListener('storage', onStorage);
+  window.addEventListener('theme-change', onChange);
+  return () => {
+    mq.removeEventListener('change', onChange);
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener('theme-change', onChange);
+  };
+}
+
 export default function ThemeToggle({ variant = 'default' }: { variant?: 'default' | 'forest' }) {
-  const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const dark = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => false);
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = stored === 'dark' || (!stored && prefersDark);
-    setDark(isDark);
-    document.documentElement.classList.toggle('dark', isDark);
-  }, []);
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
 
   const toggle = () => {
     const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle('dark', next);
     localStorage.setItem('theme', next ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', next);
+    window.dispatchEvent(new Event('theme-change'));
   };
 
   if (!mounted) return <div className="w-9 h-9" />;

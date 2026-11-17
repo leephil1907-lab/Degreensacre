@@ -36,7 +36,28 @@ export default function NotificationsPage() {
     }
   }, []);
 
-  useEffect(() => { void loadNotifications(); }, [loadNotifications]);
+  useEffect(() => {
+    let active = true;
+    fetch('/api/notifications', { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(response.status === 401 ? 'Please sign in to view your notifications.' : data.error || 'Notifications could not be loaded.');
+        if (active) {
+          setNotifications(data.notifications || []);
+          setError('');
+        }
+      })
+      .catch((loadError) => {
+        if (active) {
+          setNotifications([]);
+          setError(loadError instanceof Error ? loadError.message : 'Notifications could not be loaded.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   const filtered = useMemo(() => notifications.filter((notification) => {
     if (filter === 'all') return true;

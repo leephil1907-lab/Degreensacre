@@ -1,3 +1,6 @@
+export const PUBLIC_PROPERTY_COLUMNS =
+  'id,slug,title,description,property_type,type,price,price_period,bedrooms,bathrooms,toilets,parking,sqm,land_size,furnished,serviced,gated_estate,address,area,lga,city,state,coordinates,images,features,amenities,documentation,verification_status,status,featured,sample,agent,agent_phone,agent_email,owner_id,views,saves,enquiries_count,date_added,published_at,updated_at,negotiable';
+
 export type PropertyCoordinates = { lat: number; lng: number };
 
 export type PropertyLocation = {

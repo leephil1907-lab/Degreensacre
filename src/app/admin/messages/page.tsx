@@ -39,7 +39,20 @@ export default function AdminMessagesPage() {
     }
   }, []);
 
-  useEffect(() => { void loadMessages(); }, [loadMessages]);
+  useEffect(() => {
+    let active = true;
+    fetch('/api/admin/messages', { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Messages could not be loaded.');
+        if (active) setMessages(data.messages || []);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Messages could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const filtered = useMemo(() => messages.filter((message) => {
     const inspection = message.subject.startsWith('Inspection Booking:');

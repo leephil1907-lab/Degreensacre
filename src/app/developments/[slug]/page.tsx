@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
@@ -6,11 +7,48 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+interface DevelopmentUnit {
+  type: string;
+  bedrooms?: number;
+  size: number | string;
+  available: number | string;
+  price: number;
+}
+
+interface PaymentPlan {
+  name: string;
+  description: string;
+  duration: string;
+}
+
+interface DevelopmentDetail {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  location: string;
+  state: string;
+  developer: string;
+  description: string;
+  documentation?: string | null;
+  gallery: string[];
+  unitTypes: DevelopmentUnit[];
+  paymentPlans: PaymentPlan[];
+  amenities?: string[];
+  features?: string[];
+  totalUnits: number;
+  availableUnits: number;
+  completionDate?: string | null;
+  siteInspection: boolean;
+  site_inspection?: boolean;
+  featured: boolean;
+}
+
 export default async function DevelopmentDetailPage({ params }: Props) {
   const { slug } = await params;
 
   // Try Supabase first
-  let development: any = null;
+  let development: DevelopmentDetail | null = null;
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('developments').select('*').eq('slug', slug).single();
@@ -79,10 +117,14 @@ export default async function DevelopmentDetailPage({ params }: Props) {
     <div className="min-h-screen bg-ivory">
       {/* Hero Section */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
-        <img
+        <Image
           src={development.gallery?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90'}
           alt={development.name}
-          className="w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          unoptimized
+          priority
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent" />
         
@@ -141,7 +183,7 @@ export default async function DevelopmentDetailPage({ params }: Props) {
               <div className="bg-white rounded-xl shadow-soft p-8">
                 <h2 className="text-2xl font-bold text-charcoal mb-6">Available Units</h2>
                 <div className="space-y-4">
-                  {(development.unitTypes || []).map((unit: any, idx: number) => (
+                  {(development.unitTypes || []).map((unit, idx) => (
                     <div key={idx} className="border border-gray-200 rounded-lg p-6 hover:border-forest transition-colors">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex-1">
@@ -169,7 +211,7 @@ export default async function DevelopmentDetailPage({ params }: Props) {
                 <div className="bg-white rounded-xl shadow-soft p-8">
                   <h2 className="text-2xl font-bold text-charcoal mb-6">Payment Plans</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {development.paymentPlans.map((plan: any, idx: number) => (
+                    {development.paymentPlans.map((plan, idx) => (
                       <div key={idx} className="border border-gray-200 rounded-lg p-6">
                         <h3 className="font-bold text-charcoal mb-2">{plan.name}</h3>
                         <p className="text-sm text-gray-600 mb-3">{plan.description}</p>
@@ -217,12 +259,15 @@ export default async function DevelopmentDetailPage({ params }: Props) {
                 <div className="bg-white rounded-xl shadow-soft p-8">
                   <h2 className="text-2xl font-bold text-charcoal mb-6">Gallery</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {development.gallery.map((image: string, idx: number) => (
+                    {development.gallery.map((image, idx) => (
                       <div key={idx} className="relative h-48 rounded-lg overflow-hidden group cursor-pointer">
-                        <img
+                        <Image
                           src={image}
                           alt={`${development.name} - ${idx + 1}`}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          fill
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          unoptimized
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       </div>
                     ))}
@@ -312,7 +357,7 @@ export default async function DevelopmentDetailPage({ params }: Props) {
                 <div className="pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-600 mb-2">Price Range</p>
                   <p className="text-2xl font-bold text-forest">
-                    {formatPrice(Math.min(...(development.unitTypes || [{price:0}]).map((u: any) => u.price)))} - {formatPrice(Math.max(...(development.unitTypes || [{price:0}]).map((u: any) => u.price)))}
+                    {formatPrice(Math.min(...(development.unitTypes || [{price:0}]).map((u) => u.price)))} - {formatPrice(Math.max(...(development.unitTypes || [{price:0}]).map((u) => u.price)))}
                   </p>
                 </div>
               </div>

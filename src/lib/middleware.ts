@@ -1,9 +1,10 @@
+import type { User } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export interface AuthenticatedRequest extends NextRequest {
-  user?: any;
-  profile?: any;
+  user?: User;
+  profile?: Record<string, unknown> & { is_admin?: boolean | null } | null;
 }
 
 export async function withAuth(

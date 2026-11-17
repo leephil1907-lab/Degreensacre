@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
@@ -6,22 +7,58 @@ import { Building2, BadgeCheck, Phone, Mail, Globe, MapPin, Users, ArrowRight } 
 
 interface Props { params: Promise<{ slug: string }> }
 
+type AgencyRow = {
+  id: string;
+  slug: string;
+  name: string;
+  logo_url?: string | null;
+  is_verified?: boolean | null;
+  state?: string | null;
+  address?: string | null;
+  description?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+};
+
+type AgentRow = {
+  id: string;
+  slug: string;
+  name: string;
+  photo_url?: string | null;
+  is_verified?: boolean | null;
+  user_id?: string | null;
+};
+
+type PropertyRow = {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  price_period?: string | null;
+  area: string;
+  state: string;
+  images?: string[] | null;
+  type: string;
+};
+
 export default async function AgencyDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  let agency: any = null;
-  let agents: any[] = [];
-  let properties: any[] = [];
+  let agency: AgencyRow | null = null;
+  let agents: AgentRow[] = [];
+  let properties: PropertyRow[] = [];
 
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase.from('agencies').select('*').eq('slug', slug).single();
     if (data) {
-      agency = data;
-      const { data: ags } = await supabase.from('agents').select('*').eq('agency_id', agency.id);
+      const loadedAgency = data as AgencyRow;
+      agency = loadedAgency;
+      const { data: ags } = await supabase.from('agents').select('*').eq('agency_id', loadedAgency.id);
       agents = ags || [];
       if (agents.length) {
-        const uids = agents.map((a: any) => a.user_id).filter(Boolean);
+        const uids = agents.map((a) => a.user_id).filter((id): id is string => Boolean(id));
         if (uids.length) {
           const { data: props } = await supabase.from('properties').select('id, slug, title, price, price_period, area, state, images, type').in('owner_id', uids).eq('status', 'available').limit(12);
           properties = props || [];
@@ -43,7 +80,7 @@ export default async function AgencyDetailPage({ params }: Props) {
           <div className="h-32 bg-gradient-to-r from-charcoal to-forest" />
           <div className="p-8">
             <div className="flex flex-col md:flex-row gap-6 -mt-16">
-              <img src={agency.logo_url || '/logo-256.png'} alt={agency.name} className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg bg-white" />
+              <Image src={agency.logo_url || '/logo-256.png'} alt={agency.name} width={112} height={112} unoptimized className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg bg-white" />
               <div className="flex-1 pt-2">
                 <h1 className="font-display text-3xl text-charcoal flex items-center gap-2">{agency.name} {agency.is_verified && <BadgeCheck className="w-6 h-6 text-forest" />}</h1>
                 <p className="text-sm text-gray-600 mt-2 flex items-center gap-1"><MapPin className="w-4 h-4" /> {agency.state} • {agency.address}</p>
@@ -68,9 +105,9 @@ export default async function AgencyDetailPage({ params }: Props) {
               </div>
             ) : (
               <div className="space-y-3">
-                {agents.map((ag: any) => (
+                {agents.map((ag) => (
                   <Link key={ag.id || ag.slug} href={`/agents/${ag.slug}`} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3 hover:shadow-md transition-all">
-                    <img src={ag.photo_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200'} alt={ag.name} className="w-12 h-12 rounded-lg object-cover" />
+                    <Image src={ag.photo_url || '/logo-256.png'} alt={ag.name} width={48} height={48} unoptimized className="w-12 h-12 rounded-lg object-cover" />
                     <div className="flex-1">
                       <p className="font-bold text-sm text-charcoal">{ag.name}</p>
                       <p className="text-xs text-gray-500">{ag.is_verified ? 'Verified' : 'Member'}</p>
@@ -92,10 +129,10 @@ export default async function AgencyDetailPage({ params }: Props) {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {properties.map((p: any) => (
+                {properties.map((p) => (
                   <Link key={p.id} href={`/properties/${p.slug}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all group">
-                    <div className="h-48 overflow-hidden">
-                      <img src={getPropertyImage(p)} alt={p.title} className="w-full h-full object-cover bg-forest-50 group-hover:scale-105 transition-transform" />
+                    <div className="relative h-48 overflow-hidden">
+                      <Image src={getPropertyImage(p)} alt={p.title} fill sizes="(max-width: 768px) 100vw, 33vw" unoptimized className="object-cover bg-forest-50 group-hover:scale-105 transition-transform" />
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-charcoal line-clamp-2">{p.title}</h3>

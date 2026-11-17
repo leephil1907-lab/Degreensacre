@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Home, Users, Building2, MessageSquare, Eye, TrendingUp,
-  Calendar, DollarSign, AlertCircle, CheckCircle, Clock,
+  Users, Building2, MessageSquare, Eye,
+  Calendar, AlertCircle, CheckCircle, Clock,
   ArrowUpRight, ArrowDownRight, Loader2
 } from 'lucide-react';
 
@@ -50,22 +50,6 @@ export default function AdminDashboard() {
   const [recentEnquiries, setRecentEnquiries] = useState<RecentEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      const response = await fetch('/api/admin/dashboard');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.stats);
-        setRecentProperties(data.recentProperties || []);
-        setRecentEnquiries(data.recentEnquiries || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     if (!user) {
       router.push('/auth/login');
@@ -75,8 +59,20 @@ export default function AdminDashboard() {
       router.push('/dashboard');
       return;
     }
-    fetchDashboardData();
-  }, [user, profile, router, fetchDashboardData]);
+    let active = true;
+    fetch('/api/admin/dashboard')
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!active) return;
+        setStats(data.stats);
+        setRecentProperties(data.recentProperties || []);
+        setRecentEnquiries(data.recentEnquiries || []);
+      })
+      .catch((error) => console.error('Failed to fetch dashboard data:', error))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user, profile, router]);
 
   if (loading) {
     return (

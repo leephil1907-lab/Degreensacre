@@ -1,10 +1,9 @@
 import { notifyListingChange, notifyEvents } from '@/lib/email-events';
 import { notifySavedSearchMatches } from '@/lib/saved-search-alerts';
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase-server';
-import { getPropertyBySlug, incrementPropertyView } from '@/lib/db-helpers';
-import { logAudit } from '@/lib/db-helpers';
-import { parseCoordinates } from '@/lib/property';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { getPropertyBySlug, incrementPropertyView, logAudit } from '@/lib/db-helpers';
+import { PUBLIC_PROPERTY_COLUMNS, parseCoordinates } from '@/lib/property';
 import { requestRateLimit } from '@/lib/rate-limit';
 
 // GET /api/properties/[slug] - Get property by slug
@@ -61,10 +60,10 @@ export async function PATCH(
       );
     }
 
-    // Get existing property
+    // Get existing property for PATCH
     const { data: existing } = await supabase
       .from('properties')
-      .select('*')
+      .select(PUBLIC_PROPERTY_COLUMNS)
       .eq('slug', slug)
       .single();
 
@@ -90,7 +89,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
 
     // Only allow updating specific fields
     const allowedFields = [
@@ -138,7 +137,7 @@ export async function PATCH(
       .from('properties')
       .update(updates)
       .eq('id', existing.id)
-      .select()
+      .select(PUBLIC_PROPERTY_COLUMNS)
       .single();
 
     if (error) {
@@ -190,10 +189,10 @@ export async function DELETE(
       );
     }
 
-    // Get existing property
+    // Get existing property for DELETE
     const { data: existing } = await supabase
       .from('properties')
-      .select('*')
+      .select('id, owner_id, status, title')
       .eq('slug', slug)
       .single();
 

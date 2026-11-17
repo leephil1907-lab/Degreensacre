@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { getProperties } from '@/lib/db-helpers';
 import { sanitizeForDb, PROPERTY_TYPES, NIGERIAN_STATES } from '@/lib/validation';
-import { parseCoordinates } from '@/lib/property';
+import { PUBLIC_PROPERTY_COLUMNS, parseCoordinates } from '@/lib/property';
 
 // GET /api/properties - List properties with filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    const filters: any = {};
+    const filters: Record<string, unknown> = {};
     
     // Parse filter parameters
     if (searchParams.get('type')) filters.type = searchParams.get('type');
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { data: property, error } = await supabase
       .from('properties')
       .insert(propertyData)
-      .select()
+      .select(PUBLIC_PROPERTY_COLUMNS)
       .single();
 
     if (error) {

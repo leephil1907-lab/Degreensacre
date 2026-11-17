@@ -11,7 +11,7 @@ import {
   type CmsField, type CmsResource,
 } from '@/lib/cms-config';
 
-type CmsItem = Record<string, any>;
+type CmsItem = Record<string, unknown> & { id: string; slug?: string; status?: unknown; updated_at?: string; created_at?: string; published_at?: string };
 
 const resourceIcons: Record<string, typeof Building2> = {
   developments: Building2,
@@ -48,7 +48,7 @@ export default function ContentManager({ resourceName }: { resourceName: string 
   const [search, setSearch] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<CmsItem | null>(null);
-  const [values, setValues] = useState<Record<string, any>>(() => emptyCmsValues(resource));
+  const [values, setValues] = useState<Record<string, unknown>>(() => emptyCmsValues(resource));
   const [slugTouched, setSlugTouched] = useState(false);
 
   const loadItems = useCallback(async () => {
@@ -67,8 +67,24 @@ export default function ContentManager({ resourceName }: { resourceName: string 
   }, [resource.plural, resourceName]);
 
   useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
+    let active = true;
+    fetch(`/api/admin/content/${resourceName}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Failed to load ${resource.plural.toLowerCase()}.`);
+        if (active) {
+          setItems(data.items || []);
+          setError('');
+        }
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Content could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [resource.plural, resourceName]);
 
   useEffect(() => {
     if (resourceName !== 'agents') return;
@@ -189,7 +205,7 @@ export default function ContentManager({ resourceName }: { resourceName: string 
       );
     } else if (field.type === 'select') {
       const options = field.dynamicOptions === 'agencies'
-        ? agencies.map((agency) => ({ value: agency.id, label: agency.name }))
+        ? agencies.map((agency) => ({ value: agency.id, label: String(agency.name || agency.id) }))
         : field.options || [];
       input = (
         <select id={id} value={String(value || '')} required={field.required} onChange={(event) => updateValue(field, event.target.value)} className={common}>
@@ -293,15 +309,15 @@ export default function ContentManager({ resourceName }: { resourceName: string 
                 <div key={item.id} className="flex flex-col gap-4 p-4 transition hover:bg-gray-50/70 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate font-bold text-charcoal">{item[resource.titleField]}</h3>
+                      <h3 className="truncate font-bold text-charcoal">{String(item[resource.titleField] ?? '')}</h3>
                       {status !== null && status !== undefined && (
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${status === true || ['published', 'approved', 'completed'].includes(String(status)) ? 'bg-green-100 text-green-700' : ['rejected', 'archived', 'sold-out'].includes(String(status)) || status === false ? 'bg-gray-100 text-gray-600' : 'bg-amber-100 text-amber-700'}`}>
                           {typeof status === 'boolean' ? (status ? 'Verified' : 'Unverified') : String(status).replaceAll('-', ' ')}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 truncate text-sm text-gray-500">{item[resource.subtitleField || ''] || item.slug || 'No subtitle'}</p>
-                    <p className="mt-1 text-xs text-gray-400">{item.updated_at || item.created_at || item.published_at ? `Last updated ${new Date(item.updated_at || item.created_at || item.published_at).toLocaleDateString('en-NG')}` : ''}</p>
+                    <p className="mt-1 truncate text-sm text-gray-500">{String(item[resource.subtitleField || ''] || item.slug || 'No subtitle')}</p>
+                    <p className="mt-1 text-xs text-gray-400">{(item.updated_at || item.created_at || item.published_at) ? `Last updated ${new Date(String(item.updated_at || item.created_at || item.published_at)).toLocaleDateString('en-NG')}` : ''}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {path && <Link href={path} target="_blank" className="rounded-lg p-2 text-gray-400 transition hover:bg-white hover:text-forest" title="View public page"><ExternalLink className="h-4 w-4" /></Link>}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseError, requireAdminApi } from '@/lib/admin-auth';
 import { logAdminActivity } from '@/lib/db-helpers';
-import { createAdminSupabaseClient } from '@/lib/supabase-server';
+import { createServiceRoleClient } from '@/lib/supabase-server';
 
 const ROLES = ['super_admin', 'admin', 'editor', 'support'] as const;
 type Role = (typeof ROLES)[number];
@@ -99,10 +99,10 @@ export async function PATCH(request: NextRequest) {
     const { error } = await auth.context.supabase.from('profiles').update(patch).eq('id', userId);
     if (error) throw error;
 
-    // Suspension must actually stop sign-in, so ban the auth account too.
-    if (body.is_suspended !== undefined) {
+    // Suspension must actually stop sign-in, so ban the auth account too when service role is configured.
+    if (body.is_suspended !== undefined && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       try {
-        const adminClient = await createAdminSupabaseClient();
+        const adminClient = createServiceRoleClient();
         await adminClient.auth.admin.updateUserById(userId, {
           ban_duration: body.is_suspended ? '876000h' : 'none',
         });

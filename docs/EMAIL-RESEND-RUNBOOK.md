@@ -74,8 +74,19 @@ each route answers `{ "fallback": true }` and the screens use Supabase's own
 mailer exactly as before — so the site never breaks mid-migration.
 
 The service-role key is read only by `createServiceRoleClient()` in
-`src/lib/supabase-server.ts` and only inside the auth mailer. It is never used
-for data reads or exposed to the browser.
+`src/lib/supabase-server.ts` for server-only auth mail (`src/lib/auth-mailer.tsx`),
+staff auth-ban sync (`src/app/api/admin/management/staff/route.ts`), and the
+scheduled saved-search digest (`GET /api/cron/saved-searches`). It is never used
+for browser-facing data reads or exposed to the client.
+
+> **2026-11-17 Update:** `uri_allow_list` on Supabase project `rvwirpfclysapqtnrlvx`
+> has been cleaned up to remove stale Vercel preview URLs (`https://degreensacre.onrender.com/**`,
+> `https://degreenacres.org/**`, `https://www.degreenacres.org/**`, `http://localhost:3000/**`).
+> Branded auth templates live in `email-deliverables/supabase-auth/*.html`.
+> `src/lib/email.ts` also retries transient Resend errors (`rate_limit_exceeded`,
+> `application_error`, `internal_server_error`) up to 3 attempts while preserving
+> idempotency keys. Enable Resend **Webhooks** (bounces & complaints) in the Resend
+> dashboard to track deliverability and suppress invalid addresses.
 
 ## Step 1 — Verify the domain at Resend (owner, ~15 minutes + DNS propagation)
 

@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { friendlyAuthError } from '@/lib/auth-errors';
 import {
   Home, Heart, MessageSquare, Calendar, Bell, Settings, User,
-  MapPin, Eye, Loader2, Search, Clock, CheckCircle, XCircle, FileText,
+  MapPin, Loader2, Search, Clock,
   Receipt, Download, Wallet, ArrowRight, ShieldCheck, BellRing, Pause, Play, Trash2,
 } from 'lucide-react';
 import { effectiveStatus, formatNaira, invoiceBalance, STATUS_LABELS, type Invoice } from '@/lib/invoices';
@@ -16,28 +17,89 @@ import { effectiveStatus, formatNaira, invoiceBalance, STATUS_LABELS, type Invoi
 type Tab = 'overview' | 'saved' | 'searches' | 'enquiries' | 'viewings' | 'listings' | 'invoices' | 'messages' | 'notifications' | 'settings';
 const TAB_VALUES: Tab[] = ['overview', 'saved', 'searches', 'enquiries', 'viewings', 'listings', 'invoices', 'messages', 'notifications', 'settings'];
 
+interface DashboardProperty {
+  id: string;
+  slug: string;
+  title: string;
+  area?: string;
+  state?: string;
+  price: number;
+  status?: string;
+  verification_status?: string;
+  property_images?: Array<{ url: string }>;
+}
+
+interface DashboardEnquiry {
+  id: string;
+  created_at: string;
+  status: string;
+  message: string;
+  properties?: { title?: string } | null;
+}
+
+interface DashboardViewing {
+  id: string;
+  preferred_date: string;
+  preferred_time: string;
+  status: string;
+  notes?: string | null;
+  properties?: { title?: string } | null;
+}
+
+interface DashboardNotification {
+  id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+interface DashboardSearch {
+  id: string;
+  name: string;
+  summary: string;
+  match_count: number;
+  alert_enabled: boolean;
+  alert_frequency: string;
+  last_notified_at?: string | null;
+}
+
+interface DashboardProfile {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  state?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  account_type?: string | null;
+  is_verified?: boolean;
+  is_admin?: boolean;
+}
+
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window === 'undefined') return 'overview';
+    const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+    return requestedTab && TAB_VALUES.includes(requestedTab) ? requestedTab : 'overview';
+  });
   const [loading, setLoading] = useState(true);
-  const [savedProperties, setSavedProperties] = useState<any[]>([]);
-  const [myListings, setMyListings] = useState<any[]>([]);
-  const [enquiries, setEnquiries] = useState<any[]>([]);
-  const [viewings, setViewings] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [savedProperties, setSavedProperties] = useState<DashboardProperty[]>([]);
+  const [myListings, setMyListings] = useState<DashboardProperty[]>([]);
+  const [enquiries, setEnquiries] = useState<DashboardEnquiry[]>([]);
+  const [viewings, setViewings] = useState<DashboardViewing[]>([]);
+  const [notifications, setNotifications] = useState<DashboardNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [searches, setSearches] = useState<any[]>([]);
+  const [searches, setSearches] = useState<DashboardSearch[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       const returnPath = `${window.location.pathname}${window.location.search}`;
       router.push(`/signin?redirect=${encodeURIComponent(returnPath)}`);
-      return;
     }
-    const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
-    if (requestedTab && TAB_VALUES.includes(requestedTab)) setActiveTab(requestedTab);
   }, [authLoading, user, router]);
 
   const fetchDashboardData = useCallback(async () => {
@@ -92,10 +154,35 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user, fetchDashboardData]);
+    if (!user) return;
+    let active = true;
+    Promise.all([
+      fetch('/api/saved'),
+      fetch('/api/enquiries'),
+      fetch('/api/viewings'),
+      fetch('/api/notifications'),
+      fetch('/api/properties/mine'),
+      fetch('/api/invoices/mine'),
+      fetch('/api/searches'),
+    ])
+      .then(async ([savedRes, enquiriesRes, viewingsRes, notificationsRes, listingsRes, invoicesRes, searchesRes]) => {
+        if (!active) return;
+        if (searchesRes?.ok) setSearches((await searchesRes.json()).searches || []);
+        if (invoicesRes?.ok) setInvoices((await invoicesRes.json()).invoices || []);
+        if (savedRes.ok) setSavedProperties((await savedRes.json()).properties || []);
+        if (enquiriesRes.ok) setEnquiries((await enquiriesRes.json()).enquiries || []);
+        if (viewingsRes.ok) setViewings((await viewingsRes.json()).viewings || []);
+        if (notificationsRes.ok) {
+          const data = await notificationsRes.json();
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        }
+        if (listingsRes.ok) setMyListings((await listingsRes.json()).properties || []);
+      })
+      .catch((error) => console.error('Failed to fetch dashboard data:', error))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user]);
 
   if (authLoading || !user) {
     return (
@@ -134,10 +221,9 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-forest/10">
+              <div className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-forest/10">
                 {profile?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-2xl object-cover" />
+                  <Image src={profile.avatar_url} alt="" fill unoptimized className="rounded-2xl object-cover" />
                 ) : (
                   <User className="h-7 w-7 text-forest" />
                 )}
@@ -350,10 +436,12 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {myListings.map((property: any) => (
+                        {myListings.map((property) => (
                           <div key={property.id} className="bg-white rounded-xl shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
                             {property.property_images?.[0]?.url ? (
-                              <img src={property.property_images[0].url} alt={property.title} className="w-full sm:w-32 h-28 object-cover rounded-lg" />
+                              <div className="relative w-full sm:w-32 h-28 shrink-0 overflow-hidden rounded-lg">
+                                <Image src={property.property_images[0].url} alt={property.title} fill unoptimized className="object-cover" />
+                              </div>
                             ) : (
                               <div className="w-full sm:w-32 h-28 rounded-lg bg-gray-100 flex items-center justify-center"><Home className="w-8 h-8 text-gray-400" /></div>
                             )}
@@ -487,18 +575,22 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {savedProperties.map((property: any) => (
+                        {savedProperties.map((property) => (
                           <Link
                             key={property.id}
                             href={`/properties/${property.slug}`}
                             className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                           >
                             {property.property_images?.[0]?.url && (
-                              <img
-                                src={property.property_images[0].url}
-                                alt={property.title}
-                                className="w-full h-48 object-cover"
-                              />
+                              <div className="relative w-full h-48">
+                                <Image
+                                  src={property.property_images[0].url}
+                                  alt={property.title}
+                                  fill
+                                  unoptimized
+                                  className="object-cover"
+                                />
+                              </div>
                             )}
                             <div className="p-4">
                               <h3 className="font-medium text-charcoal mb-1">{property.title}</h3>
@@ -527,7 +619,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {enquiries.map((enquiry: any) => (
+                        {enquiries.map((enquiry) => (
                           <div key={enquiry.id} className="bg-white rounded-xl shadow-sm p-5">
                             <div className="flex items-start justify-between mb-2">
                               <div>
@@ -567,7 +659,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {viewings.map((viewing: any) => (
+                        {viewings.map((viewing) => (
                           <div key={viewing.id} className="bg-white rounded-xl shadow-sm p-5">
                             <div className="flex items-start justify-between mb-2">
                               <div>
@@ -630,7 +722,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {notifications.map((notif: any) => (
+                        {notifications.map((notif) => (
                           <div
                             key={notif.id}
                             className={`bg-white rounded-xl shadow-sm p-4 flex items-start gap-3 ${
@@ -668,7 +760,7 @@ export default function DashboardPage() {
   );
 }
 
-function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
+function DashboardSettings({ profile, onUpdate }: { profile: DashboardProfile | null; onUpdate: () => void }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -698,8 +790,8 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
       
       setSuccess(true);
       onUpdate();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update profile');
     } finally {
       setSaving(false);
     }
@@ -799,7 +891,7 @@ function DashboardSettings({ profile, onUpdate }: { profile: any; onUpdate: () =
 
 
 /** Password and sign-in security, separate from the editable profile fields. */
-function SecurityPanel({ profile }: { profile: any }) {
+function SecurityPanel({ profile }: { profile: DashboardProfile | null }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [state, setState] = useState<'idle' | 'saving' | 'done'>('idle');
@@ -891,7 +983,7 @@ function SecurityPanel({ profile }: { profile: any }) {
 }
 
 /** Saved searches with instant e-mail alerts, managed from the dashboard. */
-function SearchAlerts({ searches, onChanged }: { searches: any[]; onChanged: () => void }) {
+function SearchAlerts({ searches, onChanged }: { searches: DashboardSearch[]; onChanged: () => void }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');

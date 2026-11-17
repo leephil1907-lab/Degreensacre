@@ -15,20 +15,20 @@ export type Article = {
   tags: string[];
 };
 
-function normalizeArticle(row: Record<string, any>): Article {
+function normalizeArticle(row: Record<string, unknown>): Article {
   return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    excerpt: row.excerpt,
-    content: row.content,
-    category: row.category,
-    author: row.author,
-    publishDate: row.published_at,
+    id: String(row.id ?? ''),
+    slug: String(row.slug ?? ''),
+    title: String(row.title ?? ''),
+    excerpt: String(row.excerpt ?? ''),
+    content: String(row.content ?? ''),
+    category: String(row.category ?? ''),
+    author: String(row.author ?? ''),
+    publishDate: String(row.published_at ?? ''),
     readTime: Number(row.read_time || 1),
-    image: row.image,
+    image: String(row.image ?? ''),
     featured: Boolean(row.featured),
-    tags: Array.isArray(row.tags) ? row.tags : [],
+    tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
   };
 }
 

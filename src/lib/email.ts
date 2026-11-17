@@ -7,6 +7,12 @@ export type EmailResult = { success: boolean; id?: string; error?: string };
 
 type SendOptions = { to: string; subject: string; template: ReactElement; replyTo?: string; idempotencyKey?: string; scheduledAt?: Date };
 
+const TRANSIENT_ERROR_NAMES = new Set(['rate_limit_exceeded', 'application_error', 'internal_server_error']);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** Provider acceptance is not proof of inbox delivery. Never log recipient PII or tokens. */
 export async function sendEmail({ to, subject, template, replyTo, idempotencyKey, scheduledAt }: SendOptions): Promise<EmailResult> {
   if (!process.env.RESEND_API_KEY) return { success: false, error: 'Email delivery is not configured' };
@@ -14,24 +20,52 @@ export async function sendEmail({ to, subject, template, replyTo, idempotencyKey
     return { success: false, error: 'Verified EMAIL_FROM and monitored EMAIL_REPLY_TO are required' };
   }
   if (!isEmail(to) || /[\r\n]/.test(subject) || subject.length > 200 || (replyTo && !isEmail(replyTo))) return { success: false, error: 'Invalid email fields' };
+
+  let html: string;
+  let text: string;
   try {
-    const html = await render(template);
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'De-Greenacres <onboarding@resend.dev>',
-      to: [to], subject, html, text: toPlainText(html),
-      replyTo: replyTo || process.env.EMAIL_REPLY_TO,
-      ...(scheduledAt ? { scheduledAt: scheduledAt.toISOString() } : {}),
-    }, idempotencyKey ? { idempotencyKey } : undefined);
-    if (error) {
-      console.error('[email] Provider rejected email:', error.name);
-      return { success: false, error: 'Email provider rejected the message' };
-    }
-    return { success: true, id: data?.id };
+    html = await render(template);
+    text = toPlainText(html);
   } catch {
-    console.error('[email] Rendering or delivery failed');
-    return { success: false, error: 'Email delivery failed' };
+    console.error('[email] Template rendering failed');
+    return { success: false, error: 'Email rendering failed' };
   }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const payload = {
+    from: process.env.EMAIL_FROM || 'De-Greenacres <onboarding@resend.dev>',
+    to: [to],
+    subject,
+    html,
+    text,
+    replyTo: replyTo || process.env.EMAIL_REPLY_TO,
+    ...(scheduledAt ? { scheduledAt: scheduledAt.toISOString() } : {}),
+  };
+  const requestOptions = idempotencyKey ? { idempotencyKey } : undefined;
+
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { data, error } = await resend.emails.send(payload, requestOptions);
+      if (!error) {
+        return { success: true, id: data?.id };
+      }
+
+      const retryable = TRANSIENT_ERROR_NAMES.has(error.name);
+      if (!retryable || attempt === maxAttempts) {
+        console.error('[email] Provider rejected email:', error.name);
+        return { success: false, error: 'Email provider rejected the message' };
+      }
+    } catch {
+      if (attempt === maxAttempts) {
+        console.error('[email] Delivery failed after retries');
+        return { success: false, error: 'Email delivery failed' };
+      }
+    }
+    await sleep(250 * attempt);
+  }
+
+  return { success: false, error: 'Email delivery failed' };
 }
 
 /** Individual envelopes prevent disclosure of other recipients' addresses. */

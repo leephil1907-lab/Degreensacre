@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
-  ArrowLeft, MapPin, Bed, Bath, Square, Car, Heart, Share2,
+  ArrowLeft, MapPin, Bed, Bath, Square, Car, Share2,
   Phone, Mail, MessageSquare, CheckCircle, Shield, Clock,
   Calendar, Eye, Bookmark, BookmarkPlus, Loader2, ChevronLeft,
-  ChevronRight, AlertTriangle, FileText, User, Star, Navigation,
-  CreditCard, Building, Map, TreePine
+  ChevronRight, AlertTriangle, FileText, User, Navigation,
+  CreditCard, Building, Map
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdSense, { adsenseConfigured } from '@/components/GoogleAdsense';
@@ -63,10 +64,30 @@ interface Property {
   total_plots?: number;
   date_added: string;
   published_at?: string;
+  owner_id?: string;
   images?: string[];
   property_images?: { url: string; display_order: number; is_primary: boolean; alt_text?: string }[];
   property_documents?: { name: string; document_type: string; url: string; is_public: boolean }[];
   agents?: { name: string; phone: string; whatsapp: string; email: string; photo_url?: string; user_id?: string };
+}
+
+interface AgencyProfileInfo {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+interface AgentProfileInfo {
+  id: string;
+  slug: string;
+  name: string;
+  phone?: string;
+  whatsapp?: string;
+  photo_url?: string;
+  is_verified?: boolean;
+  agency_id?: string;
+  user_id?: string;
+  agencies?: AgencyProfileInfo;
 }
 
 export default function PropertyDetailClient({ params }: { params: Promise<{ slug: string }> }) {
@@ -80,7 +101,7 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const [isSaved, setIsSaved] = useState(false);
   const [shareFeedback, setShareFeedback] = useState('');
   const [showEnquiry, setShowEnquiry] = useState(false);
-  const [showViewing, setShowViewing] = useState(false);
+  const [showViewing] = useState(false);
   const [enquiryForm, setEnquiryForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [enquirySubmitting, setEnquirySubmitting] = useState(false);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
@@ -92,8 +113,8 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
   const [directMessageSubmitting, setDirectMessageSubmitting] = useState(false);
   const [directMessageError, setDirectMessageError] = useState('');
   const [slug, setSlug] = useState<string>('');
-  const [agentProfile, setAgentProfile] = useState<any>(null);
-  const [agencyProfile, setAgencyProfile] = useState<any>(null);
+  const [agentProfile, setAgentProfile] = useState<AgentProfileInfo | null>(null);
+  const [agencyProfile, setAgencyProfile] = useState<AgencyProfileInfo | null>(null);
   const mapProperties = useMemo(() => property ? [property] : [], [property]);
   const propertyCoordinates = property ? getPropertyCoordinates(property) : null;
 
@@ -101,57 +122,58 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
     params.then(p => setSlug(p.slug));
   }, [params]);
 
-  const fetchProperty = async () => {
-    setLoading(true);
-    try {
-      // First try the database API
-      const response = await fetch(`/api/properties/${slug}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.property) {
-          setProperty(data.property);
-          // Try to fetch linked agent/agency (DB-primary)
-          try {
-            const ownerId = (data.property as any).owner_id;
-            if (ownerId) {
-              const ar = await fetch(`/api/agents?user_id=${ownerId}&limit=1`);
-              if (ar.ok) {
-                const aj = await ar.json();
-                if (aj.agents && aj.agents.length > 0) {
-                  setAgentProfile(aj.agents[0]);
-                  if (aj.agents[0].agency_id) {
-                    const agRes = await fetch(`/api/agencies?limit=100`);
-                    // we could fetch agency by id via agencies/[slug] but we have agency_id, try to fetch single via supabase directly
-                    // fallback: try agencies api with id filter via slug not available, so try to fetch via agents expand already includes agencies
-                    if (aj.agents[0].agencies) setAgencyProfile(aj.agents[0].agencies);
-                    else {
-                      const agFetch = await fetch(`/api/agencies`);
-                      if (agFetch.ok) {
-                        const agJ = await agFetch.json();
-                        const found = (agJ.agencies || []).find((a: any) => a.id === aj.agents[0].agency_id);
-                        if (found) setAgencyProfile(found);
+  useEffect(() => {
+    if (!slug) return;
+    let active = true;
+
+    (async () => {
+      try {
+        const response = await fetch(`/api/properties/${slug}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.property) {
+            if (!active) return;
+            setProperty(data.property);
+            try {
+              const ownerId = (data.property as Property).owner_id;
+              if (ownerId) {
+                const ar = await fetch(`/api/agents?user_id=${ownerId}&limit=1`);
+                if (ar.ok) {
+                  const aj = await ar.json();
+                  if (active && aj.agents && aj.agents.length > 0) {
+                    const matchedAgent = aj.agents[0] as AgentProfileInfo;
+                    setAgentProfile(matchedAgent);
+                    if (matchedAgent.agency_id) {
+                      if (matchedAgent.agencies) {
+                        setAgencyProfile(matchedAgent.agencies);
+                      } else {
+                        const agFetch = await fetch(`/api/agencies`);
+                        if (agFetch.ok) {
+                          const agJ = await agFetch.json();
+                          const found = (agJ.agencies || []).find((a: AgencyProfileInfo) => a.id === matchedAgent.agency_id);
+                          if (active && found) setAgencyProfile(found);
+                        }
                       }
                     }
                   }
                 }
               }
-            }
-          } catch {}
-          setLoading(false);
-          return;
+            } catch {}
+            return;
+          }
         }
+
+        if (active) {
+          setError(response.status === 404 ? 'Property not found or no longer available.' : 'This property could not be loaded. Please try again.');
+        }
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'This property could not be loaded.');
+      } finally {
+        if (active) setLoading(false);
       }
+    })();
 
-      setError(response.status === 404 ? 'Property not found or no longer available.' : 'This property could not be loaded. Please try again.');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (slug) void fetchProperty();
+    return () => { active = false; };
   }, [slug]);
 
   const toggleSave = async () => {
@@ -329,11 +351,13 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
             {/* Image Gallery */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               {images.length > 0 ? (
-                <div className="relative">
-                  <img
+                <div className="relative h-96 w-full">
+                  <Image
                     src={images[currentImage]?.url}
                     alt={images[currentImage]?.alt_text || property.title}
-                    className="w-full h-96 object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
                   />
                   {images.length > 1 && (
                     <>
@@ -364,8 +388,8 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                   )}
                 </div>
               ) : (
-                <div className="relative">
-                  <img src="/property-placeholder.svg" alt="" className="h-72 w-full object-cover sm:h-96" />
+                <div className="relative h-72 w-full sm:h-96">
+                  <Image src="/property-placeholder.svg" alt="" fill unoptimized className="object-cover" />
                   <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-white/85 via-white/60 to-transparent px-6 pb-5 pt-16 text-center">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wide text-forest backdrop-blur-sm">
                       <MapPin className="h-3.5 w-3.5" /> Photographs coming soon
@@ -384,11 +408,11 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
                     <button
                       key={i}
                       onClick={() => setCurrentImage(i)}
-                      className={`w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                      className={`relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
                         i === currentImage ? 'border-forest' : 'border-transparent'
                       }`}
                     >
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <Image src={img.url} alt="" fill unoptimized className="object-cover" />
                     </button>
                   ))}
                 </div>
@@ -689,9 +713,9 @@ export default function PropertyDetailClient({ params }: { params: Promise<{ slu
               <h3 className="font-serif text-lg text-charcoal-900 mb-4">Contact Agent</h3>
               
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-forest-50 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="relative w-12 h-12 bg-forest-50 rounded-full flex items-center justify-center overflow-hidden">
                   {(agentProfile?.photo_url || property.agents?.photo_url) ? (
-                    <img src={agentProfile?.photo_url || property.agents?.photo_url} alt="" className="w-12 h-12 rounded-full object-cover" />
+                    <Image src={agentProfile?.photo_url || property.agents?.photo_url || ''} alt="" fill unoptimized className="rounded-full object-cover" />
                   ) : (
                     <User className="w-6 h-6 text-forest" />
                   )}

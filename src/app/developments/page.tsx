@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Building2, MapPin } from 'lucide-react';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -9,7 +10,22 @@ export const metadata = {
 };
 export const dynamic = 'force-dynamic';
 
-function formatStartingPrice(units: any[]) {
+type UnitType = { price?: number | string | null };
+type DevelopmentSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  status?: string | null;
+  location?: string | null;
+  state?: string | null;
+  description?: string | null;
+  gallery: string[];
+  unitTypes: UnitType[];
+  totalUnits: number;
+  availableUnits: number;
+};
+
+function formatStartingPrice(units: UnitType[]) {
   const prices = units.map((unit) => Number(unit?.price || 0)).filter((price) => price > 0);
   if (!prices.length) return 'Contact for pricing';
   const price = Math.min(...prices);
@@ -19,7 +35,7 @@ function formatStartingPrice(units: any[]) {
 }
 
 export default async function DevelopmentsPage() {
-  let developments: any[] = [];
+  let developments: DevelopmentSummary[] = [];
   let loadError = false;
   try {
     const supabase = await createServerSupabaseClient();
@@ -40,7 +56,7 @@ export default async function DevelopmentsPage() {
   return (
     <div className="min-h-screen bg-ivory">
       <section className="relative h-[400px] overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90" alt="Property developments" className="h-full w-full object-cover" />
+        <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=90" alt="Property developments" fill sizes="100vw" priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-charcoal/85" />
         <div className="absolute inset-0 flex items-center justify-center"><div className="container-custom text-center text-white"><p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-sage">Projects & estates</p><h1 className="font-display text-5xl font-bold md:text-display-xl">Property Developments</h1><p className="mx-auto mt-4 max-w-3xl text-xl text-white/85">Explore published estates and development projects, unit options and inspection opportunities.</p></div></div>
       </section>
@@ -56,7 +72,7 @@ export default async function DevelopmentsPage() {
                 <ScrollReveal key={development.id} delay={index * 0.08}>
                   <Link href={`/developments/${development.slug}`} className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
                     <div className="relative h-64 overflow-hidden">
-                      <img src={development.gallery[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200'} alt={development.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <Image src={development.gallery[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200'} alt={development.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" unoptimized className="object-cover transition duration-500 group-hover:scale-105" />
                       <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-xs font-bold capitalize text-white">{String(development.status || 'planning').replaceAll('-', ' ')}</span>
                       <div className="absolute inset-x-4 bottom-4 rounded-xl bg-white/95 p-3 backdrop-blur"><p className="text-xs text-gray-500">Starting from</p><p className="text-xl font-bold text-forest">{formatStartingPrice(development.unitTypes)}</p></div>
                     </div>

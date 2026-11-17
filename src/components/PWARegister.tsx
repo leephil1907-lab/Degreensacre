@@ -1,6 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+const emptySubscribe = () => () => {};
+
+function getStandaloneSnapshot(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
+}
 
 const INSTALL_SNOOZE_KEY = 'degreenacres-install-snoozed-until';
 const UPDATE_SNOOZE_KEY = 'degreenacres-update-snoozed-until';
@@ -18,22 +34,15 @@ function snooze(key: string, days: number) {
 }
 
 export default function PWARegister() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [installedOverride, setInstalledOverride] = useState(false);
+  const isStandalone = useSyncExternalStore(emptySubscribe, getStandaloneSnapshot, () => false);
+  const isInstalled = isStandalone || installedOverride;
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://');
-
-    if (isStandalone) {
-      setIsInstalled(true);
-    }
-
     let installTimer: ReturnType<typeof setTimeout> | undefined;
     let updateTimer: ReturnType<typeof setInterval> | undefined;
     const showAfterEngagement = () => {
@@ -50,7 +59,7 @@ export default function PWARegister() {
 
     const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Wait for consent and meaningful engagement before suggesting installation.
       if (!isStandalone && !isSnoozed(INSTALL_SNOOZE_KEY)) {
         window.addEventListener('pointerdown', showAfterEngagement, { once: true, passive: true });
@@ -66,7 +75,7 @@ export default function PWARegister() {
       removeEngagementListeners();
       clearTimeout(installTimer);
       console.log('[PWA] App installed');
-      setIsInstalled(true);
+      setInstalledOverride(true);
       setShowInstallButton(false);
       setDeferredPrompt(null);
     };
@@ -119,7 +128,7 @@ export default function PWARegister() {
       clearTimeout(installTimer);
       clearInterval(updateTimer);
     };
-  }, []);
+  }, [isStandalone]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -128,7 +137,7 @@ export default function PWARegister() {
       const { outcome } = await deferredPrompt.userChoice;
       console.log(`[PWA] User response: ${outcome}`);
       if (outcome === 'accepted') {
-        setIsInstalled(true);
+        setInstalledOverride(true);
       } else {
         snooze(INSTALL_SNOOZE_KEY, 30);
       }
@@ -171,11 +180,12 @@ export default function PWARegister() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-fade-in">
       <div className="bg-white rounded-2xl shadow-2xl p-6 border-2 border-forest/20">
         <div className="flex items-start gap-4">
-          <img
+          <Image
             src="/logo-icon.png"
             alt="De-Greenacres"
+            width={48}
+            height={48}
             className="w-12 h-12 object-contain flex-shrink-0"
-            loading="lazy"
           />
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-charcoal mb-1 text-sm">Install De-Greenacres App</h3>

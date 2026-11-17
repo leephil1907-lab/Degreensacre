@@ -19,7 +19,9 @@ export async function GET() {
     const ids = [...new Set((messages || []).flatMap((message) => [message.sender_id, message.recipient_id]))];
     const { data: summaries, error: summaryError } = await supabase.rpc('conversation_profile_summaries', { ids });
     if (summaryError) throw summaryError;
-    const profiles = new Map<string, { first_name: string; last_name: string; avatar_url: string | null }>((summaries || []).map((profile: any) => [profile.id, profile]));
+    const profiles = new Map<string, { first_name: string; last_name: string; avatar_url: string | null }>(
+      (summaries || []).map((profile: { id: string; first_name: string; last_name: string; avatar_url: string | null }) => [profile.id, profile])
+    );
 
     const conversations = new Map<string, { id: string; lastMessage: unknown; unreadCount: number; otherUser: unknown }>();
     for (const message of messages || []) {

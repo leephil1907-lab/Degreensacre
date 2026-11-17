@@ -74,7 +74,7 @@ export function validateLength(
 
 // Required field validator
 export function validateRequired(
-  value: any,
+  value: unknown,
   field: string,
   label?: string
 ): ValidationError | null {

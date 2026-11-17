@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ArrowRight, Upload, X, Check, Loader2,
-  Home, MapPin, DollarSign, Image, FileText, CheckCircle
+  Home, MapPin, DollarSign, Image as ImageIcon, CheckCircle
 } from 'lucide-react';
 import { NIGERIAN_STATES } from '@/lib/validation';
 import LocationPicker from '@/components/LocationPicker';
@@ -52,7 +53,7 @@ export default function SubmitPropertyPage() {
     { number: 1, title: 'Basic Info', icon: Home },
     { number: 2, title: 'Location', icon: MapPin },
     { number: 3, title: 'Details', icon: DollarSign },
-    { number: 4, title: 'Images', icon: Image },
+    { number: 4, title: 'Images', icon: ImageIcon },
     { number: 5, title: 'Review', icon: CheckCircle },
   ];
 
@@ -165,8 +166,8 @@ export default function SubmitPropertyPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit property');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit property');
     } finally {
       setLoading(false);
     }
@@ -632,11 +633,13 @@ export default function SubmitPropertyPage() {
                   </p>
                   <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
                     {formData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
+                      <div key={index} className="relative group h-32">
+                        <Image
                           src={URL.createObjectURL(image)}
                           alt={`Upload ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          fill
+                          unoptimized
+                          className="object-cover rounded-lg"
                         />
                         <button
                           type="button"

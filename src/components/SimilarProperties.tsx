@@ -1,14 +1,37 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatPropertyPrice, getPropertyImage } from '@/lib/property';
+
+interface PropertyShape {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  price_period?: string | null;
+  state: string;
+  area: string;
+  propertyType?: string | null;
+  property_type?: string | null;
+  type: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqm: number;
+  images?: string[];
+  property_images?: Array<{ url: string }>;
+  verificationStatus?: string | null;
+  verification_status?: string | null;
+  featured?: boolean | null;
+}
+
 interface SimilarPropertiesProps {
-  currentProperty: any; // allow DB shape or static shape
+  currentProperty: PropertyShape;
 }
 
 export default function SimilarProperties({ currentProperty }: SimilarPropertiesProps) {
-  const [dbList, setDbList] = useState<any[]>([]);
+  const [dbList, setDbList] = useState<PropertyShape[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +45,7 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
         const res = await fetch(`/api/properties?${params.toString()}`);
         if (!res.ok) return;
         const data = await res.json();
-        const normalized = (data.properties || []).map((p: any) => ({
+        const normalized = (data.properties || []).map((p: PropertyShape): PropertyShape => ({
           id: p.id,
           slug: p.slug,
           title: p.title,
@@ -35,7 +58,7 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
           bedrooms: p.bedrooms,
           bathrooms: p.bathrooms,
           sqm: p.sqm,
-          images: p.images || (p.property_images?.map((x: any) => x.url) || []),
+          images: p.images || (p.property_images?.map((x) => x.url) || []),
           verificationStatus: p.verification_status || p.verificationStatus,
           featured: p.featured,
         }));
@@ -48,9 +71,9 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
     return () => { cancelled = true; };
   }, [currentProperty.id, currentProperty.state, currentProperty.type]);
 
-  const pool: any[] = dbList;
+  const pool = dbList;
 
-  const getSimilarityScore = (property: any): number => {
+  const getSimilarityScore = (property: PropertyShape): number => {
     if (property.id === currentProperty.id) return -1;
     if (property.slug === currentProperty.slug) return -1;
 
@@ -122,10 +145,13 @@ export default function SimilarProperties({ currentProperty }: SimilarProperties
           {similarProperties.map((property) => (
             <Link key={property.id || property.slug} href={`/properties/${property.slug}`} className="card hover-lift group">
               <div className="relative h-56 overflow-hidden">
-                <img
+                <Image
                   src={getPropertyImage(property)}
                   alt={property.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  unoptimized
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
                 />
 
                 <div className="absolute top-3 left-3 flex flex-col space-y-1">

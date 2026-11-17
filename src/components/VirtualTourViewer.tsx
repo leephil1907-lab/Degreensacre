@@ -17,7 +17,7 @@ interface VirtualTourViewerProps {
   tours: VirtualTour[];
 }
 
-export default function VirtualTourViewer({ propertyId, propertyTitle, tours }: VirtualTourViewerProps) {
+export default function VirtualTourViewer({ propertyTitle, tours }: VirtualTourViewerProps) {
   const [activeTour, setActiveTour] = useState<VirtualTour | null>(tours[0] || null);
   const [activeTab, setActiveTab] = useState<string>('360');
 

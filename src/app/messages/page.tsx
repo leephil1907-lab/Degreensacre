@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -45,7 +46,7 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     setError('');
     try {
       const response = await fetch('/api/messages', { cache: 'no-store' });
@@ -57,76 +58,7 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchMessages = async (conversationId: string) => {
-    setError('');
-    try {
-      const { data, error: loadError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-      if (loadError) throw loadError;
-      setMessages(data || []);
-
-      const response = await fetch('/api/messages', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation_id: conversationId }),
-      });
-      if (response.ok) setConversations((current) => current.map((conversation) => conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Messages could not be loaded.');
-    }
-  };
-
-  const subscribeToMessages = () => {
-    const channel = supabase
-      .channel('messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `recipient_id=eq.${user?.id}`,
-        },
-        (payload) => {
-          fetchConversations();
-          if (selectedConversation && payload.new.conversation_id === selectedConversation) {
-            setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
-
-  const subscribeToConversation = (conversationId: string) => {
-    const channel = supabase
-      .channel(`conversation-${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -135,15 +67,91 @@ export default function MessagesPage() {
       return;
     }
 
-    void fetchConversations();
-    return subscribeToMessages();
-  }, [user, authLoading, router]);
+    let active = true;
+    fetch('/api/messages', { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Conversations could not be loaded.');
+        if (active) setConversations(data.conversations || []);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Conversations could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+
+    const channel = supabase
+      .channel('messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          void fetchConversations();
+          if (selectedConversation && payload.new.conversation_id === selectedConversation) {
+            setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user, authLoading, router, fetchConversations, selectedConversation]);
 
   useEffect(() => {
     if (!selectedConversation) return;
+    let active = true;
 
-    void fetchMessages(selectedConversation);
-    return subscribeToConversation(selectedConversation);
+    Promise.resolve(
+      supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', selectedConversation)
+        .order('created_at', { ascending: true })
+    )
+      .then(async ({ data, error: loadError }) => {
+        if (loadError) throw loadError;
+        if (!active) return;
+        setMessages(data || []);
+        const response = await fetch('/api/messages', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conversation_id: selectedConversation }),
+        });
+        if (response.ok && active) {
+          setConversations((current) => current.map((conversation) => conversation.id === selectedConversation ? { ...conversation, unreadCount: 0 } : conversation));
+        }
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Messages could not be loaded.');
+      });
+
+    const channel = supabase
+      .channel(`conversation-${selectedConversation}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation}`,
+        },
+        (payload) => {
+          setMessages((prev) => prev.some((message) => message.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
   }, [selectedConversation]);
 
   useEffect(() => {
@@ -254,9 +262,12 @@ export default function MessagesPage() {
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                           {conversation.otherUser.avatar_url ? (
-                            <img
+                            <Image
                               src={conversation.otherUser.avatar_url}
                               alt=""
+                              width={48}
+                              height={48}
+                              unoptimized
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (

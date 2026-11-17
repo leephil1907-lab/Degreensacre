@@ -34,7 +34,20 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   }, [id]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/admin/invoices/${id}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'The invoice could not be loaded.');
+        if (active) setInvoice(data.invoice);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'The invoice could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id]);
 
   const markPaid = async () => {
     if (!invoice) return;

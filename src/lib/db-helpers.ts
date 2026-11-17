@@ -1,15 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { isStockImage } from './property';
+import { isStockImage, PUBLIC_PROPERTY_COLUMNS } from './property';
+import { createServerSupabaseClient, createAdminSupabaseClient } from './supabase-server';
 
-function publicPropertyPhotos<T extends { images?: string[]; property_images?: { url: string }[]; admin_notes?: unknown }>(property: T) {
-  const { admin_notes: _privateNotes, ...publicRecord } = property;
+function publicPropertyPhotos<T extends { images?: string[]; property_images?: { url: string }[] }>(property: T) {
   return {
-    ...publicRecord,
+    ...property,
     images: (property.images || []).filter((url) => !isStockImage(url)),
     property_images: (property.property_images || []).filter((image) => !isStockImage(image.url)),
   };
 }
-import { createServerSupabaseClient, createAdminSupabaseClient } from './supabase-server';
 
 // Property helpers
 export async function getProperties(filters: {
@@ -27,10 +26,10 @@ export async function getProperties(filters: {
   orderDirection?: 'asc' | 'desc';
 }) {
   const supabase = await createServerSupabaseClient();
-  
+
   let query = supabase
     .from('properties')
-    .select('*, property_images(*)', { count: 'exact' })
+    .select(`${PUBLIC_PROPERTY_COLUMNS}, property_images(id,url,alt_text,display_order,is_primary)`, { count: 'exact' })
     .eq('status', 'available');
 
   if (filters.type) query = query.eq('type', filters.type);
@@ -60,10 +59,10 @@ export async function getProperties(filters: {
 
 export async function getPropertyBySlug(slug: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data: property, error } = await supabase
     .from('properties')
-    .select('*, property_images(*)')
+    .select(`${PUBLIC_PROPERTY_COLUMNS}, property_images(id,url,alt_text,display_order,is_primary)`)
     .eq('slug', slug)
     .eq('status', 'available')
     .maybeSingle();
@@ -123,10 +122,10 @@ export async function createEnquiry(enquiry: {
 
 export async function getUserEnquiries(userId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data, error } = await supabase
     .from('enquiries')
-    .select('*, properties(title, slug, images)')
+    .select('id,property_id,buyer_id,buyer_name,buyer_email,buyer_phone,message,status,source,created_at,updated_at, properties(title, slug, images)')
     .eq('buyer_id', userId)
     .order('created_at', { ascending: false });
 
@@ -138,21 +137,26 @@ export async function getUserEnquiries(userId: string) {
 // Saved properties helpers
 export async function getUserSavedProperties(userId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data, error } = await supabase
     .from('saved_properties')
-    .select('*, properties(*, property_images(*))')
+    .select(`id,created_at, properties(${PUBLIC_PROPERTY_COLUMNS}, property_images(id,url,alt_text,display_order,is_primary))`)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
 
-  return data.map(item => item.properties);
+  return (data || [])
+    .map((item) => {
+      const prop = Array.isArray(item.properties) ? item.properties[0] : item.properties;
+      return prop ? publicPropertyPhotos(prop) : null;
+    })
+    .filter(Boolean);
 }
 
 export async function toggleSavedProperty(userId: string, propertyId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data: existing } = await supabase
     .from('saved_properties')
     .select('id')
@@ -203,10 +207,10 @@ export async function createViewingRequest(viewing: {
 
 export async function getUserViewingRequests(userId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data, error } = await supabase
     .from('viewing_requests')
-    .select('*, properties(title, slug, images)')
+    .select('id,property_id,user_id,preferred_date,preferred_time,alternative_date,alternative_time,notes,status,created_at,updated_at, properties(title, slug, images)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -221,10 +225,10 @@ export async function createNotification(notification: {
   type: string;
   title: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }) {
   const supabase = await createAdminSupabaseClient();
-  
+
   const { data, error } = await supabase
     .from('notifications')
     .insert(notification)
@@ -238,10 +242,10 @@ export async function createNotification(notification: {
 
 export async function getUserNotifications(userId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data, error } = await supabase
     .from('notifications')
-    .select('*')
+    .select('id,user_id,type,title,message,data,is_read,created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -253,7 +257,7 @@ export async function getUserNotifications(userId: string) {
 
 export async function markNotificationAsRead(notificationId: string, userId: string) {
   const supabase = await createServerSupabaseClient();
-  
+
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
@@ -266,7 +270,7 @@ export async function markNotificationAsRead(notificationId: string, userId: str
 // Admin helpers
 export async function getAdminStats() {
   const supabase = await createAdminSupabaseClient();
-  
+
   const [
     { count: totalUsers },
     { count: totalProperties },
@@ -276,13 +280,13 @@ export async function getAdminStats() {
     { count: newEnquiries },
     { count: totalViewings },
   ] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('properties').select('*', { count: 'exact', head: true }),
-    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available'),
-    supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
-    supabase.from('enquiries').select('*', { count: 'exact', head: true }),
-    supabase.from('enquiries').select('*', { count: 'exact', head: true }).eq('status', 'new'),
-    supabase.from('viewing_requests').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }),
+    supabase.from('properties').select('id', { count: 'exact', head: true }),
+    supabase.from('properties').select('id', { count: 'exact', head: true }).eq('status', 'available'),
+    supabase.from('properties').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
+    supabase.from('enquiries').select('id', { count: 'exact', head: true }),
+    supabase.from('enquiries').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+    supabase.from('viewing_requests').select('id', { count: 'exact', head: true }),
   ]);
 
   return {
@@ -301,11 +305,11 @@ export async function logAdminActivity(activity: {
   action: string;
   entity_type: string;
   entity_id?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   ip_address?: string;
 }) {
   const supabase = await createAdminSupabaseClient();
-  
+
   await supabase.from('admin_activity').insert(activity);
 }
 
@@ -314,12 +318,12 @@ export async function logAudit(log: {
   action: string;
   entity_type: string;
   entity_id?: string;
-  old_values?: any;
-  new_values?: any;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
 }) {
   const supabase = await createAdminSupabaseClient();
-  
+
   await supabase.from('audit_logs').insert(log);
 }

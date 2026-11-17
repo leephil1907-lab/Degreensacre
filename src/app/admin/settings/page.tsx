@@ -46,8 +46,24 @@ export default function AdminSettingsPage() {
   }, []);
 
   useEffect(() => {
-    void loadSettings();
-  }, [loadSettings]);
+    let active = true;
+    fetch('/api/admin/settings', { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Settings could not be loaded.');
+        if (!active) return;
+        setSettings({ ...DEFAULT_SITE_SETTINGS, ...(data.settings || {}) });
+        setUpdatedAt(data.updated_at || null);
+        setLoaded(true);
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        setLoaded(false);
+        setError(loadError instanceof Error ? loadError.message : 'Settings could not be loaded.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const update = (field: keyof SiteSettings, value: string | number) => {
     setSettings((current) => ({ ...current, [field]: value }));
