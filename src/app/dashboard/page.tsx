@@ -236,6 +236,11 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {profile?.is_admin && (
+                <Link href="/admin/dashboard" className="inline-flex items-center gap-1.5 rounded-xl bg-charcoal px-4 py-2.5 text-sm font-bold text-white transition hover:bg-forest">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" /> Admin Console
+                </Link>
+              )}
               {profile?.is_verified && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
                   <ShieldCheck className="h-3.5 w-3.5" /> Verified account

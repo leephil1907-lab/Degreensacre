@@ -6,12 +6,17 @@ export async function proxy(request: NextRequest) {
     request: { headers: request.headers },
   });
 
+  const pathname = request.nextUrl.pathname;
+  if (pathname === '/admin/login') {
+    return response;
+  }
+
   // Protected routes
   const protectedPaths = ['/dashboard', '/submit-property', '/account', '/messages', '/notifications'];
-  const isProtected = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
 
   // Admin routes
-  const isAdmin = request.nextUrl.pathname.startsWith('/admin');
+  const isAdmin = pathname.startsWith('/admin');
 
   if (isProtected || isAdmin) {
     const supabase = createServerClient(
@@ -37,8 +42,12 @@ export async function proxy(request: NextRequest) {
 
     if (!user) {
       const url = request.nextUrl.clone();
-      url.pathname = '/signin';
-      url.searchParams.set('redirect', `${request.nextUrl.pathname}${request.nextUrl.search}`);
+      url.pathname = isAdmin ? '/admin/login' : '/signin';
+      if (!isAdmin) {
+        url.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
+      } else if (pathname !== '/admin' && pathname !== '/admin/dashboard') {
+        url.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
+      }
       return NextResponse.redirect(url);
     }
 
@@ -46,11 +55,11 @@ export async function proxy(request: NextRequest) {
     if (isAdmin) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, is_suspended')
         .eq('id', user.id)
         .single();
 
-      if (!profile?.is_admin) {
+      if (!profile?.is_admin || profile.is_suspended) {
         const url = request.nextUrl.clone();
         url.pathname = '/dashboard';
         url.search = '';

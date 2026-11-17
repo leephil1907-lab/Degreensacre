@@ -34,10 +34,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [signingOut, setSigningOut] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  const isLoginRoute = pathname === '/admin/login';
+
   useEffect(() => {
-    if (!loading && !user) router.replace('/signin?redirect=/admin/dashboard');
+    if (isLoginRoute) return;
+    if (!loading && !user) router.replace('/admin/login');
     else if (!loading && user && profile && !profile.is_admin) router.replace('/dashboard');
-  }, [user, profile, loading, router]);
+  }, [isLoginRoute, user, profile, loading, router]);
+
+  if (isLoginRoute) {
+    return <>{children}</>;
+  }
 
   const handleSignOut = async () => {
     setSigningOut(true);

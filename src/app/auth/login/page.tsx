@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -22,8 +23,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(formData.email, formData.password);
-      router.push('/dashboard');
+      const data = await signIn(formData.email.trim(), formData.password);
+      let isAdmin = false;
+      if (data?.user) {
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        isAdmin = Boolean(profileRow?.is_admin);
+      }
+      router.replace(isAdmin ? '/admin/dashboard' : '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in. Please check your credentials.');
     } finally {

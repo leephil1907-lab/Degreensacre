@@ -204,6 +204,7 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link href="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
+            <Link href="/admin/login" className="hover:text-white transition-colors">Admin Portal</Link>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle variant="forest" />

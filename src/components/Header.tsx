@@ -172,6 +172,12 @@ export default function Header() {
           <div className="hidden shrink-0 items-center gap-2 lg:flex">
             {!loading && user ? (
               <>
+                {profile?.is_admin && (
+                  <Link href="/admin/dashboard" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-forest/10 px-3 py-2 text-xs font-extrabold text-forest transition-colors hover:bg-forest hover:text-white">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    Admin
+                  </Link>
+                )}
                 <Link href="/dashboard" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-charcoal transition-colors hover:text-forest dark:text-white">
                   {profile?.first_name ? `Hi, ${profile.first_name}` : 'Dashboard'}
                 </Link>
@@ -221,9 +227,16 @@ export default function Header() {
             </div>
             <div className="mt-5 border-t border-forest/10 pt-5">
               {!loading && user ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/dashboard" onClick={closeMobile} className="btn-outline text-center text-sm">Dashboard</Link>
-                  <button type="button" onClick={() => { void signOut(); closeMobile(); }} className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300">Sign out</button>
+                <div className="space-y-2">
+                  {profile?.is_admin && (
+                    <Link href="/admin/dashboard" onClick={closeMobile} className="flex w-full items-center justify-center gap-2 rounded-xl bg-forest/10 px-4 py-3 text-sm font-extrabold text-forest">
+                      <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Open Admin Console
+                    </Link>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/dashboard" onClick={closeMobile} className="btn-outline text-center text-sm">Dashboard</Link>
+                    <button type="button" onClick={() => { void signOut(); closeMobile(); }} className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300">Sign out</button>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
