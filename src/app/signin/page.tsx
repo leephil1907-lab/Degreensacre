@@ -240,10 +240,6 @@ function SignInContent() {
             New to De-Greenacres?{' '}
             <Link href="/signup" className="font-bold text-forest hover:underline">Create a free account</Link>
           </p>
-          <p className="mt-2 text-center text-xs text-gray-400">
-            Administrator?{' '}
-            <Link href="/admin/login" className="font-semibold text-forest hover:underline">Go to Admin Console sign in</Link>
-          </p>
           <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
             <ShieldCheck className="h-3.5 w-3.5 text-forest" />
             <span>Encrypted connection · Protected by Supabase Auth</span>
