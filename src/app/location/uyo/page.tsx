@@ -44,11 +44,15 @@ export default function UyoPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {areas.map((area) => (
-              <div key={area.name} className="bg-ivory rounded-xl p-6">
-                <h3 className="text-lg font-bold text-charcoal">{area.name}</h3>
+              <Link
+                key={area.name}
+                href={`/properties?state=Akwa%20Ibom&area=${encodeURIComponent(area.name)}`}
+                className="bg-ivory rounded-xl p-6 border border-transparent hover:border-forest/30 hover:shadow-md transition-all group block"
+              >
+                <h3 className="text-lg font-bold text-charcoal group-hover:text-forest transition-colors">{area.name}</h3>
                 <p className="text-magenta text-sm font-semibold mt-1">{area.type}</p>
                 <p className="text-gray-600 text-sm mt-2">{area.highlight}</p>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -64,7 +68,7 @@ export default function UyoPage() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/properties?location=akwa-ibom" className="btn-primary inline-block mr-4">
+            <Link href="/properties?state=Akwa%20Ibom&area=Uyo" className="btn-primary inline-block mr-4">
               Browse Uyo Properties
             </Link>
             <Link href="/locations" className="btn-outline inline-block">

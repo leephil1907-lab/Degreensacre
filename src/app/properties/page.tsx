@@ -2,6 +2,7 @@
 
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -100,8 +101,8 @@ function PropertyResultCard({ property, view, selected, saved, saving, onSave, o
   return (
     <article id={`property-card-${property.id}`} className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all ${selected ? 'border-forest ring-2 ring-forest/20' : 'border-gray-100 hover:border-forest/25 hover:shadow-lg'} ${isList ? 'sm:flex-row' : ''} ${view === 'grid' ? 'w-full sm:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-1rem)] 2xl:w-[calc(25%-1.125rem)]' : ''}`}>
       <div className={`relative shrink-0 overflow-hidden ${isList ? 'sm:w-64 lg:w-80' : ''}`}>
-        <Link href={`/properties/${property.slug}`} className="block" aria-label={`View ${property.title}`}>
-          <img src={image} alt={hasPhoto ? property.title : ''} className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] ${isList ? 'h-56 sm:h-full sm:min-h-[19rem]' : compact ? 'h-48' : 'h-60'}`} loading="lazy" />
+        <Link href={`/properties/${property.slug}`} className={`relative block w-full ${isList ? 'h-56 sm:h-full sm:min-h-[19rem]' : compact ? 'h-48' : 'h-60'}`} aria-label={`View ${property.title}`}>
+          <Image src={image} alt={hasPhoto ? property.title : ''} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         </Link>
         <div className="pointer-events-none absolute left-3 top-3 flex max-w-[75%] flex-wrap gap-1.5">
           <span className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white ${displayType === 'sale' ? 'bg-forest' : displayType === 'rent' ? 'bg-blue-700' : displayType === 'land' ? 'bg-amber-700' : 'bg-charcoal'}`}>{typeLabel(displayType)}</span>
@@ -149,12 +150,14 @@ function PropertiesContent() {
   const [filters, setFilters] = useState<Filters>({
     ...EMPTY_FILTERS,
     type: searchParams.get('type') || '',
-    state: searchParams.get('state') || '',
-    area: searchParams.get('area') || '',
+    state: searchParams.get('state') || searchParams.get('location') || '',
+    area: searchParams.get('area') || searchParams.get('q') || '',
     propertyType: searchParams.get('propertyType') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     bedrooms: searchParams.get('bedrooms') || '',
+    verification: searchParams.get('verification') || '',
+    documentation: searchParams.get('documentation') || '',
   });
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -198,14 +201,15 @@ function PropertiesContent() {
     }
   }, []);
 
-  useEffect(() => { void loadProperties(); }, [loadProperties]);
-
-  useEffect(() => {
+  const searchKey = searchParams.toString();
+  const [prevSearchKey, setPrevSearchKey] = useState(searchKey);
+  if (searchKey !== prevSearchKey) {
+    setPrevSearchKey(searchKey);
     setFilters({
       ...EMPTY_FILTERS,
       type: searchParams.get('type') || '',
-      state: searchParams.get('state') || '',
-      area: searchParams.get('area') || '',
+      state: searchParams.get('state') || searchParams.get('location') || '',
+      area: searchParams.get('area') || searchParams.get('q') || '',
       propertyType: searchParams.get('propertyType') || '',
       minPrice: searchParams.get('minPrice') || '',
       maxPrice: searchParams.get('maxPrice') || '',
@@ -214,13 +218,32 @@ function PropertiesContent() {
       documentation: searchParams.get('documentation') || '',
     });
     setSortBy(searchParams.get('sort') || 'newest');
-  }, [searchParams]);
+    setVisibleCount(CARD_INCREMENT);
+  }
 
   useEffect(() => {
-    if (!user) {
-      setSavedIds(new Set());
-      return;
-    }
+    let active = true;
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: '0' });
+    fetch(`/api/properties?${params}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Properties could not be loaded.');
+        if (!active) return;
+        const incoming = (data.properties || []) as Property[];
+        setProperties(incoming);
+        setTotalProperties(Number(data.count) || incoming.length);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error instanceof Error ? error.message : 'Properties could not be loaded. Please try again.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     void fetch('/api/saved', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((data) => {
       if (!cancelled && data?.properties) setSavedIds(new Set(data.properties.map((property: { id: string }) => property.id)));
@@ -228,7 +251,7 @@ function PropertiesContent() {
     return () => { cancelled = true; };
   }, [user]);
 
-  useEffect(() => { setVisibleCount(CARD_INCREMENT); }, [filters, sortBy]);
+  const effectiveSavedIds = useMemo(() => (user ? savedIds : new Set<string>()), [user, savedIds]);
 
   const filteredProperties = useMemo(() => properties.filter((property) => {
     // Land and commercial are property categories, not values of the listing
@@ -289,8 +312,16 @@ function PropertiesContent() {
 
   const hasMore = visibleCount < sortedProperties.length || properties.length < totalProperties;
 
-  const updateFilter = (key: keyof Filters, value: string) => setFilters((current) => ({ ...current, [key]: value }));
-  const clearFilters = () => { setFilters(EMPTY_FILTERS); setSortBy('newest'); setSelectedPropertyId(null); };
+  const updateFilter = (key: keyof Filters, value: string) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+    setVisibleCount(CARD_INCREMENT);
+  };
+  const clearFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setSortBy('newest');
+    setSelectedPropertyId(null);
+    setVisibleCount(CARD_INCREMENT);
+  };
 
   const selectProperty = (id: string | null) => {
     setSelectedPropertyId(id);
@@ -343,7 +374,7 @@ function PropertiesContent() {
   };
 
   const renderCard = (property: Property, view: ViewMode) => (
-    <PropertyResultCard key={property.id} property={property} view={view} selected={selectedPropertyId === property.id} saved={savedIds.has(property.id)} saving={savingId === property.id} onSave={() => void toggleSaved(property)} onShowMap={() => showOnMap(property)} />
+    <PropertyResultCard key={property.id} property={property} view={view} selected={selectedPropertyId === property.id} saved={effectiveSavedIds.has(property.id)} saving={savingId === property.id} onSave={() => void toggleSaved(property)} onShowMap={() => showOnMap(property)} />
   );
 
   const loadMoreButton = <button type="button" onClick={() => void showMore()} disabled={loadingMore} className="btn-outline inline-flex min-w-44 items-center justify-center gap-2 disabled:opacity-60">{loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{loadingMore ? 'Loading…' : 'Show more properties'}</button>;
@@ -412,7 +443,7 @@ function PropertiesContent() {
         <div className="border-t border-gray-100 bg-gray-50">
           <div className="container-custom flex min-h-11 items-center justify-between gap-3 py-2">
             <p className="text-xs text-gray-600" aria-live="polite"><strong className="text-charcoal">{sortedProperties.length}</strong> {sortedProperties.length === 1 ? 'property' : 'properties'}{filters.state ? <> in <strong>{filters.state === 'FCT' ? 'Abuja (FCT)' : filters.state}</strong></> : null}{!hasActiveFilters && totalProperties > properties.length ? <span className="text-gray-400"> · {properties.length} of {totalProperties} loaded</span> : null}</p>
-            <label className="flex items-center gap-1 text-xs text-gray-500"><span className="hidden sm:inline">Sort:</span><select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="rounded-lg border border-transparent bg-transparent px-1 py-1 font-bold text-charcoal outline-none focus:border-forest"><option value="newest">Newest</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="popular">Most viewed</option></select></label>
+            <label className="flex items-center gap-1 text-xs text-gray-500"><span className="hidden sm:inline">Sort:</span><select value={sortBy} onChange={(event) => { setSortBy(event.target.value); setVisibleCount(CARD_INCREMENT); }} className="rounded-lg border border-transparent bg-transparent px-1 py-1 font-bold text-charcoal outline-none focus:border-forest"><option value="newest">Newest</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="popular">Most viewed</option></select></label>
           </div>
         </div>
         {saveSearchOpen && (
